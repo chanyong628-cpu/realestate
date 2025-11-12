@@ -1,4 +1,4 @@
-const serviceKey = "여기에_공공데이터포털_API키_입력"; // 디코딩된 키
+const serviceKey = "6c712922ba179a63f752341c8e77729a92a493a01169e4c73de1d90c110b0d6c"; // 디코딩된 키
 
 document.getElementById("searchBtn").addEventListener("click", async () => {
   const address = document.getElementById("addressInput").value.trim();
