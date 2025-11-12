@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>건축물정보 통합조회</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>🏢 건축물정보 통합조회</h1>
+    <p>서울특별시 송파구 가락동 108 과 같이 입력하세요</p>
+    <div class="search-box">
+      <input id="addressInput" type="text" placeholder="예: 서울특별시 송파구 가락동 108" />
+      <button id="searchBtn">조회</button>
+    </div>
+
+    <section id="result">
+      <h2>📋 기본정보</h2>
+      <pre id="basicInfo">-</pre>
+
+      <h2>🏗 층별정보</h2>
+      <pre id="floorInfo">-</pre>
+
+      <h2>🚨 위반건축물 여부</h2>
+      <pre id="violationInfo">-</pre>
+    </section>
+  </div>
+</body>
+</html>
