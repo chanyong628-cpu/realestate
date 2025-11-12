@@ -4,7 +4,7 @@
   "description": "부동산 건축물정보 조회용 Vercel 서버리스 API",
   "type": "module",
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "dependencies": {
     "node-fetch": "3.3.2",
