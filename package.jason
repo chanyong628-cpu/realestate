@@ -1,0 +1,19 @@
+{
+  "name": "realestate-proxy",
+  "version": "1.0.0",
+  "description": "부동산 건축물정보 조회용 Vercel 서버리스 API",
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "node-fetch": "3.3.2",
+    "xml2js": "0.6.2"
+  },
+  "scripts": {
+    "postinstall": "npm install node-fetch@3.3.2 xml2js@0.6.2",
+    "start": "node api/building.js"
+  },
+  "author": "chanyong628-cpu",
+  "license": "MIT"
+}
