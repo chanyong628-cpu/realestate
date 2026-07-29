@@ -186,9 +186,11 @@ export default async function PropertyDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <PropertyGallery images={property.image_urls} title={property.title} />
+      <div className="mx-auto w-full max-w-[960px]">
+        <PropertyGallery images={property.image_urls} title={property.title} />
+      </div>
       {isAdmin && (
-        <div className="mt-4 flex justify-end gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3">
+        <div className="mx-auto mt-4 flex w-full max-w-[960px] justify-end gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3">
           <Link
             href={`/admin/properties/${property.id}/edit`}
             className="rounded-lg bg-[#155EEF] px-4 py-2 text-sm font-bold text-white"
@@ -231,11 +233,15 @@ export default async function PropertyDetailPage({
             <FavoriteButton propertyId={property.id} compact />
           </div>
 
-          <p className="mt-8 text-2xl font-black md:text-3xl">
-            보증금 {formatWon(property.deposit)}
-            <span className="mx-3 text-stone-300">/</span>
-            월세 {formatWon(property.monthly_rent)}
-          </p>
+          <div className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-2 text-2xl font-black md:text-3xl">
+            <span className="whitespace-nowrap">
+              보증금 {formatWon(property.deposit)}
+            </span>
+            <span className="inline-flex whitespace-nowrap">
+              <span className="mr-3 text-stone-300">/</span>
+              월세 {formatWon(property.monthly_rent)}
+            </span>
+          </div>
           <p className="mt-2 text-lg font-semibold text-stone-700">
             관리비 {formatWon(property.maintenance_fee)}
           </p>
