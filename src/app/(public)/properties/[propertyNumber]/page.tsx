@@ -186,9 +186,7 @@ export default async function PropertyDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <div className="mx-auto w-full max-w-[960px]">
-        <PropertyGallery images={property.image_urls} title={property.title} />
-      </div>
+      <PropertyGallery images={property.image_urls} title={property.title} />
       {isAdmin && (
         <div className="mx-auto mt-4 flex w-full max-w-[960px] justify-end gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3">
           <Link
@@ -233,15 +231,11 @@ export default async function PropertyDetailPage({
             <FavoriteButton propertyId={property.id} compact />
           </div>
 
-          <div className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-2 text-2xl font-black md:text-3xl">
-            <span className="whitespace-nowrap">
-              보증금 {formatWon(property.deposit)}
-            </span>
-            <span className="inline-flex whitespace-nowrap">
-              <span className="mr-3 text-stone-300">/</span>
-              월세 {formatWon(property.monthly_rent)}
-            </span>
-          </div>
+          <p className="mt-8 whitespace-nowrap text-xl font-black sm:text-2xl md:text-3xl">
+            보증금 {formatWon(property.deposit)}
+            <span className="mx-2 text-stone-300 sm:mx-3">/</span>
+            월세 {formatWon(property.monthly_rent)}
+          </p>
           <p className="mt-2 text-lg font-semibold text-stone-700">
             관리비 {formatWon(property.maintenance_fee)}
           </p>
