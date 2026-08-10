@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Heart, LoaderCircle, UserRound, Users, X } from "lucide-react";
+import { track } from "@vercel/analytics";
 import { useState, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "cy-favorite-properties";
@@ -60,11 +61,13 @@ export function FavoriteButton({
   const saved = adminSaved ?? personalSaved;
 
   function togglePersonal() {
+    const selected = !personalSaved;
     const next = personalSaved
       ? ids.filter((id) => id !== propertyId)
       : [...ids, propertyId];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     window.dispatchEvent(new Event("cy-favorites-updated"));
+    track(selected ? "favorite_added" : "favorite_removed", { propertyId });
   }
 
   async function openOrToggle() {
@@ -109,6 +112,10 @@ export function FavoriteButton({
       }),
     });
     if (response.ok) {
+      track(selected ? "favorite_added" : "favorite_removed", {
+        propertyId,
+        destination: destination.type,
+      });
       setDestinations((current) => {
         const next =
           current?.map((item) =>

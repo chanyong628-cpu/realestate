@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-import { absoluteUrl, baseKeywords } from "@/lib/seo";
+import { absoluteUrl, baseKeywords, siteUrl } from "@/lib/seo";
 
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION;
 const naverVerification = process.env.NAVER_SITE_VERIFICATION;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://cy-realestate.vercel.app",
-  ),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "C.Y 부동산 | 송파구 사무실·상가 임대 전문",
     template: "%s | CY 부동산",
@@ -79,7 +79,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { CheckCircle2, Send } from "lucide-react";
-import { useActionState } from "react";
+import { track } from "@vercel/analytics";
+import { useActionState, useEffect } from "react";
 import { createInquiryAction } from "./actions";
 
 function InquiryField({
@@ -40,6 +41,10 @@ function InquiryField({
 
 export function InquiryForm() {
   const [state, action, pending] = useActionState(createInquiryAction, {});
+
+  useEffect(() => {
+    if (state.success) track("inquiry_submitted");
+  }, [state.success]);
 
   if (state.success) {
     return (

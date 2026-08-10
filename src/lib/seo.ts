@@ -2,7 +2,7 @@ import type { Property } from "@/types/database";
 import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
 
 export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://cy-realestate.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://cy-office.com";
 
 export const siteName = "C.Y 부동산";
 export const companyName = "씨와이(C.Y)부동산중개";
