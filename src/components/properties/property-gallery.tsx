@@ -27,7 +27,10 @@ export function PropertyGallery({
   }
 
   return (
-    <section aria-label="매물 사진 갤러리">
+    <section
+      aria-label="매물 사진 갤러리"
+      className="-mx-2 sm:mx-0"
+    >
       <div
         className="relative aspect-[75/46] overflow-hidden rounded-2xl bg-stone-100"
         onTouchStart={(event) => {
