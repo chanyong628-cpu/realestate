@@ -1,5 +1,10 @@
 import { getPublishedProperties } from "@/lib/properties/queries";
-import { buildPropertySeo, siteName, siteUrl } from "@/lib/seo";
+import {
+  buildPropertySeo,
+  siteName,
+  siteUrl,
+  stripRichText,
+} from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -23,12 +28,16 @@ export async function GET() {
     .map((property) => {
       const url = `${siteUrl}/properties/${property.property_number}`;
       const seo = buildPropertySeo(property);
+      const propertyDescription = stripRichText(property.description);
+      const description = propertyDescription
+        ? `${seo.description} ${propertyDescription}`
+        : seo.description;
 
       return `    <item>
       <title>${escapeXml(property.title)}</title>
       <link>${escapeXml(url)}</link>
       <guid isPermaLink="true">${escapeXml(url)}</guid>
-      <description>${escapeXml(seo.description)}</description>
+      <description>${escapeXml(description)}</description>
       <pubDate>${new Date(property.updated_at).toUTCString()}</pubDate>
     </item>`;
     })
