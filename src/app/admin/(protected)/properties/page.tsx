@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { FavoriteButton } from "@/components/properties/favorite-button";
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
+import { ProposalPlaceholderButton } from "@/features/admin/properties/proposal-placeholder-button";
 import {
   setPropertyPublishedAction,
   setPropertyRecommendedAction,
@@ -217,7 +219,8 @@ export default async function AdminPropertiesPage({
                 <th className="px-4 py-4 text-center" title="사진 등록 여부">
                   ✓
                 </th>
-                <th className="px-5 py-4 text-right">관리</th>
+                <th className="px-3 py-4 text-center">즐겨찾기</th>
+                <th className="px-4 py-4 text-right">관리</th>
               </tr>
             </thead>
             <tbody>
@@ -311,8 +314,12 @@ export default async function AdminPropertiesPage({
                         </span>
                       )}
                     </td>
-                    <td className="whitespace-nowrap px-5 py-4">
-                      <div className="flex min-w-[92px] flex-nowrap justify-end gap-2">
+                    <td className="px-3 py-4 text-center">
+                      <FavoriteButton propertyId={property.id} compact />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-4">
+                      <div className="flex min-w-[184px] flex-nowrap justify-end gap-2">
+                        <ProposalPlaceholderButton />
                         <Link
                           href={`/admin/properties/${property.id}/edit`}
                           className="whitespace-nowrap rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold hover:bg-stone-50"

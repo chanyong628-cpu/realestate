@@ -1,24 +1,21 @@
+import Link from "next/link";
+import { DeleteInquiryButton } from "@/features/admin/inquiries/delete-button";
+import type { AdminInquiry } from "@/features/admin/inquiries/types";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-interface Inquiry {
-  id: string;
-  business_type: string;
-  phone: string;
-  budget: string;
-  desired_area: string;
-  move_in_date: string;
-  notes: string | null;
-  created_at: string;
-}
 
 export const metadata = { title: "맞춤 문의 관리" };
 
-export default async function AdminInquiriesPage() {
+export default async function AdminInquiriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ updated?: string }>;
+}) {
+  const notice = await searchParams;
   const { data, error } = await createAdminClient()
     .from("inquiries")
     .select("*")
     .order("created_at", { ascending: false });
-  const inquiries = (data ?? []) as Inquiry[];
+  const inquiries = (data ?? []) as AdminInquiry[];
 
   return (
     <section>
@@ -27,6 +24,12 @@ export default async function AdminInquiriesPage() {
       <p className="mt-2 text-stone-600">
         홈페이지에서 접수된 문의를 최신순으로 확인합니다.
       </p>
+
+      {notice.updated && (
+        <p className="mt-4 rounded-xl bg-blue-50 px-4 py-3 font-bold text-[#155EEF]">
+          문의 내용이 수정되었습니다.
+        </p>
+      )}
 
       {error && (
         <p className="mt-6 rounded-xl bg-red-50 p-4 text-red-700">
@@ -55,13 +58,27 @@ export default async function AdminInquiriesPage() {
                     {inquiry.phone}
                   </a>
                 </div>
-                <time className="text-xs text-stone-500">
-                  {new Intl.DateTimeFormat("ko-KR", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    timeZone: "Asia/Seoul",
-                  }).format(new Date(inquiry.created_at))}
-                </time>
+                <div className="flex flex-col items-end gap-2">
+                  <time className="text-xs text-stone-500">
+                    {new Intl.DateTimeFormat("ko-KR", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "Asia/Seoul",
+                    }).format(new Date(inquiry.created_at))}
+                  </time>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/admin/inquiries/${inquiry.id}/edit`}
+                      className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold hover:bg-stone-50"
+                    >
+                      수정
+                    </Link>
+                    <DeleteInquiryButton
+                      id={inquiry.id}
+                      businessType={inquiry.business_type}
+                    />
+                  </div>
+                </div>
               </div>
               <dl className="mt-4 grid gap-3 rounded-xl bg-stone-50 p-4 text-sm sm:grid-cols-3">
                 <div><dt className="text-stone-500">예산</dt><dd className="mt-1 font-bold">{inquiry.budget}</dd></div>
