@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FavoriteButton } from "@/components/properties/favorite-button";
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
-import { ProposalPlaceholderButton } from "@/features/admin/properties/proposal-placeholder-button";
+import { PropertyProposalButton } from "@/features/admin/properties/property-proposal-button";
 import {
   setPropertyPublishedAction,
   setPropertyRecommendedAction,
@@ -319,7 +319,10 @@ export default async function AdminPropertiesPage({
                     </td>
                     <td className="whitespace-nowrap px-4 py-4">
                       <div className="flex min-w-[184px] flex-nowrap justify-end gap-2">
-                        <ProposalPlaceholderButton />
+                        <PropertyProposalButton
+                          id={property.id}
+                          propertyNumber={property.property_number}
+                        />
                         <Link
                           href={`/admin/properties/${property.id}/edit`}
                           className="whitespace-nowrap rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold hover:bg-stone-50"

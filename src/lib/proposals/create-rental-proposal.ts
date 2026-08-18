@@ -1,75 +1,41 @@
 import path from "node:path";
-import { Automizer, CmToDxa, modify } from "pptx-automizer";
+import { Automizer, modify } from "pptx-automizer";
 import sharp from "sharp";
-import type { CustomerBlock, Property } from "@/types/database";
+import type { Property } from "@/types/database";
 import { formatPyeong } from "@/lib/properties/format";
 
 const TEMPLATE_NAME = "cy-rental-proposal.pptx";
 
 export interface ProposalProperty extends Property {
-  proposalImages: string[];
+  proposalImages: Array<string | null>;
 }
 
 function formatNumber(value: number | null) {
   return value === null ? "-" : value.toLocaleString("ko-KR");
 }
 
-function formatAmount(property: Property) {
-  return `${formatNumber(property.deposit)} / ${formatNumber(property.monthly_rent)} / ${formatNumber(property.maintenance_fee)}`;
-}
-
 function formatArea(property: Property) {
   if (property.exclusive_area === null) return "-";
-  return `${property.exclusive_area.toLocaleString("ko-KR")}㎡ (실 ${formatPyeong(
-    property.exclusive_area,
-  )}평)`;
+  return `실 ${formatPyeong(property.exclusive_area)}평`;
 }
 
 function formatParking(property: Property) {
-  if (property.available_parking_count !== null) {
-    return `가능 ${property.available_parking_count}대`;
-  }
-  return property.parking_available ? "주차 가능" : "주차 불가";
+  const total = property.total_parking_count ?? "-";
+  const available = property.available_parking_count ?? "-";
+  return `총 ${total}대 / 가능 ${available}대`;
 }
 
-function proposalDescription(property: Property) {
-  const ignored = [
-    "C.Y",
-    "REALESTATE",
-    "네이버",
-    "당근",
-    "기본확인사항",
-    "상호:",
-    "등록번호:",
-    "전화번호:",
-    "주소:",
-  ];
-  const candidates = (property.description ?? "")
-    .split(/\r?\n/)
-    .map((line) =>
-      line
-        .replace(/^[✔✓•·\-─『』✨❤️\s]+/g, "")
-        .replace(/\s+/g, " ")
-        .trim(),
-    )
-    .filter(
-      (line) =>
-        line.length >= 3 &&
-        !ignored.some((keyword) => line.includes(keyword)),
-    )
-    .slice(0, 3);
+function formatRestroom(property: Property) {
+  if (property.restroom_type === "internal_private") return "분리화장실";
+  if (property.restroom_type === "external_shared") return "공용화장실";
+  return "-";
+}
 
-  const fallback = [
-    property.title,
-    property.move_in_date ? `입주 가능: ${property.move_in_date}` : "",
-    property.building_direction
-      ? `건물 방향: ${property.building_direction}`
-      : "",
-  ].filter(Boolean);
-
-  return (candidates.length ? candidates : fallback)
-    .map((line) => `• ${line}`)
-    .join("\n");
+function formatMonthlyTotal(property: Property) {
+  if (property.monthly_rent === null || property.maintenance_fee === null) {
+    return "-";
+  }
+  return formatNumber(property.monthly_rent + property.maintenance_fee);
 }
 
 function imageDataUri(buffer: Buffer, contentType: string) {
@@ -104,7 +70,7 @@ export async function fetchProposalImages(urls: string[]) {
     }),
   );
 
-  return images.filter((image): image is string => Boolean(image));
+  return images;
 }
 
 function streamToBuffer(stream: NodeJS.ReadableStream) {
@@ -118,14 +84,7 @@ function streamToBuffer(stream: NodeJS.ReadableStream) {
   });
 }
 
-function inchesToDxa(value: number) {
-  return CmToDxa(value * 2.54);
-}
-
-export async function createRentalProposal(
-  block: CustomerBlock,
-  properties: ProposalProperty[],
-) {
+export async function createRentalProposal(properties: ProposalProperty[]) {
   const templateDir = path.join(process.cwd(), "templates");
   const automizer = new Automizer({
     templateDir,
@@ -139,76 +98,66 @@ export async function createRentalProposal(
     .loadRoot(TEMPLATE_NAME)
     .load(TEMPLATE_NAME, "proposal");
 
-  presentation.addSlide("proposal", 1, (slide) => {
-    slide.modifyElement(
-      "Text 7",
-      modify.setText(`${block.customer_name} 고객님 임대제안서`),
-    );
-    slide.modifyElement(
-      "Text 9",
-      modify.setText(`C.Y부동산 추천 매물 | 총 ${properties.length}건`),
-    );
-  });
+  presentation.addSlide("proposal", 1);
 
-  properties.forEach((property, index) => {
-    const informationPage = index * 2 + 1;
-    const photoPage = informationPage + 1;
-
+  properties.forEach((property) => {
     presentation.addSlide("proposal", 2, (slide) => {
-      slide.removeElement("Image 0");
-      slide.removeElement("Image 1");
+      slide.removeElement("직사각형 122");
+      slide.removeElement("직사각형 137");
       slide.modifyElement(
-        "Text 3",
-        modify.setText(`물건 정보 ( ${property.property_number} )`),
+        "Group 58",
+        modify.setTableData({
+          body: [
+            {
+              values: [
+                "물건주소",
+                property.private_address || property.public_address || "-",
+              ],
+            },
+            { values: ["층 수", property.floor || "-"] },
+            { values: ["면 적", formatArea(property)] },
+            { values: ["주 차 장", formatParking(property)] },
+            {
+              values: [
+                "엘리베이터",
+                property.elevator_available ? "有" : "無",
+              ],
+            },
+            { values: ["화 장 실", formatRestroom(property)] },
+          ],
+        }),
       );
       slide.modifyElement(
-        "Text 11",
-        modify.setText(property.private_address || property.public_address || "-"),
-      );
-      slide.modifyElement("Text 15", modify.setText(property.floor || "-"));
-      slide.modifyElement("Text 19", modify.setText(formatAmount(property)));
-      slide.modifyElement("Text 23", modify.setText(formatArea(property)));
-      slide.modifyElement("Text 27", modify.setText(formatParking(property)));
-      slide.modifyElement(
-        "Text 31",
-        modify.setText(property.elevator_available ? "有" : "無"),
-      );
-      slide.modifyElement(
-        "Text 36",
-        modify.setText(proposalDescription(property)),
+        "표 1",
+        modify.setTableData({
+          body: [
+            { values: ["보증금", formatNumber(property.deposit)] },
+            { values: ["월세", formatNumber(property.monthly_rent)] },
+            { values: ["관리비", formatNumber(property.maintenance_fee)] },
+            { values: ["월세 + 관리비", formatMonthlyTotal(property)] },
+          ],
+        }),
       );
       slide.modifyElement(
-        "Text 44",
-        modify.setText(String(informationPage).padStart(2, "0")),
+        "표 2",
+        modify.setTableData({ body: [{ values: ["", ""] }] }),
       );
     });
 
     presentation.addSlide("proposal", 3, (slide) => {
-      slide.modifyElement(
-        "Text 18",
-        modify.setText(String(photoPage).padStart(2, "0")),
-      );
-
       const frames = [
-        { x: 0.22, y: 1.35, w: 4.67, h: 2.45 },
-        { x: 5.11, y: 1.35, w: 4.67, h: 2.45 },
-        { x: 0.22, y: 4.02, w: 4.67, h: 2.45 },
-        { x: 5.11, y: 4.02, w: 4.67, h: 2.45 },
+        { x: 0.542, y: 1.182, w: 4.883, h: 2.668 },
+        { x: 5.425, y: 1.182, w: 4.883, h: 2.668 },
+        { x: 5.417, y: 3.859, w: 4.883, h: 2.785 },
+        { x: 0.542, y: 3.859, w: 4.883, h: 2.785 },
       ];
 
-      frames.forEach((frame, frameIndex) => {
-        slide.modifyElement(
-          `Shape ${frameIndex + 7}`,
-          modify.setPosition({
-            x: inchesToDxa(frame.x),
-            y: inchesToDxa(frame.y),
-            w: inchesToDxa(frame.w),
-            h: inchesToDxa(frame.h),
-          }),
-        );
-      });
+      ["직사각형 11", "직사각형 102", "직사각형 103", "직사각형 313"].forEach(
+        (name) => slide.removeElement(name),
+      );
 
       property.proposalImages.slice(0, 4).forEach((data, imageIndex) => {
+        if (!data) return;
         const frame = frames[imageIndex];
         if (!frame) return;
         slide.generate(

@@ -90,10 +90,7 @@ export async function POST(
       orderedIds.map(async (propertyId) => {
         const property = byId.get(propertyId);
         if (!property) return null;
-        const imageCandidates =
-          property.image_urls.length > 4
-            ? property.image_urls.slice(1, 5)
-            : property.image_urls.slice(0, 4);
+        const imageCandidates = property.image_urls.slice(0, 4);
         const proposalImages = await fetchProposalImages(imageCandidates);
         return { ...property, proposalImages } satisfies ProposalProperty;
       }),
@@ -108,7 +105,7 @@ export async function POST(
   }
 
   try {
-    const file = await createRentalProposal(block, properties);
+    const file = await createRentalProposal(properties);
     const filename = `${safeFilename(block.customer_name)}_임대제안서.pptx`;
     return new Response(new Uint8Array(file), {
       headers: {
