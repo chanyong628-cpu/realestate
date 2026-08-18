@@ -1,5 +1,8 @@
+import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { Automizer, modify } from "pptx-automizer";
+import type { ShapeModificationCallback } from "pptx-automizer";
 import sharp from "sharp";
 import type { Property } from "@/types/database";
 import { formatPyeong } from "@/lib/properties/format";
@@ -43,9 +46,39 @@ function imageDataUri(buffer: Buffer, contentType: string) {
   return `data:${mime};base64,${buffer.toString("base64")}`;
 }
 
+function dataUriBuffer(data: string) {
+  const match = data.match(/^data:[^;]+;base64,(.+)$/);
+  return match ? Buffer.from(match[1], "base64") : null;
+}
+
+function replaceShapeImageFill(filename: string): ShapeModificationCallback {
+  return (element, relations) => {
+    if (!relations) return;
+    const blip = element.getElementsByTagName("a:blip")[0];
+    const relationId = blip?.getAttribute("r:embed");
+    if (!relationId) return;
+
+    const relationItems = relations.getElementsByTagName("Relationship");
+    for (let index = 0; index < relationItems.length; index += 1) {
+      const relation = relationItems[index];
+      if (relation.getAttribute("Id") === relationId) {
+        relation.setAttribute("Target", `../media/${filename}`);
+        break;
+      }
+    }
+
+    const sourceRect = element.getElementsByTagName("a:srcRect")[0];
+    if (sourceRect) {
+      ["l", "t", "r", "b"].forEach((attribute) =>
+        sourceRect.setAttribute(attribute, "0"),
+      );
+    }
+  };
+}
+
 export async function fetchProposalImages(urls: string[]) {
   const images = await Promise.all(
-    urls.slice(0, 4).map(async (url) => {
+    urls.slice(0, 4).map(async (url, imageIndex) => {
       try {
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) return null;
@@ -53,10 +86,10 @@ export async function fetchProposalImages(urls: string[]) {
         if (!source.length) return null;
         const buffer = await sharp(source)
           .rotate()
-          .resize(1200, 630, {
-            fit: "contain",
+          .resize(1200, imageIndex < 2 ? 656 : 684, {
+            fit: "cover",
             position: "centre",
-            background: { r: 255, g: 255, b: 255 },
+            withoutEnlargement: true,
           })
           .jpeg({ quality: 84, mozjpeg: true })
           .toBuffer();
@@ -85,6 +118,24 @@ function streamToBuffer(stream: NodeJS.ReadableStream) {
 }
 
 export async function createRentalProposal(properties: ProposalProperty[]) {
+  const mediaDir = await fs.mkdtemp(path.join(os.tmpdir(), "cy-proposal-"));
+  const mediaNames: Array<Array<string | null>> = [];
+
+  await Promise.all(
+    properties.map(async (property, propertyIndex) => {
+      mediaNames[propertyIndex] = await Promise.all(
+        property.proposalImages.slice(0, 4).map(async (data, imageIndex) => {
+          if (!data) return null;
+          const buffer = dataUriBuffer(data);
+          if (!buffer) return null;
+          const filename = `property-${propertyIndex + 1}-photo-${imageIndex + 1}.jpg`;
+          await fs.writeFile(path.join(mediaDir, filename), buffer);
+          return filename;
+        }),
+      );
+    }),
+  );
+
   const templateDir = path.join(process.cwd(), "templates");
   const automizer = new Automizer({
     templateDir,
@@ -96,14 +147,16 @@ export async function createRentalProposal(properties: ProposalProperty[]) {
   });
   const presentation = automizer
     .loadRoot(TEMPLATE_NAME)
+    .loadMedia(
+      mediaNames.flat().filter((name): name is string => Boolean(name)),
+      mediaDir,
+    )
     .load(TEMPLATE_NAME, "proposal");
 
   presentation.addSlide("proposal", 1);
 
-  properties.forEach((property) => {
+  properties.forEach((property, propertyIndex) => {
     presentation.addSlide("proposal", 2, (slide) => {
-      slide.removeElement("직사각형 122");
-      slide.removeElement("직사각형 137");
       slide.modifyElement(
         "Group 58",
         modify.setTableData({
@@ -145,40 +198,28 @@ export async function createRentalProposal(properties: ProposalProperty[]) {
     });
 
     presentation.addSlide("proposal", 3, (slide) => {
-      const frames = [
-        { x: 0.542, y: 1.182, w: 4.883, h: 2.668 },
-        { x: 5.425, y: 1.182, w: 4.883, h: 2.668 },
-        { x: 5.417, y: 3.859, w: 4.883, h: 2.785 },
-        { x: 0.542, y: 3.859, w: 4.883, h: 2.785 },
+      const placeholders = [
+        "직사각형 11",
+        "직사각형 102",
+        "직사각형 103",
+        "직사각형 313",
       ];
 
-      ["직사각형 11", "직사각형 102", "직사각형 103", "직사각형 313"].forEach(
-        (name) => slide.removeElement(name),
-      );
-
-      property.proposalImages.slice(0, 4).forEach((data, imageIndex) => {
-        if (!data) return;
-        const frame = frames[imageIndex];
-        if (!frame) return;
-        slide.generate(
-          (generatedSlide) => {
-            generatedSlide.addImage({
-              data,
-              x: frame.x,
-              y: frame.y,
-              w: frame.w,
-              h: frame.h,
-            });
-          },
-          `Interior photo ${imageIndex + 1}`,
-        );
+      mediaNames[propertyIndex]?.forEach((filename, imageIndex) => {
+        const placeholder = placeholders[imageIndex];
+        if (!filename || !placeholder) return;
+        slide.modifyElement(placeholder, replaceShapeImageFill(filename));
       });
     });
   });
 
   presentation.addSlide("proposal", 4);
-  const stream = await presentation.stream({
-    compressionOptions: { level: 6 },
-  });
-  return streamToBuffer(stream);
+  try {
+    const stream = await presentation.stream({
+      compressionOptions: { level: 6 },
+    });
+    return await streamToBuffer(stream);
+  } finally {
+    await fs.rm(mediaDir, { recursive: true, force: true });
+  }
 }
