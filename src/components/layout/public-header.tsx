@@ -6,7 +6,7 @@ import { Heart, Menu, MessageSquareText, Phone, X } from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
-  ["/", "전체보기"],
+  ["/?view=all", "전체보기"],
   ["/office", "사무실"],
   ["/store", "상가"],
   ["/etc", "기타"],
@@ -35,6 +35,11 @@ export function PublicHeader() {
             <Link
               key={href}
               href={href}
+              onClick={(event) => {
+                if (label !== "전체보기") return;
+                event.preventDefault();
+                window.location.assign(href);
+              }}
               className="text-[15px] font-bold text-[#111827] transition hover:text-[#155EEF]"
             >
               {label}
@@ -69,7 +74,12 @@ export function PublicHeader() {
               <Link
                 key={href}
                 href={href}
-                onClick={() => setOpen(false)}
+                onClick={(event) => {
+                  setOpen(false);
+                  if (label !== "전체보기") return;
+                  event.preventDefault();
+                  window.location.assign(href);
+                }}
                 className="flex min-h-12 items-center gap-2 border-b border-[#F3F4F6] px-2 font-bold text-[#111827]"
               >
                 {label === "즐겨찾기" && <Heart size={17} />}

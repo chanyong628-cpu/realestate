@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 import { PropertyCard } from "./property-card";
 
@@ -14,6 +14,82 @@ type RentFilter =
   | "301to500"
   | "over500";
 type AreaFilter = "all" | "under20" | "under30" | "under50" | "over50";
+type SearchState = {
+  number: string;
+  rent: RentFilter;
+  area: AreaFilter;
+};
+
+const rentFilters: RentFilter[] = [
+  "all",
+  "under100",
+  "101to200",
+  "201to300",
+  "301to500",
+  "over500",
+];
+const areaFilters: AreaFilter[] = [
+  "all",
+  "under20",
+  "under30",
+  "under50",
+  "over50",
+];
+const homeSearchStorageKey = "cy-property-search:/";
+
+function normalizeRentFilter(value: string | null): RentFilter {
+  return rentFilters.includes(value as RentFilter)
+    ? (value as RentFilter)
+    : "all";
+}
+
+function normalizeAreaFilter(value: string | null): AreaFilter {
+  return areaFilters.includes(value as AreaFilter)
+    ? (value as AreaFilter)
+    : "all";
+}
+
+function readSearchFromUrl(params: URLSearchParams): SearchState | null {
+  const hasSearchParams =
+    params.has("propertyNumber") || params.has("rent") || params.has("area");
+  if (!hasSearchParams) return null;
+
+  return {
+    number: (params.get("propertyNumber") ?? "").trim(),
+    rent: normalizeRentFilter(params.get("rent")),
+    area: normalizeAreaFilter(params.get("area")),
+  };
+}
+
+function readStoredSearch(): SearchState | null {
+  try {
+    const stored = window.sessionStorage.getItem(homeSearchStorageKey);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as Partial<SearchState>;
+    return {
+      number: String(parsed.number ?? "").trim(),
+      rent: normalizeRentFilter(parsed.rent ?? null),
+      area: normalizeAreaFilter(parsed.area ?? null),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeSearchToUrl(search: SearchState | null) {
+  const params = new URLSearchParams(window.location.search);
+  params.delete("view");
+  params.delete("propertyNumber");
+  params.delete("rent");
+  params.delete("area");
+
+  if (search?.number) params.set("propertyNumber", search.number);
+  if (search?.rent && search.rent !== "all") params.set("rent", search.rent);
+  if (search?.area && search.area !== "all") params.set("area", search.area);
+
+  const query = params.toString();
+  window.history.replaceState(null, "", query ? `/?${query}` : "/");
+}
 
 function SectionHeading({
   title,
@@ -146,11 +222,27 @@ export function HomePropertySections({
   const [propertyNumber, setPropertyNumber] = useState("");
   const [rentFilter, setRentFilter] = useState<RentFilter>("all");
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
-  const [search, setSearch] = useState<{
-    number: string;
-    rent: RentFilter;
-    area: AreaFilter;
-  } | null>(null);
+  const [search, setSearch] = useState<SearchState | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("view") === "all") {
+      window.sessionStorage.removeItem(homeSearchStorageKey);
+      writeSearchToUrl(null);
+      return;
+    }
+
+    const restoredSearch = readSearchFromUrl(params) ?? readStoredSearch();
+    if (!restoredSearch) return;
+
+    queueMicrotask(() => {
+      setPropertyNumber(restoredSearch.number);
+      setRentFilter(restoredSearch.rent);
+      setAreaFilter(restoredSearch.area);
+      setSearch(restoredSearch);
+      writeSearchToUrl(restoredSearch);
+    });
+  }, []);
 
   const latest = useMemo(
     () =>
@@ -208,10 +300,30 @@ export function HomePropertySections({
 
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
-    setSearch({ number: propertyNumber, rent: rentFilter, area: areaFilter });
+    const nextSearch: SearchState = {
+      number: propertyNumber.trim(),
+      rent: rentFilter,
+      area: areaFilter,
+    };
+    setPropertyNumber(nextSearch.number);
+    setSearch(nextSearch);
+    window.sessionStorage.setItem(
+      homeSearchStorageKey,
+      JSON.stringify(nextSearch),
+    );
+    writeSearchToUrl(nextSearch);
     requestAnimationFrame(() =>
       document.getElementById("properties")?.scrollIntoView({ behavior: "smooth" }),
     );
+  }
+
+  function clearSearch() {
+    setPropertyNumber("");
+    setRentFilter("all");
+    setAreaFilter("all");
+    setSearch(null);
+    window.sessionStorage.removeItem(homeSearchStorageKey);
+    writeSearchToUrl(null);
   }
 
   return (
@@ -282,7 +394,7 @@ export function HomePropertySections({
               </div>
               <button
                 type="button"
-                onClick={() => setSearch(null)}
+                onClick={clearSearch}
                 className="text-sm font-bold text-[#155EEF]"
               >
                 검색 초기화
