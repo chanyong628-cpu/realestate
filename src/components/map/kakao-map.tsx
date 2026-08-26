@@ -63,11 +63,13 @@ export function KakaoMap({
   longitude,
   address,
   displayAddress,
+  isAddressHidden,
 }: {
   latitude: number | null;
   longitude: number | null;
   address: string | null;
   displayAddress?: string | null;
+  isAddressHidden: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -96,18 +98,22 @@ export function KakaoMap({
           const position = new mapApi.LatLng(mapLatitude, mapLongitude);
           const map = new mapApi.Map(mapContainer, {
             center: position,
-            level: 5,
+            level: isAddressHidden ? 5 : 3,
           });
-          new mapApi.Circle({
-            center: position,
-            radius: 400,
-            strokeWeight: 2,
-            strokeColor: "#155EEF",
-            strokeOpacity: 0.85,
-            strokeStyle: "solid",
-            fillColor: "#155EEF",
-            fillOpacity: 0.12,
-          }).setMap(map);
+          if (isAddressHidden) {
+            new mapApi.Circle({
+              center: position,
+              radius: 400,
+              strokeWeight: 2,
+              strokeColor: "#155EEF",
+              strokeOpacity: 0.85,
+              strokeStyle: "solid",
+              fillColor: "#155EEF",
+              fillOpacity: 0.12,
+            }).setMap(map);
+          } else {
+            new mapApi.Marker({ position }).setMap(map);
+          }
         }
 
         const services = mapApi.services;
@@ -159,7 +165,7 @@ export function KakaoMap({
     script.addEventListener("load", renderMap, { once: true });
     script.addEventListener("error", () => setFailed(true), { once: true });
     document.head.appendChild(script);
-  }, [address, appKey, displayAddress, latitude, longitude]);
+  }, [address, appKey, displayAddress, isAddressHidden, latitude, longitude]);
 
   if (!latitude || !longitude || !appKey || failed) {
     return (
@@ -180,7 +186,11 @@ export function KakaoMap({
   return (
     <div
       ref={containerRef}
-      aria-label={`${displayAddress ?? "매물"} 인근 400m 지도`}
+      aria-label={
+        isAddressHidden
+          ? `${displayAddress ?? "매물"} 인근 400m 지도`
+          : `${displayAddress ?? "매물"} 정확한 위치 지도`
+      }
       className="aspect-[4/3] w-full overflow-hidden rounded-3xl bg-[#e5e5db]"
     />
   );

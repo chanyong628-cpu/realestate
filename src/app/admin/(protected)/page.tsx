@@ -33,9 +33,9 @@ export default async function AdminDashboardPage() {
 
   const stats = [
     [Building2, "전체 매물", totalCount ?? 0, "/admin/properties"],
-    [Eye, "노출 매물", publishedCount ?? 0, "/admin/properties"],
-    [EyeOff, "비노출 매물", hiddenCount ?? 0, "/admin/properties"],
-    [Star, "추천 매물", recommendedCount ?? 0, "/admin/properties"],
+    [Eye, "노출 매물", publishedCount ?? 0, "/admin/properties?status=published"],
+    [EyeOff, "비노출 매물", hiddenCount ?? 0, "/admin/properties?status=hidden"],
+    [Star, "추천 매물", recommendedCount ?? 0, "/admin/properties?status=recommended"],
     [Users, "고객 블록", customerBlockCount ?? 0, "/admin/customer-blocks"],
     [MessageSquareText, "맞춤 문의", inquiryCount ?? 0, "/admin/inquiries"],
   ] as const;

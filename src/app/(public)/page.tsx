@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -10,8 +11,11 @@ import { derivePublicAddress } from "@/lib/properties/address";
 import { buildRealEstateAgentJsonLd } from "@/lib/seo";
 
 export default async function HomePage() {
-  const properties = await getPublishedProperties();
-  const isAdmin = Boolean(await getAdminSession());
+  const [properties, adminSession] = await Promise.all([
+    getPublishedProperties(),
+    getAdminSession(),
+  ]);
+  const isAdmin = Boolean(adminSession);
   const locationProperties = isAdmin
     ? (
         (
@@ -76,7 +80,11 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-      <HomePropertySections properties={properties} isAdmin={isAdmin} />
+      <HomePropertySections
+        properties={properties}
+        isAdmin={isAdmin}
+        shuffleSeed={randomUUID()}
+      />
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { derivePublicAddress } from "@/lib/properties/address";
+import { buildStoredPublicAddress } from "@/lib/properties/address";
 
 const optionalNumber = z.preprocess(
   (value) => (value === "" || value === null ? null : Number(value)),
@@ -64,6 +64,7 @@ export type PropertyFormValues = z.infer<typeof propertyFormSchema>;
 export function propertyFormDataToValues(formData: FormData) {
   const restroomType = String(formData.get("restroom_type") ?? "");
   const privateAddress = String(formData.get("private_address") ?? "").trim();
+  const isAddressHidden = formData.get("is_address_hidden") === "on";
   const imageUrls = String(formData.get("image_urls") ?? "")
     .split(/\r?\n/)
     .map((url) => url.trim())
@@ -76,7 +77,7 @@ export function propertyFormDataToValues(formData: FormData) {
     monthly_rent: formData.get("monthly_rent"),
     maintenance_fee: formData.get("maintenance_fee"),
     public_address:
-      derivePublicAddress(privateAddress) ||
+      buildStoredPublicAddress(privateAddress, isAddressHidden) ||
       String(formData.get("public_address") ?? "").trim(),
     private_address: privateAddress,
     latitude: formData.get("latitude"),

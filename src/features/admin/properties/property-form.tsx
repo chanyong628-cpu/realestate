@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import { isStoredAddressHidden } from "@/lib/properties/address";
 import type { Property } from "@/types/database";
 import {
   createPropertyAction,
@@ -252,6 +253,20 @@ export function PropertyForm({
             latitude={property?.latitude}
             longitude={property?.longitude}
           />
+          <label className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:col-span-2">
+            <input
+              name="is_address_hidden"
+              type="checkbox"
+              defaultChecked={isStoredAddressHidden(property?.public_address)}
+              className="size-5 accent-amber-600"
+            />
+            <span>
+              <b className="block">주소 비노출</b>
+              <small className="text-stone-600">
+                체크하면 정확한 주소 대신 동 단위 주소와 400m 반경을 표시합니다.
+              </small>
+            </span>
+          </label>
         </div>
       </section>
 

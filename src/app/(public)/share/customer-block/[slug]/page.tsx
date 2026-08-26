@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PropertyCard } from "@/components/properties/property-card";
+import { getPublishedPropertiesByIds } from "@/lib/properties/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   CustomerBlock,
@@ -31,17 +32,9 @@ async function getSharedBlock(slug: string) {
 
   if (!propertyIds.length) return { block, properties: [] as Property[] };
 
-  const { data: propertiesData } = await client
-    .from("properties")
-    .select(
-      "id,property_number,title,category,deposit,monthly_rent,maintenance_fee,public_address,latitude,longitude,exclusive_area,supply_area,floor,total_floor,parking_available,restroom_type,move_in_date,is_recommended,is_published,image_urls,description,view_count,created_at,updated_at",
-    )
-    .in("id", propertyIds)
-    .eq("is_published", true);
-
   return {
     block,
-    properties: (propertiesData ?? []) as unknown as Property[],
+    properties: await getPublishedPropertiesByIds(propertyIds),
   };
 }
 

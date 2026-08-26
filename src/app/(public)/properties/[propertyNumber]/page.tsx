@@ -245,7 +245,9 @@ export default async function PropertyDetailPage({
               {
                 icon: MapPin,
                 label: "위치",
-                value: formatPublicLocation(publicAddress),
+                value: property.address_hidden
+                  ? formatPublicLocation(publicAddress)
+                  : publicAddress,
               },
               {
                 icon: Building,
@@ -378,6 +380,7 @@ export default async function PropertyDetailPage({
                 longitude={property.longitude}
                 address={publicAddress}
                 displayAddress={publicAddress}
+                isAddressHidden={property.address_hidden ?? false}
               />
             </div>
           </section>

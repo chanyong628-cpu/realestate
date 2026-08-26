@@ -1,7 +1,11 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Property, PropertyCategory } from "@/types/database";
+import {
+  isStoredAddressHidden,
+  resolvePublicAddress,
+} from "./address";
 
 const publicColumns = [
   "id",
@@ -40,11 +44,30 @@ const publicColumns = [
   "updated_at",
 ].join(",");
 
+const privatePublicColumns = `${publicColumns},private_address`;
+
+function sanitizePublishedProperties(data: unknown[] | null) {
+  return (data ?? []).map((row) => {
+    const property = row as Property;
+    const addressHidden = isStoredAddressHidden(property.public_address);
+
+    return {
+      ...property,
+      public_address: resolvePublicAddress(
+        property.public_address,
+        property.private_address,
+      ),
+      private_address: null,
+      address_hidden: addressHidden,
+    } satisfies Property;
+  });
+}
+
 export async function getPublishedProperties(category?: PropertyCategory) {
-  const client = await createClient();
+  const client = createAdminClient();
   let query = client
     .from("properties")
-    .select(publicColumns)
+    .select(privatePublicColumns)
     .eq("is_published", true)
     .order("is_recommended", { ascending: false })
     .order("created_at", { ascending: false });
@@ -57,14 +80,14 @@ export async function getPublishedProperties(category?: PropertyCategory) {
     return [];
   }
 
-  return data as unknown as Property[];
+  return sanitizePublishedProperties(data);
 }
 
 export async function getPublishedProperty(propertyNumber: string) {
-  const client = await createClient();
+  const client = createAdminClient();
   const { data, error } = await client
     .from("properties")
-    .select(publicColumns)
+    .select(privatePublicColumns)
     .eq("property_number", propertyNumber)
     .eq("is_published", true)
     .maybeSingle();
@@ -74,5 +97,22 @@ export async function getPublishedProperty(propertyNumber: string) {
     return null;
   }
 
-  return data as unknown as Property | null;
+  return sanitizePublishedProperties(data ? [data] : [])[0] ?? null;
+}
+
+export async function getPublishedPropertiesByIds(ids: string[]) {
+  if (!ids.length) return [];
+
+  const { data, error } = await createAdminClient()
+    .from("properties")
+    .select(privatePublicColumns)
+    .in("id", ids)
+    .eq("is_published", true);
+
+  if (error) {
+    console.error("Shared properties query failed:", error.message);
+    return [];
+  }
+
+  return sanitizePublishedProperties(data);
 }

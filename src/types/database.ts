@@ -37,6 +37,7 @@ export interface Property {
   move_in_date: string | null;
   is_recommended: boolean;
   is_published: boolean;
+  address_hidden?: boolean;
   image_urls: string[];
   description: string | null;
   private_memo: string | null;

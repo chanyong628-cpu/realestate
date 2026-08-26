@@ -162,8 +162,8 @@ export function AddressLocationFields({
         </div>
       </label>
       <div className="self-end rounded-xl bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
-        공개 화면에는 `송파구 가락동`까지만 표시하고, 지도에는 정확한 주소
-        주변 400m만 표시합니다.
+        주소 비노출을 체크하지 않으면 정확한 주소와 지도 핀이 표시됩니다.
+        체크하면 동 단위 주소와 주변 400m 반경만 표시됩니다.
       </div>
       <input
         ref={latitudeRef}

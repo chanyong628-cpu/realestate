@@ -118,7 +118,7 @@ export async function bulkCreatePropertiesAction(
       deposit: draft.deposit,
       monthly_rent: draft.monthly_rent,
       maintenance_fee: draft.maintenance_fee,
-      public_address: draft.public_address,
+      public_address: draft.private_address || draft.public_address,
       private_address: draft.private_address,
       latitude: null,
       longitude: null,

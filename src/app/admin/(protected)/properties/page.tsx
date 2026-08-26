@@ -7,7 +7,11 @@ import {
   setPropertyRecommendedAction,
 } from "@/features/admin/properties/actions";
 import { AdminLocationAutoRepair } from "@/features/admin/properties/admin-location-auto-repair";
-import { derivePublicAddress } from "@/lib/properties/address";
+import {
+  derivePublicAddress,
+  isStoredAddressHidden,
+  resolvePublicAddress,
+} from "@/lib/properties/address";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Property, PropertyCategory } from "@/types/database";
 
@@ -18,6 +22,21 @@ const categoryLabels: Record<PropertyCategory, string> = {
 };
 
 export const metadata = { title: "매물 관리" };
+
+type PropertyStatusFilter = "all" | "published" | "hidden" | "recommended";
+
+const statusLabels: Record<PropertyStatusFilter, string> = {
+  all: "전체 매물",
+  published: "노출 매물",
+  hidden: "비노출 매물",
+  recommended: "추천 매물",
+};
+
+function normalizeStatusFilter(value?: string): PropertyStatusFilter {
+  return value === "published" || value === "hidden" || value === "recommended"
+    ? value
+    : "all";
+}
 
 function formatWon(value: number | null) {
   return value === null ? "협의" : `${value.toLocaleString("ko-KR")}만원`;
@@ -94,23 +113,35 @@ function propertySearchText(property: Property) {
 export default async function AdminPropertiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; updated?: string; q?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    updated?: string;
+    q?: string;
+    status?: string;
+  }>;
 }) {
   const notice = await searchParams;
   const keyword = (notice.q ?? "").trim();
+  const status = normalizeStatusFilter(notice.status);
   const normalizedKeyword = normalizeSearchText(keyword);
   const { data, error } = await createAdminClient()
     .from("properties")
     .select("*")
     .order("created_at", { ascending: false });
   const properties = data as Property[] | null;
-  const filteredProperties =
+  const statusFilteredProperties =
     properties?.filter((property) => {
+      if (status === "published") return property.is_published;
+      if (status === "hidden") return !property.is_published;
+      if (status === "recommended") return property.is_recommended;
+      return true;
+    }) ?? [];
+  const filteredProperties = statusFilteredProperties.filter((property) => {
       if (!normalizedKeyword) return true;
       return normalizeSearchText(propertySearchText(property)).includes(
         normalizedKeyword,
       );
-    }) ?? [];
+    });
   const locationProperties =
     properties
       ?.filter((property) => property.private_address)
@@ -152,7 +183,23 @@ export default async function AdminPropertiesPage({
       </div>
 
       <div className="mt-6 grid gap-3 rounded-2xl bg-white p-4 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
+        <nav className="flex flex-wrap gap-2 md:col-span-2" aria-label="매물 상태 필터">
+          {(Object.keys(statusLabels) as PropertyStatusFilter[]).map((value) => (
+            <Link
+              key={value}
+              href={value === "all" ? "/admin/properties" : `/admin/properties?status=${value}`}
+              className={`rounded-full px-4 py-2 text-sm font-black transition ${
+                status === value
+                  ? "bg-[#155EEF] text-white"
+                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              }`}
+            >
+              {statusLabels[value]}
+            </Link>
+          ))}
+        </nav>
         <form action="/admin/properties" className="flex min-w-0 gap-2">
+          {status !== "all" && <input type="hidden" name="status" value={status} />}
           <input
             name="q"
             defaultValue={keyword}
@@ -164,7 +211,7 @@ export default async function AdminPropertiesPage({
           </button>
           {keyword && (
             <Link
-              href="/admin/properties"
+              href={status === "all" ? "/admin/properties" : `/admin/properties?status=${status}`}
               className="grid h-11 place-items-center rounded-xl border border-stone-300 px-4 text-sm font-bold hover:bg-stone-50"
             >
               전체
@@ -173,8 +220,8 @@ export default async function AdminPropertiesPage({
         </form>
         <p className="text-sm font-bold text-stone-500">
           {keyword
-            ? `${filteredProperties.length}개 검색됨 / 전체 ${properties?.length ?? 0}개`
-            : `전체 ${properties?.length ?? 0}개`}
+            ? `${filteredProperties.length}개 검색됨 / ${statusLabels[status]} ${statusFilteredProperties.length}개`
+            : `${statusLabels[status]} ${statusFilteredProperties.length}개 / 전체 ${properties?.length ?? 0}개`}
         </p>
       </div>
 
@@ -214,6 +261,7 @@ export default async function AdminPropertiesPage({
                 <th className="px-5 py-4">매물</th>
                 <th className="px-4 py-4">카테고리</th>
                 <th className="px-4 py-4">공개 주소</th>
+                <th className="px-4 py-4 text-center">주소 표시</th>
                 <th className="px-4 py-4 text-center">노출</th>
                 <th className="px-4 py-4 text-center">추천</th>
                 <th className="px-4 py-4 text-center" title="사진 등록 여부">
@@ -255,7 +303,23 @@ export default async function AdminPropertiesPage({
                       {categoryLabels[property.category]}
                     </td>
                     <td className="max-w-56 truncate px-4 py-4 text-sm text-stone-600">
-                      {property.public_address || "-"}
+                      {resolvePublicAddress(
+                        property.public_address,
+                        property.private_address,
+                      ) || "-"}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-4 text-center">
+                      <span
+                        className={`rounded-full px-3 py-1.5 text-xs font-black ${
+                          isStoredAddressHidden(property.public_address)
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-blue-100 text-[#155EEF]"
+                        }`}
+                      >
+                        {isStoredAddressHidden(property.public_address)
+                          ? "반경 표시"
+                          : "주소 공개"}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-4 text-center">
                       <form

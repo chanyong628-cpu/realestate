@@ -37,6 +37,33 @@ const areaFilters: AreaFilter[] = [
 ];
 const homeSearchStorageKey = "cy-property-search:/";
 
+function createSeededRandom(seed: string) {
+  let state = Array.from(seed).reduce(
+    (value, character) => Math.imul(value ^ character.charCodeAt(0), 16777619),
+    2166136261,
+  );
+
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleProperties(properties: Property[], seed: string) {
+  const shuffled = [...properties];
+  const random = createSeededRandom(seed);
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
 function normalizeRentFilter(value: string | null): RentFilter {
   return rentFilters.includes(value as RentFilter)
     ? (value as RentFilter)
@@ -215,9 +242,11 @@ function RecommendedSlider({
 export function HomePropertySections({
   properties,
   isAdmin,
+  shuffleSeed,
 }: {
   properties: Property[];
   isAdmin: boolean;
+  shuffleSeed: string;
 }) {
   const [propertyNumber, setPropertyNumber] = useState("");
   const [rentFilter, setRentFilter] = useState<RentFilter>("all");
@@ -246,23 +275,28 @@ export function HomePropertySections({
 
   const latest = useMemo(
     () =>
-      [...properties]
+      shuffleProperties(
+        [...properties]
         .filter((property) => property.category !== "etc")
         .sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         )
         .slice(0, 12),
-    [properties],
+        `${shuffleSeed}:latest`,
+      ),
+    [properties, shuffleSeed],
   );
   const recommended = useMemo(
     () =>
-      properties
-        .filter(
+      shuffleProperties(
+        properties.filter(
           (property) =>
             property.category !== "etc" && property.is_recommended,
         ),
-    [properties],
+        `${shuffleSeed}:recommended`,
+      ),
+    [properties, shuffleSeed],
   );
   const results = useMemo(() => {
     if (!search) return [];
