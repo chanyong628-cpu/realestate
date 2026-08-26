@@ -3,6 +3,15 @@
 import { MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+interface KakaoAddressResult {
+  x: string;
+  y: string;
+  address?: {
+    region_2depth_name: string;
+    region_3depth_name: string;
+  };
+}
+
 type KakaoWindow = Window & {
   kakao?: {
     maps: {
@@ -35,7 +44,7 @@ type KakaoWindow = Window & {
           addressSearch: (
             address: string,
             callback: (
-              result: Array<{ x: string; y: string }>,
+              result: KakaoAddressResult[],
               status: string,
             ) => void,
           ) => void;
@@ -58,6 +67,13 @@ type KakaoWindow = Window & {
   };
 };
 
+function toSongpaAddress(address: string) {
+  const trimmed = address.trim();
+  if (/^서울(?:특별시)?\s/.test(trimmed)) return trimmed;
+  if (/^송파구\s/.test(trimmed)) return `서울특별시 ${trimmed}`;
+  return `서울특별시 송파구 ${trimmed}`;
+}
+
 export function KakaoMap({
   latitude,
   longitude,
@@ -74,32 +90,48 @@ export function KakaoMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const appKey = process.env.NEXT_PUBLIC_MAP_API_KEY;
+  const locationAddress = address?.trim() || displayAddress?.trim() || null;
+  const hasStoredCoordinates =
+    Number.isFinite(latitude) && Number.isFinite(longitude);
 
   useEffect(() => {
-    if (!latitude || !longitude) {
-      return;
-    }
-    const mapLatitude = latitude;
-    const mapLongitude = longitude;
     if (!appKey || !containerRef.current) return;
+    if (!hasStoredCoordinates && !locationAddress) return;
+
+    let cancelled = false;
     const kakaoWindow = window as KakaoWindow;
+
+    function fail() {
+      if (!cancelled) setFailed(true);
+    }
 
     function renderMap() {
       const maps = kakaoWindow.kakao?.maps;
       const container = containerRef.current;
       if (!maps || !container) {
-        setFailed(true);
+        fail();
         return;
       }
       const mapApi = maps;
       const mapContainer = container;
+
       mapApi.load(() => {
+        const services = mapApi.services;
+        if (!services || cancelled) {
+          fail();
+          return;
+        }
+
+        const expectedDong = displayAddress?.match(/([가-힣0-9]+동)/)?.[1];
+
         function drawMap(mapLatitude: number, mapLongitude: number) {
+          if (cancelled) return;
           const position = new mapApi.LatLng(mapLatitude, mapLongitude);
           const map = new mapApi.Map(mapContainer, {
             center: position,
             level: isAddressHidden ? 5 : 3,
           });
+
           if (isAddressHidden) {
             new mapApi.Circle({
               center: position,
@@ -116,29 +148,52 @@ export function KakaoMap({
           }
         }
 
-        const services = mapApi.services;
-        if (!services) {
-          setFailed(true);
+        function isExpectedAddress(resultAddress?: {
+          region_2depth_name: string;
+          region_3depth_name: string;
+        }) {
+          return (
+            resultAddress?.region_2depth_name === "송파구" &&
+            (!expectedDong || resultAddress.region_3depth_name === expectedDong)
+          );
+        }
+
+        if (hasStoredCoordinates) {
+          const mapLatitude = latitude as number;
+          const mapLongitude = longitude as number;
+          new services.Geocoder().coord2Address(
+            mapLongitude,
+            mapLatitude,
+            (result, status) => {
+              if (
+                status === services.Status.OK &&
+                isExpectedAddress(result[0]?.address)
+              ) {
+                drawMap(mapLatitude, mapLongitude);
+                return;
+              }
+              fail();
+            },
+          );
           return;
         }
-        const expectedDong = displayAddress?.match(/([가-힣0-9]+동)/)?.[1];
-        new services.Geocoder().coord2Address(
-          mapLongitude,
-          mapLatitude,
+
+        new services.Geocoder().addressSearch(
+          toSongpaAddress(locationAddress as string),
           (result, status) => {
-            const resolved = result[0]?.address;
-            const isSongpa = resolved?.region_2depth_name === "송파구";
-            const isExpectedDong =
-              !expectedDong || resolved?.region_3depth_name === expectedDong;
+            const first = result[0];
+            const resolvedLatitude = Number(first?.y);
+            const resolvedLongitude = Number(first?.x);
             if (
               status === services.Status.OK &&
-              isSongpa &&
-              isExpectedDong
+              Number.isFinite(resolvedLatitude) &&
+              Number.isFinite(resolvedLongitude) &&
+              isExpectedAddress(first?.address)
             ) {
-              drawMap(mapLatitude, mapLongitude);
+              drawMap(resolvedLatitude, resolvedLongitude);
               return;
             }
-            setFailed(true);
+            fail();
           },
         );
       });
@@ -146,7 +201,9 @@ export function KakaoMap({
 
     if (kakaoWindow.kakao?.maps) {
       renderMap();
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     const existing = document.querySelector<HTMLScriptElement>(
@@ -154,8 +211,12 @@ export function KakaoMap({
     );
     if (existing) {
       existing.addEventListener("load", renderMap, { once: true });
-      existing.addEventListener("error", () => setFailed(true), { once: true });
-      return;
+      existing.addEventListener("error", fail, { once: true });
+      return () => {
+        cancelled = true;
+        existing.removeEventListener("load", renderMap);
+        existing.removeEventListener("error", fail);
+      };
     }
 
     const script = document.createElement("script");
@@ -163,11 +224,25 @@ export function KakaoMap({
     script.async = true;
     script.dataset.cyKakaoMap = "true";
     script.addEventListener("load", renderMap, { once: true });
-    script.addEventListener("error", () => setFailed(true), { once: true });
+    script.addEventListener("error", fail, { once: true });
     document.head.appendChild(script);
-  }, [address, appKey, displayAddress, isAddressHidden, latitude, longitude]);
 
-  if (!latitude || !longitude || !appKey || failed) {
+    return () => {
+      cancelled = true;
+      script.removeEventListener("load", renderMap);
+      script.removeEventListener("error", fail);
+    };
+  }, [
+    appKey,
+    displayAddress,
+    hasStoredCoordinates,
+    isAddressHidden,
+    latitude,
+    locationAddress,
+    longitude,
+  ]);
+
+  if (!appKey || (!hasStoredCoordinates && !locationAddress) || failed) {
     return (
       <div className="grid aspect-[4/3] w-full place-items-center rounded-3xl bg-[#e5e5db] text-center">
         <div>
