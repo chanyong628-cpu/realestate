@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import "./globals.css";
 import { absoluteUrl, baseKeywords, siteUrl } from "@/lib/seo";
 
@@ -81,6 +82,7 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         {children}
+        <GoogleAnalytics />
         <Analytics />
         <SpeedInsights />
       </body>

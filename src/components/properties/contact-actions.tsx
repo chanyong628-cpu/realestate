@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy, MessageCircle, Phone } from "lucide-react";
-import { track } from "@vercel/analytics";
+import { trackConversion } from "@/components/analytics/google-analytics";
 import { useState } from "react";
 
 export function ContactActions({
@@ -27,14 +27,14 @@ export function ContactActions({
       <>
         <a
           href={`tel:${phone}`}
-          onClick={() => track("phone_clicked", { propertyNumber })}
+          onClick={() => trackConversion("phone_clicked", { property_number: propertyNumber })}
           className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest-700 font-black text-white"
         >
           <Phone size={18} /> 전화
         </a>
         <a
           href={`sms:${phone}?body=${encodeURIComponent(message)}`}
-          onClick={() => track("sms_clicked", { propertyNumber })}
+          onClick={() => trackConversion("sms_clicked", { property_number: propertyNumber })}
           className="flex h-12 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white font-black"
         >
           <MessageCircle size={18} /> 문자
@@ -47,14 +47,14 @@ export function ContactActions({
     <>
       <a
         href={`tel:${phone}`}
-        onClick={() => track("phone_clicked", { propertyNumber })}
+        onClick={() => trackConversion("phone_clicked", { property_number: propertyNumber })}
         className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-forest-700 font-black text-white"
       >
         <Phone size={18} /> 전화 문의
       </a>
       <a
         href={`sms:${phone}?body=${encodeURIComponent(message)}`}
-        onClick={() => track("sms_clicked", { propertyNumber })}
+        onClick={() => trackConversion("sms_clicked", { property_number: propertyNumber })}
         className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-stone-300 font-black"
       >
         <MessageCircle size={18} /> 문자 문의

@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ContactActions } from "@/components/properties/contact-actions";
+import { PropertyViewTracker } from "@/components/analytics/property-view-tracker";
 import { FavoriteButton } from "@/components/properties/favorite-button";
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { KakaoMap } from "@/components/map/kakao-map";
@@ -178,6 +179,7 @@ export default async function PropertyDetailPage({
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-8">
+      <PropertyViewTracker propertyNumber={property.property_number} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
