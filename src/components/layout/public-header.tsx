@@ -21,7 +21,7 @@ export function PublicHeader() {
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0" aria-label="C.Y 부동산 홈">
           <Image
-            src="/images/cy-realestate-logo.png"
+            src="/images/cy-realestate-logo-header.png"
             alt="C.Y REALESTATE"
             width={500}
             height={119}

@@ -207,29 +207,30 @@ export default async function PropertyDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <PropertyGallery images={property.image_urls} title={property.title} />
-      {isAdmin && (
-        <div className="mx-auto mt-4 flex w-full max-w-[960px] justify-end gap-2 rounded-xl border border-brand-line bg-brand-soft p-3">
-          <Link
-            href={`/admin/properties/${property.id}/edit`}
-            className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-white"
-          >
-            매물수정
-          </Link>
-          <PublishToggleButton
-            id={property.id}
-            isPublished={property.is_published}
-          />
-          <DeletePropertyButton
-            id={property.id}
-            propertyNumber={property.property_number}
-            redirectTo="/"
-          />
-        </div>
-      )}
+      <div className="grid gap-12 pb-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <div className="min-w-0 lg:max-w-[800px]">
+          <PropertyGallery images={property.image_urls} title={property.title} />
+          {isAdmin && (
+            <div className="mt-4 flex w-full justify-end gap-2 rounded-xl border border-brand-line bg-brand-soft p-3">
+              <Link
+                href={`/admin/properties/${property.id}/edit`}
+                className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-white"
+              >
+                매물수정
+              </Link>
+              <PublishToggleButton
+                id={property.id}
+                isPublished={property.is_published}
+              />
+              <DeletePropertyButton
+                id={property.id}
+                propertyNumber={property.property_number}
+                redirectTo="/"
+              />
+            </div>
+          )}
 
-      <div className="grid gap-12 py-10 lg:grid-cols-[1fr_360px]">
-        <article>
+          <article className="pt-10">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -395,9 +396,9 @@ export default async function PropertyDetailPage({
 
           <section className="mt-12 border-t border-brand-line pt-10">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-3xl font-black">위치</h2>
+              <h2 className="text-3xl font-black text-brand-accent">위치</h2>
               {exactLocationHeading && (
-                <p className="text-lg font-bold text-brand-accent sm:text-xl">
+                <p className="text-sm font-semibold text-brand-muted/70 sm:text-base">
                   {exactLocationHeading}
                 </p>
               )}
@@ -412,9 +413,10 @@ export default async function PropertyDetailPage({
               />
             </div>
           </section>
-        </article>
+          </article>
+        </div>
 
-        <aside className="h-fit rounded-3xl bg-brand-card p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24">
+        <aside className="h-fit rounded-3xl bg-brand-card p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:self-start">
           <h2 className="text-xl font-black">이 매물이 궁금하신가요?</h2>
           <p className="mt-2 text-sm leading-6 text-brand-muted">
             매물번호 {property.property_number}을 말씀해 주시면 빠르게
