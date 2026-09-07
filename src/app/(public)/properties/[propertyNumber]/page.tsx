@@ -39,15 +39,14 @@ interface DetailPageProps {
 }
 
 function formatPublicLocation(address: string | null) {
-  if (!address) return "협의";
+  if (!address?.trim()) return "송파구";
   const parts = address
     .trim()
     .split(/\s+/)
     .filter((part) => !/^(서울|서울특별시)$/.test(part));
-  const neighborhoodIndex = parts.findIndex((part) => /(동|읍|면)$/.test(part));
-  return neighborhoodIndex >= 0
-    ? parts.slice(0, neighborhoodIndex + 1).join(" ")
-    : parts.slice(0, 3).join(" ");
+  const district = parts.find((part) => /구$/.test(part)) ?? "송파구";
+  const neighborhood = parts.find((part) => /(동|읍|면)$/.test(part));
+  return neighborhood ? `${district} ${neighborhood}` : district;
 }
 
 function formatExactLocationHeading(address: string | null) {
@@ -258,7 +257,7 @@ export default async function PropertyDetailPage({
             <span className="mx-2 text-brand-line sm:mx-3">/</span>
             월세 {formatWon(property.monthly_rent)}
           </p>
-          <p className="mt-2 text-lg font-semibold text-brand-slate">
+          <p className="mt-2 text-xl font-semibold text-brand-slate">
             관리비 {formatWon(property.maintenance_fee)}
           </p>
 
@@ -267,9 +266,7 @@ export default async function PropertyDetailPage({
               {
                 icon: MapPin,
                 label: "위치",
-                value: property.address_hidden
-                  ? formatPublicLocation(publicAddress)
-                  : publicAddress,
+                value: formatPublicLocation(publicAddress),
               },
               {
                 icon: Building,
