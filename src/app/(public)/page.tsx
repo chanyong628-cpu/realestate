@@ -41,7 +41,7 @@ export default async function HomePage() {
   const businessJsonLd = buildRealEstateAgentJsonLd();
 
   return (
-    <main className="bg-brand-surface">
+    <main className="bg-brand-base">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(businessJsonLd) }}

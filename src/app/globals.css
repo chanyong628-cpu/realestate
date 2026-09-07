@@ -1,28 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-forest-50: #eff6ff;
-  --color-forest-100: #dbeafe;
-  --color-forest-600: #155eef;
-  --color-forest-700: #0f4cbb;
-  --color-forest-900: #0b1b3a;
-  --color-cream: #f7f2ea;
-  --color-brand-blue: #155eef;
-  --color-brand-navy: #0b1b3a;
-  --color-brand-base: #f7f2ea;
-  --color-brand-surface: #fffcf7;
-  --color-brand-dark: #2c2622;
-  --color-brand-ink: #33291f;
-  --color-brand-accent: #92704e;
-  --color-brand-accent-dark: #76583e;
-  --color-brand-slate: #333b45;
-  --color-brand-sage: #7c8b6f;
-  --color-brand-muted: #746b63;
-  --color-brand-line: #ded3c5;
-  --color-brand-soft: #eee6dc;
-  --color-brand-sand: #d8c3ab;
-  --shadow-card: 0 2px 10px rgb(44 38 34 / 0.05);
-  --shadow-card-hover: 0 8px 24px rgb(146 112 78 / 0.14);
+  --color-forest-50: #faf6ee;
+  --color-forest-100: #e4d8c3;
+  --color-forest-600: #b4622f;
+  --color-forest-700: #b4622f;
+  --color-forest-900: #26221f;
+  --color-cream: #faf6ee;
+  --color-brand-base: #faf6ee;
+  --color-brand-surface: #fffdf9;
+  --color-brand-card: #e4d8c3;
+  --color-brand-dark: #26221f;
+  --color-brand-ink: #26221f;
+  --color-brand-accent: #b4622f;
+  --color-brand-accent-dark: #8f4927;
+  --color-brand-slate: #4a413a;
+  --color-brand-sage: #6e7f63;
+  --color-brand-muted: #6d625a;
+  --color-brand-line: #e4d8c3;
+  --color-brand-soft: #f1e9dc;
+  --color-brand-sand: #e4d8c3;
+  --shadow-card: 0 2px 10px rgb(38 34 31 / 0.06);
+  --shadow-card-hover: 0 8px 24px rgb(180 98 47 / 0.18);
 }
 
 :root {

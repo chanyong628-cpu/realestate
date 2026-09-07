@@ -314,7 +314,7 @@ export default async function PropertyDetailPage({
               return (
                 <div
                   key={label}
-                  className="rounded-2xl border border-brand-line bg-brand-surface p-4"
+                  className="rounded-2xl border border-brand-line bg-brand-card p-4"
                 >
                   <ItemIcon size={20} className="text-brand-accent" />
                   <p className="mt-3 text-sm text-brand-muted">
@@ -414,7 +414,7 @@ export default async function PropertyDetailPage({
           </section>
         </article>
 
-        <aside className="h-fit rounded-3xl bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24">
+        <aside className="h-fit rounded-3xl bg-brand-card p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24">
           <h2 className="text-xl font-black">이 매물이 궁금하신가요?</h2>
           <p className="mt-2 text-sm leading-6 text-brand-muted">
             매물번호 {property.property_number}을 말씀해 주시면 빠르게

@@ -142,7 +142,7 @@ export function FavoriteButton({
           compact ? "size-11" : "h-11 px-4"
         } ${
           saved
-            ? "border-brand-accent bg-brand-accent text-white"
+            ? "border-brand-sage bg-brand-sage text-white"
             : "border-brand-line bg-brand-surface text-brand-slate hover:border-brand-accent"
         }`}
       >
@@ -178,7 +178,7 @@ export function FavoriteButton({
               {savingId === myFavorite.id ? (
                 <LoaderCircle size={17} className="animate-spin" />
               ) : myFavorite.selected ? (
-                <Check size={18} className="text-brand-accent" />
+                <Check size={18} className="text-brand-sage" />
               ) : null}
             </button>
           )}
@@ -201,7 +201,7 @@ export function FavoriteButton({
                   {savingId === customer.id ? (
                     <LoaderCircle size={17} className="animate-spin" />
                   ) : customer.selected ? (
-                    <Check size={18} className="text-brand-accent" />
+                    <Check size={18} className="text-brand-sage" />
                   ) : null}
                 </button>
               ))

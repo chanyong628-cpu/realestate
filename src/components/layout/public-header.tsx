@@ -17,7 +17,7 @@ export function PublicHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-brand-line bg-brand-surface/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-brand-line bg-brand-base/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0" aria-label="C.Y 부동산 홈">
           <Image
@@ -68,7 +68,7 @@ export function PublicHeader() {
         </button>
       </div>
       {open && (
-        <nav className="border-t border-brand-line bg-brand-surface px-4 py-3 lg:hidden">
+        <nav className="border-t border-brand-line bg-brand-base px-4 py-3 lg:hidden">
           <div className="mx-auto flex max-w-[1440px] flex-col">
             {navigation.map(([href, label]) => (
               <Link

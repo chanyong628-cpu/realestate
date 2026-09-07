@@ -190,7 +190,7 @@ export default async function AdminPropertiesPage({
               href={value === "all" ? "/admin/properties" : `/admin/properties?status=${value}`}
               className={`rounded-full px-4 py-2 text-sm font-black transition ${
                 status === value
-                  ? "bg-[#155EEF] text-white"
+                  ? "bg-brand-accent text-white"
                   : "bg-stone-100 text-stone-600 hover:bg-stone-200"
               }`}
             >
@@ -204,9 +204,9 @@ export default async function AdminPropertiesPage({
             name="q"
             defaultValue={keyword}
             placeholder="주소, 금액, 평수, 매물번호 검색 예: 방이동163-10 / 2000-150-30 / 30평 / CY-0029"
-            className="h-11 min-w-0 flex-1 rounded-xl border border-stone-300 px-4 text-sm outline-none focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-stone-300 px-4 text-sm outline-none focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
           />
-          <button className="h-11 rounded-xl bg-[#155EEF] px-5 text-sm font-black text-white hover:bg-[#0F4CBB]">
+          <button className="h-11 rounded-xl bg-brand-accent px-5 text-sm font-black text-white hover:bg-brand-accent-dark">
             검색
           </button>
           {keyword && (
@@ -313,7 +313,7 @@ export default async function AdminPropertiesPage({
                         className={`rounded-full px-3 py-1.5 text-xs font-black ${
                           isStoredAddressHidden(property.public_address)
                             ? "bg-amber-100 text-amber-800"
-                            : "bg-blue-100 text-[#155EEF]"
+                            : "bg-brand-line text-brand-accent"
                         }`}
                       >
                         {isStoredAddressHidden(property.public_address)
@@ -364,7 +364,7 @@ export default async function AdminPropertiesPage({
                     <td className="px-4 py-4 text-center">
                       {hasImages ? (
                         <span
-                          className="inline-grid size-7 place-items-center rounded-full bg-blue-100 text-sm font-black text-[#155EEF]"
+                          className="inline-grid size-7 place-items-center rounded-full bg-brand-line text-sm font-black text-brand-accent"
                           title={`${property.image_urls.length}장 등록됨`}
                         >
                           ✓

@@ -19,7 +19,7 @@ export default function InquiryPage() {
             간단한 조건을 남겨주시면 C.Y 부동산이 확인 후 직접 연락드립니다.
           </p>
         </div>
-        <div className="rounded-3xl border border-brand-line bg-brand-surface p-6 shadow-sm sm:p-9">
+        <div className="rounded-3xl border border-brand-line bg-brand-card p-6 shadow-sm sm:p-9">
           <InquiryForm />
         </div>
       </section>

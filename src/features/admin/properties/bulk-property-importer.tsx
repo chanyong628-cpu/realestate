@@ -111,10 +111,10 @@ export function BulkPropertyImporter() {
 
   return (
     <div className="mt-8 space-y-8">
-      <section className="rounded-2xl border-2 border-blue-200 bg-blue-50/60 p-6">
+      <section className="rounded-2xl border-2 border-brand-line bg-brand-soft/60 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <FileSpreadsheet className="text-[#155EEF]" size={24} />
+            <FileSpreadsheet className="text-brand-accent" size={24} />
             <h2 className="text-xl font-black">EXCEL 일괄등록</h2>
           </div>
           <div>
@@ -128,7 +128,7 @@ export function BulkPropertyImporter() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#155EEF] px-5 text-sm font-black text-white hover:bg-[#0F4CBB]"
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand-accent px-5 text-sm font-black text-white hover:bg-brand-accent-dark"
             >
               <Upload size={17} />
               Excel 업로드
@@ -140,7 +140,7 @@ export function BulkPropertyImporter() {
           <b> 즉시입주</b>로 저장됩니다.
         </p>
         {fileName && (
-          <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#155EEF]">
+          <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm font-bold text-brand-accent">
             선택한 파일: {fileName}
           </p>
         )}
@@ -149,16 +149,16 @@ export function BulkPropertyImporter() {
             {fileError}
           </p>
         )}
-        <div className="mt-5 overflow-hidden rounded-xl border border-blue-200 bg-white">
+        <div className="mt-5 overflow-hidden rounded-xl border border-brand-line bg-white">
           <table className="w-full text-left text-sm">
-            <thead className="bg-blue-50 text-stone-600">
+            <thead className="bg-brand-soft text-stone-600">
               <tr>
                 <th className="px-4 py-3">사진폴더명</th>
                 <th className="px-4 py-3">광고문</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-blue-100">
+              <tr className="border-t border-brand-line">
                 <td className="px-4 py-3 text-stone-500">
                   사진폴더명: B8, E8, H8, K8, N8, Q8, T8, W8, Z8, AC8
                 </td>

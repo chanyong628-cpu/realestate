@@ -26,7 +26,7 @@ export default async function AdminInquiriesPage({
       </p>
 
       {notice.updated && (
-        <p className="mt-4 rounded-xl bg-blue-50 px-4 py-3 font-bold text-[#155EEF]">
+        <p className="mt-4 rounded-xl bg-brand-soft px-4 py-3 font-bold text-brand-accent">
           문의 내용이 수정되었습니다.
         </p>
       )}
@@ -53,7 +53,7 @@ export default async function AdminInquiriesPage({
                   <h2 className="text-lg font-black">{inquiry.business_type}</h2>
                   <a
                     href={`tel:${inquiry.phone.replace(/\D/g, "")}`}
-                    className="mt-1 inline-block font-bold text-[#155EEF]"
+                    className="mt-1 inline-block font-bold text-brand-accent"
                   >
                     {inquiry.phone}
                   </a>

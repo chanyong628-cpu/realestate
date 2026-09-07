@@ -147,7 +147,7 @@ export function AddressLocationFields({
     <>
       <label className="block">
         <span className="mb-2 block text-sm font-bold">정확한 주소</span>
-        <div className="flex overflow-hidden rounded-xl border border-stone-300 bg-white focus-within:border-[#155EEF] focus-within:ring-3 focus-within:ring-blue-100">
+        <div className="flex overflow-hidden rounded-xl border border-stone-300 bg-white focus-within:border-brand-accent focus-within:ring-3 focus-within:ring-brand-sand/40">
           <span className="flex items-center bg-stone-100 px-3 text-sm font-bold text-stone-600">
             서울특별시 송파구
           </span>
@@ -161,7 +161,7 @@ export function AddressLocationFields({
           />
         </div>
       </label>
-      <div className="self-end rounded-xl bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+      <div className="self-end rounded-xl bg-brand-soft px-4 py-3 text-sm leading-6 text-brand-slate">
         주소 비노출을 체크하지 않으면 정확한 주소와 지도 핀이 표시됩니다.
         체크하면 동 단위 주소와 주변 400m 반경만 표시됩니다.
       </div>
@@ -181,7 +181,7 @@ export function AddressLocationFields({
         <button
           type="button"
           onClick={() => void geocode()}
-          className="inline-flex h-11 items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 text-sm font-bold text-[#155EEF]"
+          className="inline-flex h-11 items-center gap-2 rounded-lg border border-brand-line bg-white px-4 text-sm font-bold text-brand-accent"
         >
           <MapPin size={17} />
           주소로 위치 다시 찾기

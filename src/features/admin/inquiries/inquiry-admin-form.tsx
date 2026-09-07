@@ -22,7 +22,7 @@ function Field({
         name={name}
         required={required}
         defaultValue={defaultValue}
-        className="h-12 w-full rounded-xl border border-stone-300 px-4 outline-none focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+        className="h-12 w-full rounded-xl border border-stone-300 px-4 outline-none focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
       />
     </label>
   );
@@ -55,7 +55,7 @@ export function InquiryAdminForm({ inquiry }: { inquiry: AdminInquiry }) {
               rows={6}
               maxLength={1000}
               defaultValue={inquiry.notes ?? ""}
-              className="w-full rounded-xl border border-stone-300 p-4 outline-none focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+              className="w-full rounded-xl border border-stone-300 p-4 outline-none focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
             />
           </label>
         </div>
@@ -70,7 +70,7 @@ export function InquiryAdminForm({ inquiry }: { inquiry: AdminInquiry }) {
       <div className="flex justify-end">
         <button
           disabled={pending}
-          className="h-12 rounded-xl bg-[#155EEF] px-8 font-black text-white disabled:opacity-50"
+          className="h-12 rounded-xl bg-brand-accent px-8 font-black text-white disabled:opacity-50"
         >
           {pending ? "저장 중..." : "변경사항 저장"}
         </button>

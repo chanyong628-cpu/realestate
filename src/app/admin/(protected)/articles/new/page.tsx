@@ -8,7 +8,7 @@ export default function NewArticlePage() {
     <section className="pb-20">
       <Link
         href="/admin/content/new"
-        className="text-sm font-bold text-[#155EEF] hover:underline"
+        className="text-sm font-bold text-brand-accent hover:underline"
       >
         ← 등록 유형 선택
       </Link>

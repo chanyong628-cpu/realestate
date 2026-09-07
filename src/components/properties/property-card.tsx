@@ -20,7 +20,7 @@ export function PropertyCard({
     : "면적 협의";
 
   return (
-    <article className="group relative rounded-xl border border-brand-line bg-brand-surface shadow-card transition hover:-translate-y-0.5 hover:border-brand-sand hover:shadow-card-hover">
+    <article className="group relative rounded-xl border border-brand-line bg-brand-card shadow-card transition hover:-translate-y-0.5 hover:border-brand-accent hover:shadow-card-hover">
       <Link
         href={`/properties/${property.property_number}`}
         aria-label={`${property.title} 상세보기`}

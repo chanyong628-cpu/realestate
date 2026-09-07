@@ -45,7 +45,7 @@ export function ArticleForm() {
             name="title"
             required
             maxLength={120}
-            className="h-12 w-full rounded-xl border border-stone-300 px-4 outline-none focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+            className="h-12 w-full rounded-xl border border-stone-300 px-4 outline-none focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
           />
         </label>
       </section>
@@ -77,7 +77,7 @@ export function ArticleForm() {
             name="is_published"
             type="checkbox"
             defaultChecked
-            className="size-5 accent-[#155EEF]"
+            className="size-5 accent-brand-accent"
           />
           <span className="font-bold">작성 즉시 공개</span>
         </label>
@@ -90,7 +90,7 @@ export function ArticleForm() {
       <div className="flex justify-end">
         <button
           disabled={pending}
-          className="h-12 rounded-xl bg-[#155EEF] px-8 font-black text-white disabled:opacity-50"
+          className="h-12 rounded-xl bg-brand-accent px-8 font-black text-white disabled:opacity-50"
         >
           {pending ? "저장 중..." : "게시글 등록"}
         </button>

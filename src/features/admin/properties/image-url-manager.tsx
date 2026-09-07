@@ -155,9 +155,9 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
         {...({ webkitdirectory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
         onChange={(event) => uploadFiles(event.target.files)}
       />
-      <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
-        <p className="font-black text-blue-950">컴퓨터 사진 한 번에 올리기</p>
-        <p className="mt-1 text-sm leading-6 text-blue-800">
+      <div className="mb-4 rounded-xl border border-brand-line bg-brand-soft p-4">
+        <p className="font-black text-brand-dark">컴퓨터 사진 한 번에 올리기</p>
+        <p className="mt-1 text-sm leading-6 text-brand-slate">
           선택한 사진은 자동으로 선명하게 압축되어 홈페이지에 복사
           저장됩니다. 업로드 후 컴퓨터 폴더를 옮겨도 괜찮습니다.
         </p>
@@ -166,7 +166,7 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
             type="button"
             disabled={uploading}
             onClick={() => filesInputRef.current?.click()}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#155EEF] px-4 font-bold text-white hover:bg-[#0F4CBB] disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-brand-accent px-4 font-bold text-white hover:bg-brand-accent-dark disabled:opacity-60"
           >
             {uploading ? (
               <LoaderCircle className="animate-spin" size={18} />
@@ -179,22 +179,22 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
             type="button"
             disabled={uploading}
             onClick={() => folderInputRef.current?.click()}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-blue-300 bg-white px-4 font-bold text-blue-800 hover:bg-blue-100 disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand-line bg-white px-4 font-bold text-brand-slate hover:bg-brand-line disabled:opacity-60"
           >
             <FolderOpen size={18} /> 폴더 전체 선택
           </button>
         </div>
         {uploading && (
           <div className="mt-3">
-            <div className="h-2 overflow-hidden rounded-full bg-blue-100">
+            <div className="h-2 overflow-hidden rounded-full bg-brand-line">
               <div
-                className="h-full rounded-full bg-[#155EEF] transition-all"
+                className="h-full rounded-full bg-brand-accent transition-all"
                 style={{
                   width: `${(progress.done / progress.total) * 100}%`,
                 }}
               />
             </div>
-            <p className="mt-2 text-sm font-bold text-blue-900">
+            <p className="mt-2 text-sm font-bold text-brand-dark">
               사진 압축·저장 중 {progress.done}/{progress.total}
             </p>
           </div>

@@ -274,7 +274,7 @@ export function RichContentEditor({
               type="button"
               disabled={uploading}
               onClick={() => imageInputRef.current?.click()}
-              className="flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 text-xs font-bold text-[#155EEF] disabled:opacity-60"
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-brand-line bg-white px-3 text-xs font-bold text-brand-accent disabled:opacity-60"
             >
               {uploading ? (
                 <LoaderCircle className="animate-spin" size={15} />
@@ -326,7 +326,7 @@ export function RichContentEditor({
               <option value="market">상권/입지 템플릿</option>
             </select>
           </div>
-          <p className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800">
+          <p className="mb-3 rounded-lg bg-brand-soft px-3 py-2 text-xs leading-5 text-brand-slate">
             네이버 블로그처럼 버튼으로 서식을 넣는 방식입니다. 사진 업로드는
             현재 커서 위치에 본문 이미지로 삽입됩니다. 가운데/오른쪽 정렬은
             문장 맨 앞에 안전한 정렬 표시를 붙여 공개 화면에서 정렬됩니다.

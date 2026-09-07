@@ -28,11 +28,11 @@ export function ProposalDownloadForm({
   return (
     <section
       id="ppt-proposal"
-      className="mt-8 rounded-2xl border border-blue-100 bg-white p-6 shadow-sm"
+      className="mt-8 rounded-2xl border border-brand-line bg-white p-6 shadow-sm"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-black tracking-wider text-blue-700">
+          <p className="text-sm font-black tracking-wider text-brand-accent-dark">
             POWERPOINT
           </p>
           <h2 className="mt-1 text-xl font-black">임대제안서 저장</h2>
@@ -71,7 +71,7 @@ export function ProposalDownloadForm({
             {properties.map((property) => (
               <label
                 key={property.id}
-                className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200 p-4 hover:border-blue-300"
+                className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200 p-4 hover:border-brand-accent"
               >
                 <input
                   type="checkbox"
@@ -79,10 +79,10 @@ export function ProposalDownloadForm({
                   value={property.id}
                   checked={selected.includes(property.id)}
                   onChange={() => toggle(property.id)}
-                  className="mt-1 size-4 accent-blue-700"
+                  className="mt-1 size-4 accent-brand-accent"
                 />
                 <span className="min-w-0">
-                  <strong className="block text-sm text-blue-700">
+                  <strong className="block text-sm text-brand-accent-dark">
                     {property.property_number}
                   </strong>
                   <span className="mt-1 block truncate font-bold">
@@ -97,7 +97,7 @@ export function ProposalDownloadForm({
           </div>
           <button
             disabled={!selected.length || pending}
-            className="mt-5 h-12 w-full rounded-xl bg-[#0F4CBB] px-6 font-black text-white hover:bg-[#0B3D96] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+            className="mt-5 h-12 w-full rounded-xl bg-brand-accent-dark px-6 font-black text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
           >
             {pending
               ? "PowerPoint 만드는 중..."
