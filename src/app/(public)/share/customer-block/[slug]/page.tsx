@@ -61,9 +61,9 @@ export default async function SharedCustomerBlockPage({
 
   return (
     <main className="min-h-[70vh]">
-      <section className="bg-[#0B1B3A] py-16 text-white">
+      <section className="bg-brand-dark py-16 text-white">
         <div className="mx-auto max-w-4xl px-5 text-center">
-          <p className="text-sm font-black tracking-widest text-blue-300">
+          <p className="text-sm font-black tracking-widest text-brand-sand">
             CY REAL ESTATE
           </p>
           <h1 className="mt-4 text-4xl font-black md:text-5xl">
@@ -85,7 +85,7 @@ export default async function SharedCustomerBlockPage({
             ))}
           </div>
         ) : (
-          <div className="rounded-3xl border border-dashed border-stone-300 bg-white p-16 text-center">
+          <div className="rounded-3xl border border-dashed border-brand-line bg-brand-surface p-16 text-center">
             현재 공개 중인 추천 매물이 없습니다.
           </div>
         )}

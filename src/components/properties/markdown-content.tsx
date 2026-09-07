@@ -14,22 +14,22 @@ function plainText(children: ReactNode) {
 
 export function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="space-y-5 text-[16px] leading-8 text-[#374151]">
+    <div className="space-y-5 text-[16px] leading-8 text-brand-slate">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="mt-10 text-3xl font-black text-[#111827]">
+            <h1 className="mt-10 text-3xl font-black text-brand-ink">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mt-9 text-2xl font-black text-[#111827]">
+            <h2 className="mt-9 text-2xl font-black text-brand-ink">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mt-8 text-xl font-bold text-[#111827]">
+            <h3 className="mt-8 text-xl font-bold text-brand-ink">
               {children}
             </h3>
           ),
@@ -52,18 +52,18 @@ export function MarkdownContent({ content }: { content: string }) {
             return <p className="whitespace-pre-wrap">{children}</p>;
           },
           strong: ({ children }) => (
-            <strong className="font-black text-[#111827]">{children}</strong>
+            <strong className="font-black text-brand-ink">{children}</strong>
           ),
           em: ({ children }) => <em className="italic">{children}</em>,
           del: ({ children }) => (
-            <del className="text-stone-500 line-through">{children}</del>
+            <del className="text-brand-muted line-through">{children}</del>
           ),
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="font-bold text-[#155EEF] underline underline-offset-4"
+              className="font-bold text-brand-accent underline underline-offset-4"
             >
               {children}
             </a>
@@ -74,7 +74,7 @@ export function MarkdownContent({ content }: { content: string }) {
               src={src}
               alt={alt ?? ""}
               loading="lazy"
-              className="my-7 h-auto max-w-full rounded-xl border border-[#E5E7EB]"
+              className="my-7 h-auto max-w-full rounded-xl border border-brand-line"
             />
           ),
           table: ({ children }) => (
@@ -85,12 +85,12 @@ export function MarkdownContent({ content }: { content: string }) {
             </div>
           ),
           th: ({ children }) => (
-            <th className="border border-[#D1D5DB] bg-[#F8FAFC] px-4 py-3 text-left font-bold text-[#111827]">
+            <th className="border border-brand-line bg-brand-soft px-4 py-3 text-left font-bold text-brand-ink">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-[#D1D5DB] px-4 py-3">{children}</td>
+            <td className="border border-brand-line px-4 py-3">{children}</td>
           ),
           ul: ({ children }) => (
             <ul className="list-disc space-y-2 pl-6">{children}</ul>
@@ -99,7 +99,7 @@ export function MarkdownContent({ content }: { content: string }) {
             <ol className="list-decimal space-y-2 pl-6">{children}</ol>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-[#155EEF] bg-blue-50 px-5 py-3 text-[#374151]">
+            <blockquote className="border-l-4 border-brand-accent bg-brand-soft px-5 py-3 text-brand-slate">
               {children}
             </blockquote>
           ),

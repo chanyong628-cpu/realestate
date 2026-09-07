@@ -11,9 +11,9 @@ export function FavoritesBrowser({ properties }: { properties: Property[] }) {
 
   return (
     <main className="mx-auto min-h-[65vh] max-w-7xl px-5 py-14">
-      <Heart className="text-forest-600" />
+      <Heart className="text-brand-accent" />
       <h1 className="mt-3 text-4xl font-black">즐겨찾기</h1>
-      <p className="mt-2 text-stone-600">
+      <p className="mt-2 text-brand-muted">
         관심 있는 매물을 이 브라우저에 저장했습니다.
       </p>
       {favorites.length ? (
@@ -23,7 +23,7 @@ export function FavoritesBrowser({ properties }: { properties: Property[] }) {
           ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-3xl border border-dashed border-stone-300 bg-white p-16 text-center">
+        <div className="mt-8 rounded-3xl border border-dashed border-brand-line bg-brand-surface p-16 text-center">
           저장한 매물이 없습니다.
         </div>
       )}

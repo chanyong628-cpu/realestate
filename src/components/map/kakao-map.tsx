@@ -126,6 +126,9 @@ export function KakaoMap({
 
         function drawMap(mapLatitude: number, mapLongitude: number) {
           if (cancelled) return;
+          const mapAccent = getComputedStyle(document.documentElement)
+            .getPropertyValue("--color-brand-sage")
+            .trim();
           const position = new mapApi.LatLng(mapLatitude, mapLongitude);
           const map = new mapApi.Map(mapContainer, {
             center: position,
@@ -137,10 +140,10 @@ export function KakaoMap({
               center: position,
               radius: 400,
               strokeWeight: 2,
-              strokeColor: "#155EEF",
+              strokeColor: mapAccent,
               strokeOpacity: 0.85,
               strokeStyle: "solid",
-              fillColor: "#155EEF",
+              fillColor: mapAccent,
               fillOpacity: 0.12,
             }).setMap(map);
           } else {
@@ -244,13 +247,13 @@ export function KakaoMap({
 
   if (!appKey || (!hasStoredCoordinates && !locationAddress) || failed) {
     return (
-      <div className="grid aspect-[4/3] w-full place-items-center rounded-3xl bg-[#e5e5db] text-center">
+      <div className="grid h-[210px] w-full place-items-center rounded-3xl bg-brand-soft text-center md:h-[340px]">
         <div>
-          <MapPin className="mx-auto text-rose-600" />
+          <MapPin className="mx-auto text-brand-sage" />
           <b className="mt-3 block">
             {displayAddress || "위치 정보 준비 중"}
           </b>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-brand-muted">
             정확한 위치를 확인 중입니다.
           </p>
         </div>
@@ -266,7 +269,7 @@ export function KakaoMap({
           ? `${displayAddress ?? "매물"} 인근 400m 지도`
           : `${displayAddress ?? "매물"} 정확한 위치 지도`
       }
-      className="aspect-[4/3] w-full overflow-hidden rounded-3xl bg-[#e5e5db]"
+      className="h-[210px] w-full overflow-hidden rounded-3xl bg-brand-soft md:h-[340px]"
     />
   );
 }

@@ -130,16 +130,16 @@ function SectionHeading({
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
       <div>
-        <h2 className="text-2xl font-black tracking-[-0.025em] text-[#111827] sm:text-3xl">
+        <h2 className="text-2xl font-black tracking-[-0.025em] text-brand-ink sm:text-3xl">
           {title}
         </h2>
         {count !== undefined && (
-          <p className="mt-1 text-sm text-[#6B7280]">{count}개의 매물</p>
+          <p className="mt-1 text-sm text-brand-muted">{count}개의 매물</p>
         )}
       </div>
       <Link
         href={href}
-        className="shrink-0 text-sm font-bold text-[#155EEF] hover:underline"
+        className="shrink-0 text-sm font-bold text-brand-accent hover:underline"
       >
         전체보기 →
       </Link>
@@ -158,7 +158,7 @@ function PropertyGrid({
 }) {
   if (!properties.length) {
     return (
-      <div className="rounded-xl border border-dashed border-[#D1D5DB] px-5 py-14 text-center text-[#6B7280]">
+      <div className="rounded-xl border border-dashed border-brand-line px-5 py-14 text-center text-brand-muted">
         {emptyText}
       </div>
     );
@@ -194,7 +194,7 @@ function RecommendedSlider({
 
   if (!properties.length) {
     return (
-      <div className="rounded-xl border border-dashed border-[#D1D5DB] px-5 py-14 text-center text-[#6B7280]">
+      <div className="rounded-xl border border-dashed border-brand-line px-5 py-14 text-center text-brand-muted">
         현재 추천매물을 준비하고 있습니다.
       </div>
     );
@@ -221,7 +221,7 @@ function RecommendedSlider({
             type="button"
             aria-label="이전 추천매물"
             onClick={() => move(-1)}
-            className="absolute top-1/2 left-2 z-20 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white text-[#111827] shadow-lg hover:bg-blue-50"
+            className="absolute top-1/2 left-2 z-20 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-brand-surface text-brand-ink shadow-lg hover:bg-brand-soft"
           >
             <ChevronLeft size={23} />
           </button>
@@ -229,7 +229,7 @@ function RecommendedSlider({
             type="button"
             aria-label="다음 추천매물"
             onClick={() => move(1)}
-            className="absolute top-1/2 right-2 z-20 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white text-[#111827] shadow-lg hover:bg-blue-50"
+            className="absolute top-1/2 right-2 z-20 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-brand-surface text-brand-ink shadow-lg hover:bg-brand-soft"
           >
             <ChevronRight size={23} />
           </button>
@@ -362,7 +362,7 @@ export function HomePropertySections({
 
   return (
     <>
-      <section className="border-b border-[#E5E7EB] bg-[#F8FAFC]">
+      <section className="border-b border-brand-line bg-brand-soft">
         <form
           onSubmit={submitSearch}
           className="mx-auto grid max-w-[1440px] gap-3 px-5 py-5 sm:px-6 md:grid-cols-[2fr_1fr_1fr_auto] lg:px-8"
@@ -370,19 +370,19 @@ export function HomePropertySections({
           <label className="relative">
             <Search
               size={18}
-              className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6B7280]"
+              className="absolute top-1/2 left-4 -translate-y-1/2 text-brand-muted"
             />
             <input
               value={propertyNumber}
               onChange={(event) => setPropertyNumber(event.target.value)}
               placeholder="매물번호 검색"
-              className="h-13 w-full rounded-lg border border-[#D1D5DB] bg-white pr-4 pl-11 outline-none transition focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+              className="h-13 w-full rounded-lg border border-brand-line bg-brand-surface pr-4 pl-11 outline-none transition focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
             />
           </label>
           <select
             value={rentFilter}
             onChange={(event) => setRentFilter(event.target.value as RentFilter)}
-            className="h-13 rounded-lg border border-[#D1D5DB] bg-white px-4 outline-none focus:border-[#155EEF]"
+            className="h-13 rounded-lg border border-brand-line bg-brand-surface px-4 outline-none focus:border-brand-accent"
           >
             <option value="all">월세 전체</option>
             <option value="under100">100만원 미만</option>
@@ -394,7 +394,7 @@ export function HomePropertySections({
           <select
             value={areaFilter}
             onChange={(event) => setAreaFilter(event.target.value as AreaFilter)}
-            className="h-13 rounded-lg border border-[#D1D5DB] bg-white px-4 outline-none focus:border-[#155EEF]"
+            className="h-13 rounded-lg border border-brand-line bg-brand-surface px-4 outline-none focus:border-brand-accent"
           >
             <option value="all">평수 전체</option>
             <option value="under20">20평 이하</option>
@@ -404,7 +404,7 @@ export function HomePropertySections({
           </select>
           <button
             type="submit"
-            className="h-13 rounded-lg bg-[#155EEF] px-7 font-bold text-white transition hover:bg-[#0F4CBB]"
+            className="h-13 rounded-lg bg-brand-accent px-7 font-bold text-white transition hover:bg-brand-accent-dark"
           >
             검색하기
           </button>
@@ -419,17 +419,17 @@ export function HomePropertySections({
           <section>
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-black text-[#111827] sm:text-3xl">
+                <h2 className="text-2xl font-black text-brand-ink sm:text-3xl">
                   검색 결과
                 </h2>
-                <p className="mt-1 text-sm text-[#6B7280]">
+                <p className="mt-1 text-sm text-brand-muted">
                   {results.length}개의 매물
                 </p>
               </div>
               <button
                 type="button"
                 onClick={clearSearch}
-                className="text-sm font-bold text-[#155EEF]"
+                className="text-sm font-bold text-brand-accent"
               >
                 검색 초기화
               </button>

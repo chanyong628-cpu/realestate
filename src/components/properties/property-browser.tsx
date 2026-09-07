@@ -193,34 +193,34 @@ export function PropertyBrowser({
       id="properties"
     >
       <div className="mb-8">
-        <p className="text-sm font-bold text-[#155EEF]">
+        <p className="text-sm font-bold text-brand-accent">
           {filtered.length}개의 매물
         </p>
-        <h1 className="mt-1 text-3xl font-black tracking-[-0.03em] text-[#111827] md:text-4xl">
+        <h1 className="mt-1 text-3xl font-black tracking-[-0.03em] text-brand-ink md:text-4xl">
           {title}
         </h1>
       </div>
 
       <form
         onSubmit={submitSearch}
-        className="mb-10 grid gap-3 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4 md:grid-cols-[2fr_1fr_1fr_auto]"
+        className="mb-10 grid gap-3 rounded-xl border border-brand-line bg-brand-soft p-4 md:grid-cols-[2fr_1fr_1fr_auto]"
       >
         <label className="relative">
           <Search
             size={18}
-            className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6B7280]"
+            className="absolute top-1/2 left-4 -translate-y-1/2 text-brand-muted"
           />
           <input
             value={propertyNumber}
             onChange={(event) => setPropertyNumber(event.target.value)}
             placeholder="매물번호 검색"
-            className="h-13 w-full rounded-lg border border-[#D1D5DB] bg-white pr-4 pl-11 outline-none transition focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+            className="h-13 w-full rounded-lg border border-brand-line bg-brand-surface pr-4 pl-11 outline-none transition focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
           />
         </label>
         <select
           value={rentFilter}
           onChange={(event) => setRentFilter(event.target.value as RentFilter)}
-          className="h-13 rounded-lg border border-[#D1D5DB] bg-white px-4 outline-none focus:border-[#155EEF]"
+          className="h-13 rounded-lg border border-brand-line bg-brand-surface px-4 outline-none focus:border-brand-accent"
         >
           <option value="all">월세 전체</option>
           <option value="under100">100만원 미만</option>
@@ -232,7 +232,7 @@ export function PropertyBrowser({
         <select
           value={areaFilter}
           onChange={(event) => setAreaFilter(event.target.value as AreaFilter)}
-          className="h-13 rounded-lg border border-[#D1D5DB] bg-white px-4 outline-none focus:border-[#155EEF]"
+          className="h-13 rounded-lg border border-brand-line bg-brand-surface px-4 outline-none focus:border-brand-accent"
         >
           <option value="all">평수 전체</option>
           <option value="under20">20평 이하</option>
@@ -242,7 +242,7 @@ export function PropertyBrowser({
         </select>
         <button
           type="submit"
-          className="h-13 rounded-lg bg-[#155EEF] px-7 font-bold text-white transition hover:bg-[#0F4CBB]"
+          className="h-13 rounded-lg bg-brand-accent px-7 font-bold text-white transition hover:bg-brand-accent-dark"
         >
           검색하기
         </button>
@@ -255,9 +255,9 @@ export function PropertyBrowser({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-[#D1D5DB] bg-white p-16 text-center">
+        <div className="rounded-xl border border-dashed border-brand-line bg-brand-surface p-16 text-center">
           <h2 className="text-xl font-bold">조건에 맞는 매물이 없습니다.</h2>
-          <p className="mt-2 text-[#6B7280]">검색 조건을 바꿔 확인해 주세요.</p>
+          <p className="mt-2 text-brand-muted">검색 조건을 바꿔 확인해 주세요.</p>
         </div>
       )}
     </section>

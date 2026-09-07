@@ -17,7 +17,7 @@ export function PublicHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#E5E7EB] bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-brand-line bg-brand-surface/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0" aria-label="C.Y 부동산 홈">
           <Image
@@ -40,20 +40,20 @@ export function PublicHeader() {
                 event.preventDefault();
                 window.location.assign(href);
               }}
-              className="text-[15px] font-bold text-[#111827] transition hover:text-[#155EEF]"
+              className="text-[15px] font-bold text-brand-dark transition hover:text-brand-accent"
             >
               {label}
             </Link>
           ))}
           <a
             href="tel:01065465997"
-            className="flex h-11 items-center gap-2 rounded-lg bg-[#155EEF] px-5 text-sm font-bold text-white transition hover:bg-[#0F4CBB]"
+            className="flex h-11 items-center gap-2 rounded-lg bg-brand-accent px-5 text-sm font-bold text-white transition hover:bg-brand-accent-dark"
           >
             <Phone size={17} /> 02-6425-8090
           </a>
           <Link
             href="/inquiry"
-            className="flex h-11 items-center gap-2 rounded-lg border border-[#155EEF] bg-white px-4 text-sm font-bold text-[#155EEF] transition hover:bg-blue-50"
+            className="flex h-11 items-center gap-2 rounded-lg border border-brand-slate bg-brand-surface px-4 text-sm font-bold text-brand-slate transition hover:bg-brand-soft"
           >
             <MessageSquareText size={17} /> 맞춤 문의
           </Link>
@@ -61,14 +61,14 @@ export function PublicHeader() {
         <button
           type="button"
           aria-label="메뉴"
-          className="grid size-11 place-items-center rounded-lg border border-[#E5E7EB] lg:hidden"
+          className="grid size-11 place-items-center rounded-lg border border-brand-line text-brand-dark lg:hidden"
           onClick={() => setOpen((value) => !value)}
         >
           {open ? <X /> : <Menu />}
         </button>
       </div>
       {open && (
-        <nav className="border-t border-[#E5E7EB] bg-white px-4 py-3 lg:hidden">
+        <nav className="border-t border-brand-line bg-brand-surface px-4 py-3 lg:hidden">
           <div className="mx-auto flex max-w-[1440px] flex-col">
             {navigation.map(([href, label]) => (
               <Link
@@ -80,7 +80,7 @@ export function PublicHeader() {
                   event.preventDefault();
                   window.location.assign(href);
                 }}
-                className="flex min-h-12 items-center gap-2 border-b border-[#F3F4F6] px-2 font-bold text-[#111827]"
+                className="flex min-h-12 items-center gap-2 border-b border-brand-soft px-2 font-bold text-brand-dark"
               >
                 {label === "즐겨찾기" && <Heart size={17} />}
                 {label}
@@ -88,14 +88,14 @@ export function PublicHeader() {
             ))}
             <a
               href="tel:01065465997"
-              className="mt-3 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#155EEF] font-bold text-white"
+              className="mt-3 flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-accent font-bold text-white"
             >
               <Phone size={18} /> 02-6425-8090
             </a>
             <Link
               href="/inquiry"
               onClick={() => setOpen(false)}
-              className="mt-2 flex h-12 items-center justify-center gap-2 rounded-lg border border-[#155EEF] font-bold text-[#155EEF]"
+              className="mt-2 flex h-12 items-center justify-center gap-2 rounded-lg border border-brand-slate font-bold text-brand-slate"
             >
               <MessageSquareText size={18} /> 맞춤 문의
             </Link>

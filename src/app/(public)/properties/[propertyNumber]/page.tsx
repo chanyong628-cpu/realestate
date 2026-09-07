@@ -76,9 +76,9 @@ function DetailFloorValue({
 
   return (
     <>
-      <span className="text-[#155EEF]">{currentFloor}</span>
+      <span className="text-brand-accent">{currentFloor}</span>
       {formattedTotalFloor && (
-        <span className="text-[#111827]"> (총 {formattedTotalFloor})</span>
+        <span className="text-brand-ink"> (총 {formattedTotalFloor})</span>
       )}
     </>
   );
@@ -190,10 +190,10 @@ export default async function PropertyDetailPage({
       />
       <PropertyGallery images={property.image_urls} title={property.title} />
       {isAdmin && (
-        <div className="mx-auto mt-4 flex w-full max-w-[960px] justify-end gap-2 rounded-xl border border-blue-100 bg-blue-50 p-3">
+        <div className="mx-auto mt-4 flex w-full max-w-[960px] justify-end gap-2 rounded-xl border border-brand-line bg-brand-soft p-3">
           <Link
             href={`/admin/properties/${property.id}/edit`}
-            className="rounded-lg bg-[#155EEF] px-4 py-2 text-sm font-bold text-white"
+            className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-white"
           >
             매물수정
           </Link>
@@ -214,15 +214,15 @@ export default async function PropertyDetailPage({
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-lg font-black tracking-wide text-forest-600">
+                <p className="text-lg font-black tracking-wide text-brand-accent">
                   {property.property_number}
                 </p>
                 {property.is_recommended && (
-                  <span className="rounded-md bg-[#155EEF] px-3 py-1 text-xs font-bold text-white">
+                  <span className="rounded-md bg-brand-accent px-3 py-1 text-xs font-bold text-white">
                     추천매물
                   </span>
                 )}
-                <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-black">
+                <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-black">
                   {categoryLabels[property.category]}
                 </span>
               </div>
@@ -235,10 +235,10 @@ export default async function PropertyDetailPage({
 
           <p className="mt-8 whitespace-nowrap text-xl font-black sm:text-2xl md:text-3xl">
             보증금 {formatWon(property.deposit)}
-            <span className="mx-2 text-stone-300 sm:mx-3">/</span>
+            <span className="mx-2 text-brand-line sm:mx-3">/</span>
             월세 {formatWon(property.monthly_rent)}
           </p>
-          <p className="mt-2 text-lg font-semibold text-stone-700">
+          <p className="mt-2 text-lg font-semibold text-brand-slate">
             관리비 {formatWon(property.maintenance_fee)}
           </p>
 
@@ -295,10 +295,10 @@ export default async function PropertyDetailPage({
               return (
                 <div
                   key={label}
-                  className="rounded-2xl border border-stone-200 bg-white p-4"
+                  className="rounded-2xl border border-brand-line bg-brand-surface p-4"
                 >
-                  <ItemIcon size={20} className="text-forest-600" />
-                  <p className="mt-3 text-sm text-stone-500">
+                  <ItemIcon size={20} className="text-brand-accent" />
+                  <p className="mt-3 text-sm text-brand-muted">
                     {label}
                   </p>
                   <b
@@ -311,16 +311,16 @@ export default async function PropertyDetailPage({
             })}
           </div>
 
-          <section className="mt-12 border-t border-stone-200 pt-10">
+          <section className="mt-12 border-t border-brand-line pt-10">
             <h2 className="text-2xl font-black">매물 설명</h2>
-            <p className="mt-5 whitespace-pre-wrap text-lg leading-9 text-stone-700">
+            <p className="mt-5 whitespace-pre-wrap text-lg leading-9 text-brand-slate">
               {formatPublicDescription(property.description)}
             </p>
           </section>
 
-          <section className="mt-12 border-t border-stone-200 pt-10">
+          <section className="mt-12 border-t border-brand-line pt-10">
             <h2 className="text-2xl font-black">건축물 기본정보</h2>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-[#E5E7EB]">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-brand-line">
               {[
                 ["건축물용도", property.building_use || "-"],
                 ["사용승인일", formatApprovalDate(property.approval_date)],
@@ -353,10 +353,10 @@ export default async function PropertyDetailPage({
                 <div
                   key={label as string}
                   className={`grid grid-cols-[140px_1fr] sm:grid-cols-[190px_1fr] ${
-                    index > 0 ? "border-t border-[#E5E7EB]" : ""
+                    index > 0 ? "border-t border-brand-line" : ""
                   }`}
                 >
-                  <div className="bg-[#F8FAFC] px-4 py-3.5 text-sm font-bold text-[#374151] sm:px-5">
+                  <div className="bg-brand-soft px-4 py-3.5 text-sm font-bold text-brand-slate sm:px-5">
                     {label as string}
                   </div>
                   <div
@@ -364,7 +364,7 @@ export default async function PropertyDetailPage({
                       label === "위반건축물 여부" &&
                       property.is_violating_building
                         ? "text-red-600"
-                        : "text-[#111827]"
+                        : "text-brand-ink"
                     }`}
                   >
                     {value as string}
@@ -374,7 +374,7 @@ export default async function PropertyDetailPage({
             </div>
           </section>
 
-          <section className="mt-12 border-t border-stone-200 pt-10">
+          <section className="mt-12 border-t border-brand-line pt-10">
             <h2 className="text-2xl font-black">위치</h2>
             <div className="mt-5">
               <KakaoMap
@@ -388,9 +388,9 @@ export default async function PropertyDetailPage({
           </section>
         </article>
 
-        <aside className="h-fit rounded-3xl bg-white p-6 shadow-xl shadow-black/5 lg:sticky lg:top-24">
+        <aside className="h-fit rounded-3xl bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24">
           <h2 className="text-xl font-black">이 매물이 궁금하신가요?</h2>
-          <p className="mt-2 text-sm leading-6 text-stone-600">
+          <p className="mt-2 text-sm leading-6 text-brand-muted">
             매물번호 {property.property_number}을 말씀해 주시면 빠르게
             안내해 드립니다.
           </p>

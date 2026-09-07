@@ -142,8 +142,8 @@ export function FavoriteButton({
           compact ? "size-11" : "h-11 px-4"
         } ${
           saved
-            ? "border-forest-700 bg-forest-700 text-white"
-            : "border-stone-300 bg-white text-stone-700 hover:border-forest-600"
+            ? "border-brand-accent bg-brand-accent text-white"
+            : "border-brand-line bg-brand-surface text-brand-slate hover:border-brand-accent"
         }`}
       >
         {loading ? (
@@ -155,14 +155,14 @@ export function FavoriteButton({
       </button>
 
       {destinations && (
-        <span className="absolute top-full right-0 z-[100] mt-2 block w-72 overflow-hidden rounded-2xl border border-stone-200 bg-white text-left text-[#111827] shadow-2xl">
-          <span className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
+        <span className="absolute top-full right-0 z-[100] mt-2 block w-72 overflow-hidden rounded-2xl border border-brand-line bg-brand-surface text-left text-brand-ink shadow-2xl">
+          <span className="flex items-center justify-between border-b border-brand-line px-4 py-3">
             <b>즐겨찾기 저장 위치</b>
             <button
               type="button"
               aria-label="닫기"
               onClick={() => setDestinations(null)}
-              className="grid size-8 place-items-center rounded-full hover:bg-stone-100"
+              className="grid size-8 place-items-center rounded-full hover:bg-brand-soft"
             >
               <X size={17} />
             </button>
@@ -171,18 +171,18 @@ export function FavoriteButton({
             <button
               type="button"
               onClick={() => toggleDestination(myFavorite)}
-              className="flex w-full items-center gap-3 px-4 py-3 hover:bg-blue-50"
+              className="flex w-full items-center gap-3 px-4 py-3 hover:bg-brand-soft"
             >
-              <UserRound size={18} className="text-[#155EEF]" />
+              <UserRound size={18} className="text-brand-accent" />
               <span className="flex-1 font-bold">나의 즐겨찾기</span>
               {savingId === myFavorite.id ? (
                 <LoaderCircle size={17} className="animate-spin" />
               ) : myFavorite.selected ? (
-                <Check size={18} className="text-[#155EEF]" />
+                <Check size={18} className="text-brand-accent" />
               ) : null}
             </button>
           )}
-          <span className="block border-t border-stone-100 px-4 pt-3 pb-1 text-xs font-bold text-stone-500">
+          <span className="block border-t border-brand-soft px-4 pt-3 pb-1 text-xs font-bold text-brand-muted">
             손님 매물블록
           </span>
           <span className="block max-h-64 overflow-y-auto pb-2">
@@ -192,21 +192,21 @@ export function FavoriteButton({
                   key={customer.id}
                   type="button"
                   onClick={() => toggleDestination(customer)}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 hover:bg-blue-50"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 hover:bg-brand-soft"
                 >
-                  <Users size={17} className="text-stone-500" />
+                  <Users size={17} className="text-brand-muted" />
                   <span className="flex-1 truncate font-semibold">
                     {customer.label}
                   </span>
                   {savingId === customer.id ? (
                     <LoaderCircle size={17} className="animate-spin" />
                   ) : customer.selected ? (
-                    <Check size={18} className="text-[#155EEF]" />
+                    <Check size={18} className="text-brand-accent" />
                   ) : null}
                 </button>
               ))
             ) : (
-              <span className="block px-4 py-3 text-sm text-stone-500">
+              <span className="block px-4 py-3 text-sm text-brand-muted">
                 먼저 관리자에서 고객 블록을 만들어 주세요.
               </span>
             )}

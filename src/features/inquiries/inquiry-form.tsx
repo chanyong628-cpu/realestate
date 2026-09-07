@@ -20,12 +20,12 @@ function InquiryField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-[#111827]">
+      <span className="mb-2 block text-sm font-bold text-brand-ink">
         {label}{" "}
         {required ? (
-          <span className="text-[#155EEF]">*</span>
+          <span className="text-brand-accent">*</span>
         ) : (
-          <span className="font-normal text-stone-400">(선택)</span>
+          <span className="font-normal text-brand-muted">(선택)</span>
         )}
       </span>
       <input
@@ -33,7 +33,7 @@ function InquiryField({
         type={type}
         required={required}
         placeholder={placeholder}
-        className="h-13 w-full rounded-xl border border-[#D1D5DB] bg-white px-4 outline-none transition focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+        className="h-13 w-full rounded-xl border border-brand-line bg-brand-surface px-4 outline-none transition focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
       />
     </label>
   );
@@ -48,10 +48,10 @@ export function InquiryForm() {
 
   if (state.success) {
     return (
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 px-6 py-14 text-center">
-        <CheckCircle2 className="mx-auto text-[#155EEF]" size={46} />
+      <div className="rounded-2xl border border-brand-sand bg-brand-soft px-6 py-14 text-center">
+        <CheckCircle2 className="mx-auto text-brand-accent" size={46} />
         <h2 className="mt-4 text-2xl font-black">문의가 접수되었습니다.</h2>
-        <p className="mt-2 leading-7 text-[#4B5563]">
+        <p className="mt-2 leading-7 text-brand-slate">
           확인 후 입력하신 전화번호로 빠르게 연락드리겠습니다.
         </p>
       </div>
@@ -98,7 +98,7 @@ export function InquiryForm() {
           />
         </div>
         <label className="block sm:col-span-2">
-          <span className="mb-2 block text-sm font-bold text-[#111827]">
+          <span className="mb-2 block text-sm font-bold text-brand-ink">
             기타사항
           </span>
           <textarea
@@ -106,7 +106,7 @@ export function InquiryForm() {
             rows={6}
             maxLength={1000}
             placeholder="원하시는 지역, 주차, 룸 개수 등 추가 조건을 자유롭게 적어주세요."
-            className="w-full rounded-xl border border-[#D1D5DB] bg-white p-4 outline-none transition focus:border-[#155EEF] focus:ring-3 focus:ring-blue-100"
+            className="w-full rounded-xl border border-brand-line bg-brand-surface p-4 outline-none transition focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
           />
         </label>
       </div>
@@ -119,12 +119,12 @@ export function InquiryForm() {
       <button
         type="submit"
         disabled={pending}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#155EEF] text-lg font-black text-white transition hover:bg-[#0F4CBB] disabled:opacity-60"
+        className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand-accent text-lg font-black text-white transition hover:bg-brand-accent-dark disabled:opacity-60"
       >
         <Send size={19} />
         {pending ? "문의 접수 중..." : "맞춤매물 문의하기"}
       </button>
-      <p className="text-center text-xs leading-5 text-[#6B7280]">
+      <p className="text-center text-xs leading-5 text-brand-muted">
         문의 상담을 위해 입력하신 정보를 확인하며 상담 외 목적으로 사용하지
         않습니다.
       </p>
