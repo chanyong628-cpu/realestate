@@ -62,7 +62,7 @@ export function ContactActions({
       <button
         type="button"
         onClick={copyLink}
-        className="flex h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-brand-accent bg-brand-surface text-[15px] font-medium text-brand-accent"
+        className="flex h-[50px] w-full items-center justify-center gap-2 rounded-xl border border-brand-accent bg-brand-surface text-[15px]! font-medium! text-brand-accent"
       >
         {copied ? <Check size={18} /> : <Copy size={18} />}
         {copied ? "복사됨" : "링크 복사"}
