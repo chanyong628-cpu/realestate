@@ -415,9 +415,12 @@ export default async function PropertyDetailPage({
 
         <aside className="h-fit rounded-3xl bg-brand-card p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:self-start">
           <h2 className="text-xl font-black">이 매물이 궁금하신가요?</h2>
-          <p className="mt-2 text-sm leading-6 text-brand-muted">
-            매물번호 {property.property_number}을 말씀해 주시면 빠르게
-            안내해 드립니다.
+          <p className="mt-2 text-xs leading-[1.9] text-brand-muted">
+            매물번호{" "}
+            <span className="inline-block rounded-[6px] bg-brand-accent px-[9px] py-[3px] align-middle text-sm leading-none font-medium text-white">
+              {property.property_number}
+            </span>
+            을 말씀해 주시면 빠르게 안내해 드립니다.
           </p>
           <div className="mt-6">
             <ContactActions propertyNumber={property.property_number} />

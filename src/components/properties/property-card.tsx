@@ -59,9 +59,15 @@ export function PropertyCard({
           {property.title}
         </h3>
         <p className="mt-1 text-[17px] font-black tracking-[-0.025em] text-brand-ink">
-          보증금 {formatWon(property.deposit)}
-          <span className="mx-1 font-normal text-brand-muted">/</span>
-          월세 {formatWon(property.monthly_rent)}
+          보증금{" "}
+          <span className="text-brand-accent">
+            {formatWon(property.deposit)}
+          </span>
+          <span className="mx-1 font-normal">/</span>
+          월세{" "}
+          <span className="text-brand-accent">
+            {formatWon(property.monthly_rent)}
+          </span>
         </p>
         <div className="mt-1.5 text-sm text-brand-muted">
           <p className="flex items-center gap-1.5">
