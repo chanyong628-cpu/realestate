@@ -51,19 +51,19 @@ export function PropertyCard({
       <div className="absolute top-3 right-3 z-30">
         <FavoriteButton propertyId={property.id} compact />
       </div>
-      <div className="rounded-b-xl p-4">
+      <div className="rounded-b-xl px-4 pt-4 pb-3">
         <p className="text-base font-black text-brand-accent">
           {property.property_number}
         </p>
-        <h3 className="mt-1.5 line-clamp-1 text-lg font-bold tracking-[-0.02em] text-brand-ink">
+        <h3 className="mt-1 line-clamp-1 text-lg font-bold tracking-[-0.02em] text-brand-ink">
           {property.title}
         </h3>
-        <p className="mt-3 text-[17px] font-black tracking-[-0.025em] text-brand-ink">
+        <p className="mt-2 text-[17px] font-black tracking-[-0.025em] text-brand-ink">
           보증금 {formatWon(property.deposit)}
           <span className="mx-1.5 font-normal text-brand-line">/</span>
           월 {formatWon(property.monthly_rent)}
         </p>
-        <div className="mt-2 text-sm text-brand-muted">
+        <div className="mt-1.5 text-sm text-brand-muted">
           <p className="flex items-center gap-1.5">
             <Ruler size={15} className="shrink-0 text-brand-slate" />
             실평수 {pyeong}

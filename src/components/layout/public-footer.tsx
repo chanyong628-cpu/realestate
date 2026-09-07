@@ -6,12 +6,12 @@ export function PublicFooter() {
     <footer className="mt-20 border-t border-brand-line bg-brand-dark text-brand-base">
       <div className="mx-auto max-w-[1600px] px-5 py-8 text-center sm:px-8 lg:py-10">
         <Image
-          src="/images/cy-realestate-logo.png"
+          src="/images/cy-realestate-logo-white.png"
           alt="C.Y REALESTATE"
           width={500}
           height={119}
           sizes="(max-width: 640px) 190px, (max-width: 1024px) 230px, 270px"
-          className="mx-auto h-auto w-[190px] brightness-0 invert sm:w-[230px] lg:w-[270px]"
+          className="mx-auto h-auto w-[190px] sm:w-[230px] lg:w-[270px]"
         />
 
         <div className="mt-5 hidden text-[13px] leading-6 font-semibold tracking-[-0.02em] text-brand-base lg:block">
