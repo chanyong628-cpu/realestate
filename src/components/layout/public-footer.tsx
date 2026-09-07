@@ -6,7 +6,7 @@ export function PublicFooter() {
     <footer className="mt-20 border-t border-brand-line bg-brand-dark text-brand-base">
       <div className="mx-auto max-w-[1600px] px-5 py-8 text-center sm:px-8 lg:py-10">
         <Image
-          src="/images/cy-realestate-logo-white.png"
+          src="/images/cy-realestate-logo-footer.png"
           alt="C.Y REALESTATE"
           width={500}
           height={119}
