@@ -1,12 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Building, MapPin, Ruler } from "lucide-react";
+import { Building, Ruler } from "lucide-react";
 import type { Property } from "@/types/database";
 import { formatPyeong, formatWon } from "@/lib/properties/format";
 import { FavoriteButton } from "./favorite-button";
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
 import { PublishToggleButton } from "@/features/admin/properties/publish-toggle-button";
-import { derivePublicAddress } from "@/lib/properties/address";
 
 export function PropertyCard({
   property,
@@ -16,8 +15,6 @@ export function PropertyCard({
   isAdmin?: boolean;
 }) {
   const image = property.image_urls[0];
-  const publicAddress =
-    property.public_address || derivePublicAddress(property.title);
   const pyeong = property.exclusive_area
     ? `${formatPyeong(property.exclusive_area)}평`
     : "면적 협의";
@@ -61,10 +58,6 @@ export function PropertyCard({
         <h3 className="mt-1.5 line-clamp-1 text-lg font-bold tracking-[-0.02em] text-brand-ink">
           {property.title}
         </h3>
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-brand-muted">
-          <MapPin size={15} className="shrink-0 text-brand-slate" />
-          <span className="truncate">{publicAddress || "주소 협의"}</span>
-        </p>
         <p className="mt-3 text-[17px] font-black tracking-[-0.025em] text-brand-ink">
           보증금 {formatWon(property.deposit)}
           <span className="mx-1.5 font-normal text-brand-line">/</span>

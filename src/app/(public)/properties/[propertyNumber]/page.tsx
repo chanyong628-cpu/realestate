@@ -50,6 +50,22 @@ function formatPublicLocation(address: string | null) {
     : parts.slice(0, 3).join(" ");
 }
 
+function formatExactLocationHeading(address: string | null) {
+  if (!address?.trim()) return null;
+
+  const normalized = address
+    .trim()
+    .replace(/^서울(?:특별시)?\s*/g, "")
+    .replace(/^송파구\s*/g, "")
+    .replace(/\s+/g, " ");
+  const parcel = normalized.match(
+    /([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
+  );
+
+  if (!parcel) return normalized;
+  return `${parcel[1]} ${parcel[2].replace(/\s+/g, " ")}번지`;
+}
+
 function formatFloor(floor: string | null) {
   if (!floor) return "-";
   const match = floor.match(/(\d+)\s*층?/);
@@ -162,6 +178,9 @@ export default async function PropertyDetailPage({
   const isAdmin = Boolean(await getAdminSession());
   const publicAddress =
     property.public_address || derivePublicAddress(property.title);
+  const exactLocationHeading = property.address_hidden
+    ? null
+    : formatExactLocationHeading(publicAddress);
 
   if (property.category === "etc") {
     return <EtcArticleDetail article={property} />;
@@ -375,7 +394,14 @@ export default async function PropertyDetailPage({
           </section>
 
           <section className="mt-12 border-t border-brand-line pt-10">
-            <h2 className="text-2xl font-black">위치</h2>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="text-3xl font-black">위치</h2>
+              {exactLocationHeading && (
+                <p className="text-lg font-bold text-brand-accent sm:text-xl">
+                  {exactLocationHeading}
+                </p>
+              )}
+            </div>
             <div className="mt-5">
               <KakaoMap
                 latitude={property.latitude}
