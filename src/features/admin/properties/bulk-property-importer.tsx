@@ -8,18 +8,43 @@ import {
   parsePropertyInputs,
 } from "@/lib/properties/smart-import";
 
-const fixedExcelRanges = [
-  ["B8", "C8"],
-  ["E8", "F8"],
-  ["H8", "I8"],
-  ["K8", "L8"],
-  ["N8", "O8"],
-  ["Q8", "R8"],
-  ["T8", "U8"],
-  ["W8", "X8"],
-  ["Z8", "AA8"],
-  ["AC8", "AD8"],
-] as const;
+const excelFolderColumns = ["A", "C", "E", "G", "I", "K"] as const;
+const excelListingsPerRow = excelFolderColumns.length;
+const excelListingCount = 30;
+const excelFirstDataRow = 3;
+
+const fixedExcelRanges = Array.from(
+  { length: excelListingCount },
+  (_, index) => {
+    const pairIndex = index % excelListingsPerRow;
+    const row = excelFirstDataRow + Math.floor(index / excelListingsPerRow);
+    const folderColumn = excelFolderColumns[pairIndex];
+    const advertisementColumn = String.fromCharCode(
+      folderColumn.charCodeAt(0) + 1,
+    );
+
+    return {
+      listingNumber: index + 1,
+      folderCell: `${folderColumn}${row}`,
+      advertisementCell: `${advertisementColumn}${row}`,
+    };
+  },
+);
+
+const excelRangeRows = Array.from({ length: 5 }, (_, index) => {
+  const row = excelFirstDataRow + index;
+  const firstListing = index * excelListingsPerRow + 1;
+  const folderCells = excelFolderColumns.map((column) => `${column}${row}`);
+  const advertisementCells = excelFolderColumns.map(
+    (column) => `${String.fromCharCode(column.charCodeAt(0) + 1)}${row}`,
+  );
+
+  return {
+    listingRange: `${firstListing}~${firstListing + excelListingsPerRow - 1}번`,
+    folderCells: folderCells.join(", "),
+    advertisementCells: advertisementCells.join(", "),
+  };
+});
 
 function formatPrice(deposit: number | null, rent: number | null) {
   return `보증금 ${deposit?.toLocaleString() ?? "-"}만원 / 월세 ${
@@ -72,11 +97,14 @@ export function BulkPropertyImporter() {
     if (!file) return;
     setFileName(file.name);
     setFileError("");
+    setText("");
 
     try {
       const XLSX = await import("xlsx");
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-      const sheetName = workbook.SheetNames[0];
+      const sheetName = workbook.SheetNames.includes("네이버")
+        ? "네이버"
+        : workbook.SheetNames[0];
       const sheet = sheetName ? workbook.Sheets[sheetName] : null;
 
       if (!sheet) {
@@ -84,20 +112,44 @@ export function BulkPropertyImporter() {
         return;
       }
 
-      const fixedRows = fixedExcelRanges
-        .map(([folderCell, advertisementCell]) => ({
+      const fixedRows = fixedExcelRanges.map(
+        ({ listingNumber, folderCell, advertisementCell }) => ({
+          listingNumber,
+          folderCell,
+          advertisementCell,
           folderName: cellText(sheet[folderCell]?.w ?? sheet[folderCell]?.v),
           advertisement: cellText(
             sheet[advertisementCell]?.w ?? sheet[advertisementCell]?.v,
           ),
-        }))
-        .filter((row) => row.folderName && row.advertisement);
-      const parsedText = valuesToImportText(fixedRows);
+        }),
+      );
+      const incompleteRows = fixedRows.filter(
+        ({ folderName, advertisement }) =>
+          Boolean(folderName) !== Boolean(advertisement),
+      );
+
+      if (incompleteRows.length) {
+        const cells = incompleteRows
+          .map(
+            ({ listingNumber, folderCell, advertisementCell }) =>
+              `${listingNumber}번(${folderCell}/${advertisementCell})`,
+          )
+          .join(", ");
+        setFileError(
+          `폴더명과 광고문을 모두 입력해 주세요: ${cells}`,
+        );
+        return;
+      }
+
+      const completedRows = fixedRows.filter(
+        ({ folderName, advertisement }) => folderName && advertisement,
+      );
+      const parsedText = valuesToImportText(completedRows);
       const parsedRows = parseBulkPropertyRows(parsedText);
 
       if (!parsedRows.length) {
         setFileError(
-          "등록할 매물을 찾지 못했습니다. B8/C8, E8/F8 ... 지정 셀에 값을 넣었는지 확인해 주세요.",
+          "등록할 매물을 찾지 못했습니다. A3/B3부터 K7/L7까지 지정 셀에 값을 넣었는지 확인해 주세요.",
         );
         return;
       }
@@ -136,7 +188,8 @@ export function BulkPropertyImporter() {
           </div>
         </div>
         <p className="mt-2 text-sm leading-6 text-stone-600">
-          엑셀 파일을 업로드하면 정해진 셀만 읽습니다. 등록 시 사진은 비워두고, 입주가능일은 자동으로
+          엑셀 파일을 업로드하면 네이버 시트의 정해진 셀에서 최대 30개
+          매물을 읽습니다. 등록 시 사진은 비워두고, 입주가능일은 자동으로
           <b> 즉시입주</b>로 저장됩니다.
         </p>
         {fileName && (
@@ -149,23 +202,34 @@ export function BulkPropertyImporter() {
             {fileError}
           </p>
         )}
-        <div className="mt-5 overflow-hidden rounded-xl border border-brand-line bg-white">
-          <table className="w-full text-left text-sm">
+        <div className="mt-5 overflow-x-auto rounded-xl border border-brand-line bg-white">
+          <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="bg-brand-soft text-stone-600">
               <tr>
+                <th className="px-4 py-3">매물 번호</th>
                 <th className="px-4 py-3">사진폴더명</th>
                 <th className="px-4 py-3">광고문</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-brand-line">
-                <td className="px-4 py-3 text-stone-500">
-                  사진폴더명: B8, E8, H8, K8, N8, Q8, T8, W8, Z8, AC8
-                </td>
-                <td className="px-4 py-3 text-stone-500">
-                  광고문: C8, F8, I8, L8, O8, R8, U8, X8, AA8, AD8
-                </td>
-              </tr>
+              {excelRangeRows.map(
+                ({ listingRange, folderCells, advertisementCells }) => (
+                  <tr
+                    key={listingRange}
+                    className="border-t border-brand-line"
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 font-bold text-brand-accent">
+                      {listingRange}
+                    </td>
+                    <td className="px-4 py-3 text-stone-500">
+                      {folderCells}
+                    </td>
+                    <td className="px-4 py-3 text-stone-500">
+                      {advertisementCells}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
