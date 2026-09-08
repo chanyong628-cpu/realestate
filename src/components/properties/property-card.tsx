@@ -6,6 +6,7 @@ import { formatPyeong, formatWon } from "@/lib/properties/format";
 import { FavoriteButton } from "./favorite-button";
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
 import { PublishToggleButton } from "@/features/admin/properties/publish-toggle-button";
+import { TrackedPropertyLink } from "./tracked-property-link";
 
 export function PropertyCard({
   property,
@@ -21,10 +22,10 @@ export function PropertyCard({
 
   return (
     <article className="group relative rounded-xl border border-brand-line bg-brand-card shadow-card transition hover:-translate-y-0.5 hover:border-brand-accent hover:shadow-card-hover">
-      <Link
-        href={`/properties/${property.property_number}`}
-        aria-label={`${property.title} 상세보기`}
-        className="absolute inset-0 z-10"
+      <TrackedPropertyLink
+        propertyNumber={property.property_number}
+        propertyCategory={property.category}
+        propertyTitle={property.title}
       />
       <div className="relative aspect-[75/46] overflow-hidden rounded-t-xl bg-brand-soft">
         {image ? (
