@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import {
+  CheckCircle2,
+  Download,
   ExternalLink,
   FolderOpen,
   GripVertical,
@@ -13,6 +15,16 @@ import { useRef, useState } from "react";
 
 const MAX_WIDTH = 1600;
 const TARGET_SIZE = 300 * 1024;
+const DEFAULT_DRIVE_FOLDER_URL =
+  process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_URL ??
+  "https://drive.google.com/drive/folders/1CY01o2w0MH7KQ-RT8orJCC8PIK4w-YDj";
+
+interface DriveImageFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+}
 
 async function compressImage(file: File) {
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -53,10 +65,17 @@ async function compressImage(file: File) {
 export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
   const [urls, setUrls] = useState(initialUrls);
   const [draft, setDraft] = useState("");
+  const [driveFolderLink, setDriveFolderLink] = useState(
+    DEFAULT_DRIVE_FOLDER_URL,
+  );
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadSource, setUploadSource] = useState<"computer" | "drive">(
+    "computer",
+  );
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [uploadError, setUploadError] = useState("");
+  const [uploadMessage, setUploadMessage] = useState("");
   const filesInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +99,24 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
     });
   }
 
+  async function saveImage(file: File) {
+    const compressed = await compressImage(file);
+    const body = new FormData();
+    body.append("file", compressed);
+    const response = await fetch("/api/admin/property-images", {
+      method: "POST",
+      body,
+    });
+    const result = (await response.json()) as {
+      url?: string;
+      error?: string;
+    };
+    if (!response.ok || !result.url) {
+      throw new Error(result.error ?? "사진 저장에 실패했습니다.");
+    }
+    return result.url;
+  }
+
   async function uploadFiles(fileList: FileList | null) {
     if (!fileList?.length || uploading) return;
     const files = Array.from(fileList)
@@ -93,27 +130,15 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
     }
 
     setUploading(true);
+    setUploadSource("computer");
     setUploadError("");
+    setUploadMessage("");
     setProgress({ done: 0, total: files.length });
     const uploadedUrls: string[] = [];
 
     try {
       for (let index = 0; index < files.length; index += 1) {
-        const compressed = await compressImage(files[index]);
-        const body = new FormData();
-        body.append("file", compressed);
-        const response = await fetch("/api/admin/property-images", {
-          method: "POST",
-          body,
-        });
-        const result = (await response.json()) as {
-          url?: string;
-          error?: string;
-        };
-        if (!response.ok || !result.url) {
-          throw new Error(result.error ?? "사진 저장에 실패했습니다.");
-        }
-        uploadedUrls.push(result.url);
+        uploadedUrls.push(await saveImage(files[index]));
         setProgress({ done: index + 1, total: files.length });
       }
 
@@ -132,6 +157,89 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
       setUploading(false);
       if (filesInputRef.current) filesInputRef.current.value = "";
       if (folderInputRef.current) folderInputRef.current.value = "";
+    }
+  }
+
+  async function importDriveFolder() {
+    const folderLink = driveFolderLink.trim();
+    if (!folderLink || uploading) {
+      if (!folderLink) {
+        setUploadError("Google Drive 폴더 링크를 입력해 주세요.");
+      }
+      return;
+    }
+
+    setUploading(true);
+    setUploadSource("drive");
+    setUploadError("");
+    setUploadMessage("");
+    setProgress({ done: 0, total: 0 });
+    const uploadedUrls: string[] = [];
+    const failedNames: string[] = [];
+
+    try {
+      const listResponse = await fetch("/api/admin/google-drive-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderLink }),
+      });
+      const listResult = (await listResponse.json()) as {
+        files?: DriveImageFile[];
+        error?: string;
+      };
+      if (!listResponse.ok || !listResult.files?.length) {
+        throw new Error(
+          listResult.error ?? "Google Drive 폴더에서 사진을 찾지 못했습니다.",
+        );
+      }
+
+      setProgress({ done: 0, total: listResult.files.length });
+      for (let index = 0; index < listResult.files.length; index += 1) {
+        const driveFile = listResult.files[index];
+        try {
+          const imageResponse = await fetch(
+            `/api/admin/google-drive-images?fileId=${encodeURIComponent(driveFile.id)}`,
+          );
+          if (!imageResponse.ok) {
+            const result = (await imageResponse.json()) as { error?: string };
+            throw new Error(result.error ?? "사진을 내려받지 못했습니다.");
+          }
+          const blob = await imageResponse.blob();
+          const file = new File([blob], driveFile.name, {
+            type: driveFile.mimeType,
+          });
+          uploadedUrls.push(await saveImage(file));
+        } catch (error) {
+          console.error(`Drive image import failed: ${driveFile.name}`, error);
+          failedNames.push(driveFile.name);
+        }
+        setProgress({ done: index + 1, total: listResult.files.length });
+      }
+
+      if (uploadedUrls.length) {
+        setUrls((current) => [
+          ...current,
+          ...uploadedUrls.filter((url) => !current.includes(url)),
+        ]);
+      }
+
+      if (failedNames.length) {
+        setUploadError(
+          `${uploadedUrls.length}장은 저장했고 ${failedNames.length}장은 가져오지 못했습니다: ${failedNames.join(", ")}`,
+        );
+      } else {
+        setUploadMessage(
+          `${uploadedUrls.length}장을 파일명 순서대로 가져왔습니다.`,
+        );
+      }
+    } catch (error) {
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "Google Drive 사진을 가져오지 못했습니다.",
+      );
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -184,35 +292,78 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
             <FolderOpen size={18} /> 폴더 전체 선택
           </button>
         </div>
+        <div className="mt-4 border-t border-brand-line pt-4">
+          <p className="font-black text-brand-dark">
+            Google Drive 폴더에서 가져오기
+          </p>
+          <p className="mt-1 text-sm leading-6 text-brand-slate">
+            폴더를 연결 계정에 뷰어로 공유한 뒤 폴더 링크를 붙여넣으세요.
+            사진은 1, 2, 3, 10처럼 파일명 숫자 순서대로 저장됩니다.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input
+              type="url"
+              value={driveFolderLink}
+              disabled={uploading}
+              onChange={(event) => setDriveFolderLink(event.target.value)}
+              placeholder="https://drive.google.com/drive/folders/..."
+              className="h-11 min-w-0 flex-1 rounded-lg border border-brand-line bg-white px-4 text-sm outline-none focus:border-brand-accent focus:ring-3 focus:ring-brand-line disabled:opacity-60"
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={importDriveFolder}
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-accent px-4 font-bold text-white hover:bg-brand-accent-dark disabled:opacity-60"
+            >
+              {uploading && uploadSource === "drive" ? (
+                <LoaderCircle className="animate-spin" size={18} />
+              ) : (
+                <Download size={18} />
+              )}
+              Drive 사진 가져오기
+            </button>
+          </div>
+        </div>
         {uploading && (
           <div className="mt-3">
             <div className="h-2 overflow-hidden rounded-full bg-brand-line">
               <div
-                className="h-full rounded-full bg-brand-accent transition-all"
+                className={`h-full rounded-full bg-brand-accent transition-all ${
+                  progress.total ? "" : "animate-pulse"
+                }`}
                 style={{
-                  width: `${(progress.done / progress.total) * 100}%`,
+                  width: progress.total
+                    ? `${(progress.done / progress.total) * 100}%`
+                    : "18%",
                 }}
               />
             </div>
             <p className="mt-2 text-sm font-bold text-brand-dark">
-              사진 압축·저장 중 {progress.done}/{progress.total}
+              {uploadSource === "drive"
+                ? progress.total
+                  ? `Drive 사진 압축·저장 중 ${progress.done}/${progress.total}`
+                  : "Drive 폴더 확인 중..."
+                : `사진 압축·저장 중 ${progress.done}/${progress.total}`}
             </p>
           </div>
         )}
         {uploadError && (
           <p className="mt-3 text-sm font-bold text-red-700">{uploadError}</p>
         )}
+        {uploadMessage && (
+          <p className="mt-3 flex items-center gap-1.5 text-sm font-bold text-forest-700">
+            <CheckCircle2 size={16} /> {uploadMessage}
+          </p>
+        )}
       </div>
-      {process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_URL && (
-        <a
-          href={process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="mb-3 inline-flex items-center gap-2 rounded-lg bg-forest-50 px-3 py-2 text-sm font-bold text-forest-700"
-        >
-          Google Drive 이미지 폴더 열기 <ExternalLink size={15} />
-        </a>
-      )}
+      <a
+        href={DEFAULT_DRIVE_FOLDER_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="mb-3 inline-flex items-center gap-2 rounded-lg bg-forest-50 px-3 py-2 text-sm font-bold text-forest-700"
+      >
+        Google Drive 이미지 폴더 열기 <ExternalLink size={15} />
+      </a>
       <div className="flex flex-col gap-3 sm:flex-row">
         <textarea
           value={draft}

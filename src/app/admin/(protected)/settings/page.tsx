@@ -1,4 +1,5 @@
 import { CheckCircle2, CircleAlert, ExternalLink } from "lucide-react";
+import { GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL } from "@/lib/google-drive";
 
 function StatusRow({
   label,
@@ -30,7 +31,11 @@ function StatusRow({
 }
 
 export default function SettingsPage() {
-  const driveUrl = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_URL;
+  const driveUrl =
+    process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_URL ??
+    "https://drive.google.com/drive/folders/1CY01o2w0MH7KQ-RT8orJCC8PIK4w-YDj";
+  const driveServiceAccountEmail = GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL;
+  const driveConnected = true;
 
   return (
     <section>
@@ -54,10 +59,24 @@ export default function SettingsPage() {
         />
         <StatusRow
           label="Google Drive"
-          connected={Boolean(driveUrl)}
-          description="매물 이미지 원본을 관리하는 폴더입니다."
+          connected={driveConnected}
+          description="폴더 링크의 사진을 홈페이지 저장소로 가져옵니다."
         />
       </div>
+
+      {driveServiceAccountEmail && (
+        <div className="mt-5 rounded-2xl border border-brand-line bg-brand-soft p-5">
+          <p className="font-black text-brand-dark">
+            Google Drive 폴더 공유 계정
+          </p>
+          <p className="mt-1 text-sm leading-6 text-brand-slate">
+            사진 폴더의 공유 설정에서 아래 계정을 뷰어로 추가해 주세요.
+          </p>
+          <p className="mt-3 break-all rounded-lg bg-white px-4 py-3 text-sm font-bold text-brand-accent">
+            {driveServiceAccountEmail}
+          </p>
+        </div>
+      )}
 
       {driveUrl && (
         <a
