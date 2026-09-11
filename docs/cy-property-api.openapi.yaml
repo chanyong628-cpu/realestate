@@ -251,7 +251,6 @@ components:
               type: string
               format: date-time
     CreatePropertyInput:
-      unevaluatedProperties: false
       allOf:
         - $ref: "#/components/schemas/WritablePropertyFields"
         - type: object
@@ -261,7 +260,6 @@ components:
               type: string
               pattern: '^CY-[0-9]{4,10}$'
     UpdatePropertyInput:
-      unevaluatedProperties: false
       minProperties: 1
       allOf:
         - $ref: "#/components/schemas/WritablePropertyFields"
