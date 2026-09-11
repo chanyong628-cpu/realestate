@@ -1,0 +1,369 @@
+openapi: 3.1.0
+info:
+  title: C.Y Property API
+  version: 1.0.0
+  description: C.Y 홈페이지의 제한된 매물 조회 및 관리 API. Supabase 직접 접근이나 삭제 기능은 제공하지 않습니다.
+servers:
+  - url: https://cy-office.com
+security:
+  - bearerAuth: []
+paths:
+  /api/cy/properties:
+    get:
+      operationId: searchProperties
+      summary: 매물 검색
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: 검색 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createProperty
+      summary: 비공개 상태로 매물 신규 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePropertyInput"
+      responses:
+        "201":
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/cy/properties/{identifier}:
+    parameters:
+      - $ref: "#/components/parameters/PropertyIdentifier"
+    get:
+      operationId: getProperty
+      summary: 내부 ID 또는 매물번호로 매물 조회
+      responses:
+        "200":
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateProperty
+      summary: 허용된 매물 필드만 부분 수정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyInput"
+      responses:
+        "200":
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cy/properties/{identifier}/publish:
+    parameters:
+      - $ref: "#/components/parameters/PropertyIdentifier"
+    post:
+      operationId: publishProperty
+      summary: 매물을 홈페이지에 공개
+      responses:
+        "200":
+          description: 공개 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cy/properties/{identifier}/unpublish:
+    parameters:
+      - $ref: "#/components/parameters/PropertyIdentifier"
+    post:
+      operationId: unpublishProperty
+      summary: 매물을 비공개 처리
+      responses:
+        "200":
+          description: 비공개 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API secret
+  parameters:
+    PropertyIdentifier:
+      in: path
+      name: identifier
+      required: true
+      description: UUID 내부 ID 또는 CY-0001 형식의 매물번호
+      schema:
+        type: string
+        maxLength: 64
+  responses:
+    BadRequest:
+      description: 입력값 오류
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: 매물 없음
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: 매물번호 중복
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [success, error]
+      properties:
+        success:
+          const: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details: {}
+    PropertyResponse:
+      type: object
+      required: [success, property]
+      properties:
+        success:
+          const: true
+        property:
+          $ref: "#/components/schemas/Property"
+    PropertyListResponse:
+      type: object
+      required: [success, properties, count]
+      properties:
+        success:
+          const: true
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+        count:
+          type: integer
+          minimum: 0
+    Property:
+      allOf:
+        - $ref: "#/components/schemas/WritablePropertyFields"
+        - type: object
+          required:
+            - id
+            - property_number
+            - title
+            - category
+            - is_published
+            - view_count
+            - created_at
+            - updated_at
+          properties:
+            id:
+              type: string
+              format: uuid
+            property_number:
+              type: string
+              pattern: '^CY-[0-9]{4,10}$'
+            is_published:
+              type: boolean
+            address_hidden:
+              type: boolean
+            view_count:
+              type: integer
+              minimum: 0
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+    CreatePropertyInput:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/WritablePropertyFields"
+        - type: object
+          required: [title, category]
+          properties:
+            property_number:
+              type: string
+              pattern: '^CY-[0-9]{4,10}$'
+    UpdatePropertyInput:
+      unevaluatedProperties: false
+      minProperties: 1
+      allOf:
+        - $ref: "#/components/schemas/WritablePropertyFields"
+    WritablePropertyFields:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        category:
+          type: string
+          enum: [office, store, etc]
+        deposit:
+          $ref: "#/components/schemas/NullableAmount"
+        monthly_rent:
+          $ref: "#/components/schemas/NullableAmount"
+        maintenance_fee:
+          $ref: "#/components/schemas/NullableAmount"
+        public_address:
+          $ref: "#/components/schemas/NullableText300"
+        private_address:
+          $ref: "#/components/schemas/NullableText300"
+        latitude:
+          type: [number, 'null']
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: [number, 'null']
+          minimum: -180
+          maximum: 180
+        exclusive_area:
+          $ref: "#/components/schemas/NullableArea"
+        supply_area:
+          $ref: "#/components/schemas/NullableArea"
+        floor:
+          $ref: "#/components/schemas/NullableText30"
+        total_floor:
+          $ref: "#/components/schemas/NullableText30"
+        parking_available:
+          type: boolean
+        elevator_available:
+          type: boolean
+        total_parking_count:
+          $ref: "#/components/schemas/NullableCount"
+        available_parking_count:
+          $ref: "#/components/schemas/NullableCount"
+        building_use:
+          type: [string, 'null']
+          maxLength: 100
+        approval_date:
+          type: [string, 'null']
+          format: date
+        building_direction:
+          type: [string, 'null']
+          maxLength: 50
+        room_count:
+          $ref: "#/components/schemas/NullableCount"
+        restroom_count:
+          $ref: "#/components/schemas/NullableCount"
+        air_conditioner_type:
+          type: [string, 'null']
+          enum: [유, 무, 시스템, 스탠드, 벽걸이, null]
+        is_violating_building:
+          type: boolean
+        restroom_type:
+          type: [string, 'null']
+          enum: [internal_shared, internal_private, external_shared, external_private, null]
+        move_in_date:
+          type: [string, 'null']
+          maxLength: 100
+        is_recommended:
+          type: boolean
+        image_urls:
+          type: array
+          maxItems: 40
+          uniqueItems: true
+          items:
+            type: string
+            format: uri
+            maxLength: 2048
+        description:
+          type: [string, 'null']
+          maxLength: 20000
+        private_memo:
+          type: [string, 'null']
+          maxLength: 5000
+    NullableAmount:
+      type: [integer, 'null']
+      minimum: 0
+      maximum: 2147483647
+    NullableArea:
+      type: [number, 'null']
+      minimum: 0
+      maximum: 10000000
+    NullableCount:
+      type: [integer, 'null']
+      minimum: 0
+      maximum: 100000
+    NullableText30:
+      type: [string, 'null']
+      maxLength: 30
+    NullableText300:
+      type: [string, 'null']
+      maxLength: 300
