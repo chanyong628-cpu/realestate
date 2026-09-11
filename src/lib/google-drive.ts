@@ -24,6 +24,11 @@ export interface GoogleDriveImageFile {
   size: number;
 }
 
+export interface GoogleDriveFolder {
+  id: string;
+  name: string;
+}
+
 interface GoogleDriveFileResponse {
   id?: string;
   name?: string;
@@ -205,6 +210,10 @@ function validateDriveId(value: string) {
   return /^[a-zA-Z0-9_-]{10,200}$/.test(value) ? value : null;
 }
 
+function escapeDriveQueryValue(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
 export function extractGoogleDriveFolderId(value: string) {
   const input = value.trim();
   const rawId = validateDriveId(input);
@@ -233,6 +242,48 @@ export function sortGoogleDriveImages(files: GoogleDriveImageFile[]) {
     (a, b) =>
       naturalFileNameCollator.compare(a.name, b.name) ||
       a.id.localeCompare(b.id),
+  );
+}
+
+export async function findGoogleDriveChildFoldersByName(
+  rootFolderLink: string,
+  folderName: string,
+  oidcToken?: string,
+) {
+  const rootFolderId = extractGoogleDriveFolderId(rootFolderLink);
+  if (!rootFolderId) {
+    throw new GoogleDriveImportError(
+      "Google Drive 상위 폴더 설정이 올바르지 않습니다.",
+      500,
+    );
+  }
+
+  const normalizedName = folderName.trim();
+  if (!normalizedName) {
+    throw new GoogleDriveImportError("폴더명을 입력해 주세요.", 400);
+  }
+
+  const url = new URL(DRIVE_FILES_ENDPOINT);
+  url.searchParams.set(
+    "q",
+    `'${rootFolderId}' in parents and name = '${escapeDriveQueryValue(normalizedName)}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+  );
+  url.searchParams.set("fields", "files(id,name)");
+  url.searchParams.set("pageSize", "10");
+  url.searchParams.set("supportsAllDrives", "true");
+  url.searchParams.set("includeItemsFromAllDrives", "true");
+
+  const response = await driveFetch(url, oidcToken);
+  if (!response.ok) {
+    throw await parseDriveError(
+      response,
+      "Google Drive 폴더를 검색하지 못했습니다.",
+    );
+  }
+
+  const result = (await response.json()) as GoogleDriveFileListResponse;
+  return (result.files ?? []).flatMap<GoogleDriveFolder>((folder) =>
+    folder.id && folder.name ? [{ id: folder.id, name: folder.name }] : [],
   );
 }
 
@@ -395,4 +446,33 @@ export async function downloadGoogleDriveImage(
     response,
     mimeType: metadata.mimeType,
   };
+}
+
+export async function readGoogleDriveImageBuffer(response: Response) {
+  if (!response.body) {
+    throw new GoogleDriveImportError(
+      "Google Drive 사진을 내려받지 못했습니다.",
+      502,
+    );
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_GOOGLE_DRIVE_IMAGE_SIZE) {
+      await reader.cancel();
+      throw new GoogleDriveImportError(
+        "원본 사진 한 장의 크기는 25MB 이하여야 합니다.",
+        413,
+      );
+    }
+    chunks.push(value);
+  }
+
+  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), total);
 }

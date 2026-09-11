@@ -8,6 +8,38 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  /api/cy/property-images/import-drive:
+    post:
+      operationId: importPropertyImagesFromDrive
+      summary: 지정된 Drive 하위 폴더의 사진을 홈페이지 저장소로 가져오기
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [folder_name]
+              properties:
+                folder_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+      responses:
+        "200":
+          description: 사진 가져오기 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveImageImportResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/cy/properties:
     get:
       operationId: searchProperties
@@ -234,6 +266,23 @@ components:
         count:
           type: integer
           minimum: 0
+    DriveImageImportResponse:
+      type: object
+      additionalProperties: false
+      required: [success, image_urls, count]
+      properties:
+        success:
+          const: true
+        image_urls:
+          type: array
+          maxItems: 40
+          items:
+            type: string
+            format: uri
+        count:
+          type: integer
+          minimum: 1
+          maximum: 40
     Property:
       allOf:
         - $ref: "#/components/schemas/WritablePropertyFields"

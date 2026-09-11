@@ -8,6 +8,7 @@ Vercel의 Production 환경변수에 다음 값을 추가합니다.
 
 ```text
 CY_PROPERTY_API_SECRET=<32자 이상의 충분히 긴 랜덤 값>
+GOOGLE_DRIVE_PROPERTY_ROOT_FOLDER=<매물 사진 폴더들이 들어 있는 상위 폴더 URL 또는 ID>
 ```
 
 - `NEXT_PUBLIC_` 접두사를 붙이지 않습니다.
@@ -42,6 +43,7 @@ Secret이 없거나 틀리면 `401 UNAUTHORIZED`, 서버에 32자 이상의 Secr
 | `updateProperty` | `PATCH` | `/api/cy/properties/{identifier}` |
 | `publishProperty` | `POST` | `/api/cy/properties/{identifier}/publish` |
 | `unpublishProperty` | `POST` | `/api/cy/properties/{identifier}/unpublish` |
+| `importPropertyImagesFromDrive` | `POST` | `/api/cy/property-images/import-drive` |
 
 `identifier`에는 UUID 내부 ID 또는 `CY-0001` 형식의 매물번호를 사용할 수 있습니다. 생성된 매물은 요청과 관계없이 항상 비공개(`is_published: false`)로 저장되며, 공개 상태 변경은 별도 endpoint로만 수행합니다. 삭제 endpoint는 제공하지 않습니다.
 
@@ -78,6 +80,28 @@ Content-Type: application/json
 
 금액과 면적 등 값의 단위는 기존 관리자 CRUD와 `properties` 테이블의 단위를 그대로 사용합니다.
 
+Google Drive 사진은 설정된 상위 폴더의 직접 하위 폴더만 폴더명으로 찾습니다. 같은 이름의 폴더가 둘 이상이면 잘못된 사진을 올리지 않도록 `409`로 중단합니다. `GOOGLE_DRIVE_PROPERTY_ROOT_FOLDER`가 비어 있으면 기존 `NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_URL`을 상위 폴더로 사용합니다.
+
+```http
+POST /api/cy/property-images/import-drive
+Authorization: Bearer <secret>
+Content-Type: application/json
+
+{
+  "folder_name": "CY-0152 문정동 사무실"
+}
+```
+
+성공하면 WebP로 변환하여 기존 `property-images` 버킷에 저장하고, 매물 생성 요청의 `image_urls`에 그대로 넣을 수 있는 URL 배열을 반환합니다.
+
+```json
+{
+  "success": true,
+  "image_urls": ["https://.../property-images/drive-imports/...webp"],
+  "count": 1
+}
+```
+
 ## 안전 제한
 
 - JSON 객체만 허용하며 요청 본문은 최대 64 KiB입니다.
@@ -85,6 +109,8 @@ Content-Type: application/json
 - PATCH는 명시된 매물 필드만 허용하며 `id`, `property_number`, `is_published`, `view_count`, 생성/수정 시각은 바꿀 수 없습니다.
 - `property_number` 중복은 사전 검사와 DB unique 오류 양쪽에서 `409`로 차단합니다.
 - 사진은 현재 Supabase 프로젝트의 `property-images` 공개 bucket HTTPS URL만 허용합니다.
+- Drive 가져오기는 상위 폴더 밖을 검색할 수 없고, 사진 최대 40장·원본 한 장 최대 25MB·저장 WebP 한 장 최대 700KB로 제한합니다.
+- 같은 Drive 사진의 반복 전송은 동일한 저장 경로를 재사용하며, 처리 도중 실패하면 이번 요청에서 새로 올린 파일을 정리합니다.
 - 신규 매물은 반드시 비공개로 생성합니다.
 - DELETE, SQL, Auth, 임의 테이블, Storage 관리, schema 변경 기능은 없습니다.
 - 응답은 `private, no-store`로 캐시되지 않습니다.
