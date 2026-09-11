@@ -61,11 +61,11 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
   /api/cy/properties/{identifier}:
-    parameters:
-      - $ref: "#/components/parameters/PropertyIdentifier"
     get:
       operationId: getProperty
       summary: 내부 ID 또는 매물번호로 매물 조회
+      parameters:
+        - $ref: "#/components/parameters/PropertyIdentifier"
       responses:
         "200":
           description: 조회 성공
@@ -82,6 +82,8 @@ paths:
     patch:
       operationId: updateProperty
       summary: 허용된 매물 필드만 부분 수정
+      parameters:
+        - $ref: "#/components/parameters/PropertyIdentifier"
       requestBody:
         required: true
         content:
@@ -102,11 +104,11 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
   /api/cy/properties/{identifier}/publish:
-    parameters:
-      - $ref: "#/components/parameters/PropertyIdentifier"
     post:
       operationId: publishProperty
       summary: 매물을 홈페이지에 공개
+      parameters:
+        - $ref: "#/components/parameters/PropertyIdentifier"
       responses:
         "200":
           description: 공개 성공
@@ -121,11 +123,11 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
   /api/cy/properties/{identifier}/unpublish:
-    parameters:
-      - $ref: "#/components/parameters/PropertyIdentifier"
     post:
       operationId: unpublishProperty
       summary: 매물을 비공개 처리
+      parameters:
+        - $ref: "#/components/parameters/PropertyIdentifier"
       responses:
         "200":
           description: 비공개 성공
@@ -251,18 +253,138 @@ components:
               type: string
               format: date-time
     CreatePropertyInput:
-      allOf:
-        - $ref: "#/components/schemas/WritablePropertyFields"
-        - type: object
-          required: [title, category]
-          properties:
-            property_number:
-              type: string
-              pattern: '^CY-[0-9]{4,10}$'
+      type: object
+      additionalProperties: false
+      required: [title, category]
+      properties:
+        property_number:
+          type: string
+          pattern: '^CY-[0-9]{4,10}$'
+        title:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/title"
+        category:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/category"
+        deposit:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/deposit"
+        monthly_rent:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/monthly_rent"
+        maintenance_fee:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/maintenance_fee"
+        public_address:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/public_address"
+        private_address:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/private_address"
+        latitude:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/latitude"
+        longitude:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/longitude"
+        exclusive_area:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/exclusive_area"
+        supply_area:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/supply_area"
+        floor:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/floor"
+        total_floor:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/total_floor"
+        parking_available:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/parking_available"
+        elevator_available:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/elevator_available"
+        total_parking_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/total_parking_count"
+        available_parking_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/available_parking_count"
+        building_use:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/building_use"
+        approval_date:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/approval_date"
+        building_direction:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/building_direction"
+        room_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/room_count"
+        restroom_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_count"
+        air_conditioner_type:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/air_conditioner_type"
+        is_violating_building:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/is_violating_building"
+        restroom_type:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_type"
+        move_in_date:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/move_in_date"
+        is_recommended:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/is_recommended"
+        image_urls:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/image_urls"
+        description:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/description"
+        private_memo:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/private_memo"
     UpdatePropertyInput:
+      type: object
+      additionalProperties: false
       minProperties: 1
-      allOf:
-        - $ref: "#/components/schemas/WritablePropertyFields"
+      properties:
+        title:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/title"
+        category:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/category"
+        deposit:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/deposit"
+        monthly_rent:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/monthly_rent"
+        maintenance_fee:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/maintenance_fee"
+        public_address:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/public_address"
+        private_address:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/private_address"
+        latitude:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/latitude"
+        longitude:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/longitude"
+        exclusive_area:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/exclusive_area"
+        supply_area:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/supply_area"
+        floor:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/floor"
+        total_floor:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/total_floor"
+        parking_available:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/parking_available"
+        elevator_available:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/elevator_available"
+        total_parking_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/total_parking_count"
+        available_parking_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/available_parking_count"
+        building_use:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/building_use"
+        approval_date:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/approval_date"
+        building_direction:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/building_direction"
+        room_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/room_count"
+        restroom_count:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_count"
+        air_conditioner_type:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/air_conditioner_type"
+        is_violating_building:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/is_violating_building"
+        restroom_type:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_type"
+        move_in_date:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/move_in_date"
+        is_recommended:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/is_recommended"
+        image_urls:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/image_urls"
+        description:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/description"
+        private_memo:
+          $ref: "#/components/schemas/WritablePropertyFields/properties/private_memo"
     WritablePropertyFields:
       type: object
       properties:
