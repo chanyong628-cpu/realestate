@@ -65,7 +65,13 @@ paths:
       operationId: getProperty
       summary: 내부 ID 또는 매물번호로 매물 조회
       parameters:
-        - $ref: "#/components/parameters/PropertyIdentifier"
+        - in: path
+          name: identifier
+          required: true
+          description: UUID 내부 ID 또는 CY-0001 형식의 매물번호
+          schema:
+            type: string
+            maxLength: 64
       responses:
         "200":
           description: 조회 성공
@@ -83,7 +89,13 @@ paths:
       operationId: updateProperty
       summary: 허용된 매물 필드만 부분 수정
       parameters:
-        - $ref: "#/components/parameters/PropertyIdentifier"
+        - in: path
+          name: identifier
+          required: true
+          description: UUID 내부 ID 또는 CY-0001 형식의 매물번호
+          schema:
+            type: string
+            maxLength: 64
       requestBody:
         required: true
         content:
@@ -108,7 +120,13 @@ paths:
       operationId: publishProperty
       summary: 매물을 홈페이지에 공개
       parameters:
-        - $ref: "#/components/parameters/PropertyIdentifier"
+        - in: path
+          name: identifier
+          required: true
+          description: UUID 내부 ID 또는 CY-0001 형식의 매물번호
+          schema:
+            type: string
+            maxLength: 64
       responses:
         "200":
           description: 공개 성공
@@ -127,7 +145,13 @@ paths:
       operationId: unpublishProperty
       summary: 매물을 비공개 처리
       parameters:
-        - $ref: "#/components/parameters/PropertyIdentifier"
+        - in: path
+          name: identifier
+          required: true
+          description: UUID 내부 ID 또는 CY-0001 형식의 매물번호
+          schema:
+            type: string
+            maxLength: 64
       responses:
         "200":
           description: 비공개 성공
@@ -147,15 +171,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: API secret
-  parameters:
-    PropertyIdentifier:
-      in: path
-      name: identifier
-      required: true
-      description: UUID 내부 ID 또는 CY-0001 형식의 매물번호
-      schema:
-        type: string
-        maxLength: 64
   responses:
     BadRequest:
       description: 입력값 오류
@@ -261,130 +276,216 @@ components:
           type: string
           pattern: '^CY-[0-9]{4,10}$'
         title:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/title"
+          type: string
+          minLength: 1
+          maxLength: 120
         category:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/category"
+          type: string
+          enum: [office, store, etc]
         deposit:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/deposit"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 2147483647
         monthly_rent:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/monthly_rent"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 2147483647
         maintenance_fee:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/maintenance_fee"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 2147483647
         public_address:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/public_address"
+          type: [string, 'null']
+          maxLength: 300
         private_address:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/private_address"
+          type: [string, 'null']
+          maxLength: 300
         latitude:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/latitude"
+          type: [number, 'null']
+          minimum: -90
+          maximum: 90
         longitude:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/longitude"
+          type: [number, 'null']
+          minimum: -180
+          maximum: 180
         exclusive_area:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/exclusive_area"
+          type: [number, 'null']
+          minimum: 0
+          maximum: 10000000
         supply_area:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/supply_area"
+          type: [number, 'null']
+          minimum: 0
+          maximum: 10000000
         floor:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/floor"
+          type: [string, 'null']
+          maxLength: 30
         total_floor:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/total_floor"
+          type: [string, 'null']
+          maxLength: 30
         parking_available:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/parking_available"
+          type: boolean
         elevator_available:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/elevator_available"
+          type: boolean
         total_parking_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/total_parking_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         available_parking_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/available_parking_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         building_use:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/building_use"
+          type: [string, 'null']
+          maxLength: 100
         approval_date:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/approval_date"
+          type: [string, 'null']
+          format: date
         building_direction:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/building_direction"
+          type: [string, 'null']
+          maxLength: 50
         room_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/room_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         restroom_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         air_conditioner_type:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/air_conditioner_type"
+          type: [string, 'null']
+          enum: [유, 무, 시스템, 스탠드, 벽걸이, null]
         is_violating_building:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/is_violating_building"
+          type: boolean
         restroom_type:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_type"
+          type: [string, 'null']
+          enum: [internal_shared, internal_private, external_shared, external_private, null]
         move_in_date:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/move_in_date"
+          type: [string, 'null']
+          maxLength: 100
         is_recommended:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/is_recommended"
+          type: boolean
         image_urls:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/image_urls"
+          type: array
+          maxItems: 40
+          uniqueItems: true
+          items:
+            type: string
+            format: uri
+            maxLength: 2048
         description:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/description"
+          type: [string, 'null']
+          maxLength: 20000
         private_memo:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/private_memo"
+          type: [string, 'null']
+          maxLength: 5000
     UpdatePropertyInput:
       type: object
       additionalProperties: false
       minProperties: 1
       properties:
         title:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/title"
+          type: string
+          minLength: 1
+          maxLength: 120
         category:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/category"
+          type: string
+          enum: [office, store, etc]
         deposit:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/deposit"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 2147483647
         monthly_rent:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/monthly_rent"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 2147483647
         maintenance_fee:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/maintenance_fee"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 2147483647
         public_address:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/public_address"
+          type: [string, 'null']
+          maxLength: 300
         private_address:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/private_address"
+          type: [string, 'null']
+          maxLength: 300
         latitude:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/latitude"
+          type: [number, 'null']
+          minimum: -90
+          maximum: 90
         longitude:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/longitude"
+          type: [number, 'null']
+          minimum: -180
+          maximum: 180
         exclusive_area:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/exclusive_area"
+          type: [number, 'null']
+          minimum: 0
+          maximum: 10000000
         supply_area:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/supply_area"
+          type: [number, 'null']
+          minimum: 0
+          maximum: 10000000
         floor:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/floor"
+          type: [string, 'null']
+          maxLength: 30
         total_floor:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/total_floor"
+          type: [string, 'null']
+          maxLength: 30
         parking_available:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/parking_available"
+          type: boolean
         elevator_available:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/elevator_available"
+          type: boolean
         total_parking_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/total_parking_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         available_parking_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/available_parking_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         building_use:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/building_use"
+          type: [string, 'null']
+          maxLength: 100
         approval_date:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/approval_date"
+          type: [string, 'null']
+          format: date
         building_direction:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/building_direction"
+          type: [string, 'null']
+          maxLength: 50
         room_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/room_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         restroom_count:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_count"
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100000
         air_conditioner_type:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/air_conditioner_type"
+          type: [string, 'null']
+          enum: [유, 무, 시스템, 스탠드, 벽걸이, null]
         is_violating_building:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/is_violating_building"
+          type: boolean
         restroom_type:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/restroom_type"
+          type: [string, 'null']
+          enum: [internal_shared, internal_private, external_shared, external_private, null]
         move_in_date:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/move_in_date"
+          type: [string, 'null']
+          maxLength: 100
         is_recommended:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/is_recommended"
+          type: boolean
         image_urls:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/image_urls"
+          type: array
+          maxItems: 40
+          uniqueItems: true
+          items:
+            type: string
+            format: uri
+            maxLength: 2048
         description:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/description"
+          type: [string, 'null']
+          maxLength: 20000
         private_memo:
-          $ref: "#/components/schemas/WritablePropertyFields/properties/private_memo"
+          type: [string, 'null']
+          maxLength: 5000
     WritablePropertyFields:
       type: object
       properties:
