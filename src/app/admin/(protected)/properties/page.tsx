@@ -1,39 +1,34 @@
 import Link from "next/link";
-import { FavoriteButton } from "@/components/properties/favorite-button";
-import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
-import { PropertyProposalButton } from "@/features/admin/properties/property-proposal-button";
-import {
-  setPropertyPublishedAction,
-  setPropertyRecommendedAction,
-} from "@/features/admin/properties/actions";
+import { AdminPropertyTable } from "@/features/admin/properties/admin-property-table";
 import { AdminLocationAutoRepair } from "@/features/admin/properties/admin-location-auto-repair";
 import {
   derivePublicAddress,
-  isStoredAddressHidden,
-  resolvePublicAddress,
 } from "@/lib/properties/address";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Property, PropertyCategory } from "@/types/database";
-
-const categoryLabels: Record<PropertyCategory, string> = {
-  office: "사무실",
-  store: "상가",
-  etc: "기타",
-};
+import type { Property } from "@/types/database";
 
 export const metadata = { title: "매물 관리" };
 
-type PropertyStatusFilter = "all" | "published" | "hidden" | "recommended";
+type PropertyStatusFilter =
+  | "all"
+  | "published"
+  | "hidden"
+  | "recommended"
+  | "no-image";
 
 const statusLabels: Record<PropertyStatusFilter, string> = {
   all: "전체 매물",
   published: "노출 매물",
   hidden: "비노출 매물",
   recommended: "추천 매물",
+  "no-image": "사진 없음",
 };
 
 function normalizeStatusFilter(value?: string): PropertyStatusFilter {
-  return value === "published" || value === "hidden" || value === "recommended"
+  return value === "published" ||
+    value === "hidden" ||
+    value === "recommended" ||
+    value === "no-image"
     ? value
     : "all";
 }
@@ -134,6 +129,7 @@ export default async function AdminPropertiesPage({
       if (status === "published") return property.is_published;
       if (status === "hidden") return !property.is_published;
       if (status === "recommended") return property.is_recommended;
+      if (status === "no-image") return property.image_urls.length === 0;
       return true;
     }) ?? [];
   const filteredProperties = statusFilteredProperties.filter((property) => {
@@ -254,157 +250,7 @@ export default async function AdminPropertiesPage({
       )}
 
       {!!filteredProperties.length && (
-        <div className="mt-8 overflow-x-auto rounded-2xl bg-white shadow-sm">
-          <table className="w-full min-w-[1160px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-stone-200 bg-stone-50 text-xs text-stone-500">
-                <th className="px-5 py-4">매물</th>
-                <th className="px-4 py-4">카테고리</th>
-                <th className="px-4 py-4">공개 주소</th>
-                <th className="px-4 py-4 text-center">주소 표시</th>
-                <th className="px-4 py-4 text-center">노출</th>
-                <th className="px-4 py-4 text-center">추천</th>
-                <th className="px-4 py-4 text-center" title="사진 등록 여부">
-                  ✓
-                </th>
-                <th className="px-3 py-4 text-center">즐겨찾기</th>
-                <th className="px-4 py-4 text-right">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProperties.map((property) => {
-                const hasImages = property.image_urls.length > 0;
-                const preview = memoPreview(property);
-
-                return (
-                  <tr
-                    key={property.id}
-                    className="border-b border-stone-100 last:border-0"
-                  >
-                    <td className="px-5 py-4">
-                      <Link
-                        href={`/properties/${property.property_number}`}
-                        className="group block"
-                      >
-                        <b className="block group-hover:text-forest-700 group-hover:underline">
-                          {property.title}
-                        </b>
-                        <span className="mt-1 block text-xs font-bold text-forest-600">
-                          {property.property_number}
-                        </span>
-                        {preview && (
-                          <span className="mt-1.5 block max-w-[390px] truncate text-xs font-semibold text-red-600">
-                            {preview}
-                          </span>
-                        )}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {categoryLabels[property.category]}
-                    </td>
-                    <td className="max-w-56 truncate px-4 py-4 text-sm text-stone-600">
-                      {resolvePublicAddress(
-                        property.public_address,
-                        property.private_address,
-                      ) || "-"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-center">
-                      <span
-                        className={`rounded-full px-3 py-1.5 text-xs font-black ${
-                          isStoredAddressHidden(property.public_address)
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-brand-line text-brand-accent"
-                        }`}
-                      >
-                        {isStoredAddressHidden(property.public_address)
-                          ? "반경 표시"
-                          : "주소 공개"}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-center">
-                      <form
-                        className="inline-flex"
-                        action={setPropertyPublishedAction.bind(
-                          null,
-                          property.id,
-                          !property.is_published,
-                        )}
-                      >
-                        <button
-                          className={`rounded-full px-3 py-1.5 text-xs font-black ${
-                            property.is_published
-                              ? "bg-forest-100 text-forest-700"
-                              : "bg-stone-100 text-stone-500"
-                          }`}
-                        >
-                          {property.is_published ? "노출" : "비노출"}
-                        </button>
-                      </form>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-center">
-                      <form
-                        className="inline-flex"
-                        action={setPropertyRecommendedAction.bind(
-                          null,
-                          property.id,
-                          !property.is_recommended,
-                        )}
-                      >
-                        <button
-                          className={`rounded-full px-3 py-1.5 text-xs font-black ${
-                            property.is_recommended
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-stone-100 text-stone-500"
-                          }`}
-                        >
-                          {property.is_recommended ? "추천" : "일반"}
-                        </button>
-                      </form>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      {hasImages ? (
-                        <span
-                          className="inline-grid size-7 place-items-center rounded-full bg-brand-line text-sm font-black text-brand-accent"
-                          title={`${property.image_urls.length}장 등록됨`}
-                        >
-                          ✓
-                        </span>
-                      ) : (
-                        <span
-                          className="inline-grid size-7 place-items-center rounded-full bg-red-50 text-sm font-black text-red-600"
-                          title="사진 미등록"
-                        >
-                          ✓
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-4 text-center">
-                      <FavoriteButton propertyId={property.id} compact />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4">
-                      <div className="flex min-w-[184px] flex-nowrap justify-end gap-2">
-                        <PropertyProposalButton
-                          id={property.id}
-                          propertyNumber={property.property_number}
-                        />
-                        <Link
-                          href={`/admin/properties/${property.id}/edit`}
-                          className="whitespace-nowrap rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold hover:bg-stone-50"
-                        >
-                          수정
-                        </Link>
-                        <DeletePropertyButton
-                          id={property.id}
-                          propertyNumber={property.property_number}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <AdminPropertyTable properties={filteredProperties} />
       )}
     </section>
   );

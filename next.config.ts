@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     "/api/admin/customer-blocks/*/proposal": [
       "./templates/cy-rental-proposal.pptx",
     ],
+    "/api/admin/properties/*/proposal": ["./templates/cy-rental-proposal.pptx"],
+    "/api/admin/properties/proposal": ["./templates/cy-rental-proposal.pptx"],
   },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],

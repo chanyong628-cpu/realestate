@@ -1,10 +1,24 @@
 import Link from "next/link";
 import { Building2, Eye, EyeOff, MessageSquareText, Star, Users } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { AnalyticsDashboard } from "@/features/admin/analytics/analytics-dashboard";
+import {
+  getAdminAnalytics,
+  type AnalyticsRangeDays,
+} from "@/lib/analytics/dashboard";
 
 export const metadata = { title: "관리자 대시보드" };
 
-export default async function AdminDashboardPage() {
+function normalizeRange(value?: string): AnalyticsRangeDays {
+  return value === "7" || value === "90" ? Number(value) as AnalyticsRangeDays : 30;
+}
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const range = normalizeRange((await searchParams).range);
   const client = createAdminClient();
   const [
     { count: totalCount },
@@ -13,6 +27,7 @@ export default async function AdminDashboardPage() {
     { count: recommendedCount },
     { count: customerBlockCount },
     { count: inquiryCount },
+    analytics,
   ] = await Promise.all([
     client.from("properties").select("*", { count: "exact", head: true }),
     client
@@ -29,6 +44,7 @@ export default async function AdminDashboardPage() {
       .eq("is_recommended", true),
     client.from("customer_blocks").select("*", { count: "exact", head: true }),
     client.from("inquiries").select("*", { count: "exact", head: true }),
+    getAdminAnalytics(range),
   ]);
 
   const stats = [
@@ -82,6 +98,8 @@ export default async function AdminDashboardPage() {
           </p>
         </Link>
       </div>
+
+      <AnalyticsDashboard data={analytics} />
     </section>
   );
 }

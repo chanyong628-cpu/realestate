@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { getAdminSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -23,10 +24,32 @@ export interface BulkPropertyActionState {
   createdCount?: number;
 }
 
+export interface BulkPropertyManageResult {
+  success: boolean;
+  message: string;
+  affectedCount: number;
+}
+
+const bulkPropertyManageSchema = z
+  .object({
+    ids: z.array(z.string().uuid()).min(1).max(200),
+    action: z.enum(["hide", "delete", "favorite"]),
+  })
+  .strict();
+
 type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"];
 
 async function requireAdmin() {
   if (!(await getAdminSession())) redirect("/admin/login");
+}
+
+function revalidatePropertyPages() {
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/properties");
+  revalidatePath("/favorites");
+  revalidatePath("/sitemap.xml");
+  revalidatePath("/rss.xml");
 }
 
 function getStoredImagePath(url: string) {
@@ -267,6 +290,112 @@ export async function setPropertyRecommendedAction(
   if (error) throw new Error("추천 상태를 변경하지 못했습니다.");
   revalidatePath("/");
   revalidatePath("/admin/properties");
+}
+
+export async function bulkManagePropertiesAction(
+  input: unknown,
+): Promise<BulkPropertyManageResult> {
+  await requireAdmin();
+  const parsed = bulkPropertyManageSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: "선택한 매물 정보를 확인해 주세요.",
+      affectedCount: 0,
+    };
+  }
+
+  const ids = [...new Set(parsed.data.ids)];
+  const supabase = createAdminClient();
+  const { data: selected, error: selectError } = await supabase
+    .from("properties")
+    .select("id,image_urls")
+    .in("id", ids);
+  if (selectError) {
+    console.error("Bulk property selection failed:", selectError.message);
+    return {
+      success: false,
+      message: "선택한 매물을 불러오지 못했습니다.",
+      affectedCount: 0,
+    };
+  }
+
+  const existing = selected ?? [];
+  const existingIds = existing.map((property) => property.id as string);
+  if (!existingIds.length) {
+    return {
+      success: false,
+      message: "처리할 매물을 찾지 못했습니다.",
+      affectedCount: 0,
+    };
+  }
+
+  if (parsed.data.action === "hide") {
+    const { error } = await supabase
+      .from("properties")
+      .update({ is_published: false })
+      .in("id", existingIds);
+    if (error) {
+      console.error("Bulk property hide failed:", error.message);
+      return {
+        success: false,
+        message: "선택 매물을 비노출로 바꾸지 못했습니다.",
+        affectedCount: 0,
+      };
+    }
+    revalidatePropertyPages();
+    return {
+      success: true,
+      message: `${existingIds.length}개 매물을 비노출로 변경했습니다.`,
+      affectedCount: existingIds.length,
+    };
+  }
+
+  if (parsed.data.action === "favorite") {
+    const { error } = await supabase
+      .from("admin_favorite_properties")
+      .upsert(
+        existingIds.map((propertyId) => ({ property_id: propertyId })),
+        { onConflict: "property_id" },
+      );
+    if (error) {
+      console.error("Bulk property favorite failed:", error.message);
+      return {
+        success: false,
+        message: "선택 매물을 즐겨찾기에 저장하지 못했습니다.",
+        affectedCount: 0,
+      };
+    }
+    revalidatePropertyPages();
+    return {
+      success: true,
+      message: `${existingIds.length}개 매물을 나의 즐겨찾기에 저장했습니다.`,
+      affectedCount: existingIds.length,
+    };
+  }
+
+  const imageUrls = existing.flatMap((property) =>
+    Array.isArray(property.image_urls) ? (property.image_urls as string[]) : [],
+  );
+  const { error: deleteError } = await supabase
+    .from("properties")
+    .delete()
+    .in("id", existingIds);
+  if (deleteError) {
+    console.error("Bulk property deletion failed:", deleteError.message);
+    return {
+      success: false,
+      message: "선택 매물을 삭제하지 못했습니다.",
+      affectedCount: 0,
+    };
+  }
+  await removeStoredImages(imageUrls);
+  revalidatePropertyPages();
+  return {
+    success: true,
+    message: `${existingIds.length}개 매물을 삭제했습니다.`,
+    affectedCount: existingIds.length,
+  };
 }
 
 export async function updatePropertyCoordinatesAction(
