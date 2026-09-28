@@ -5,7 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 
 type MapInstance = {
+  getBounds: () => { contain: (position: unknown) => boolean };
   getLevel: () => number;
+  setCenter: (position: unknown) => void;
   setLevel: (level: number) => void;
 };
 
@@ -58,11 +60,13 @@ type KakaoWindow = Window & {
 type DongGroup = {
   dong: string;
   count: number;
+  propertyIds: string[];
   latitude: number | null;
   longitude: number | null;
 };
 
 type ExactPropertyPoint = {
+  propertyId: string;
   propertyNumber: string;
   address: string;
   latitude: number;
@@ -76,7 +80,12 @@ function getDong(address: string | null) {
 function createGroups(properties: Property[]) {
   const groups = new Map<
     string,
-    { count: number; latitudes: number[]; longitudes: number[] }
+    {
+      count: number;
+      propertyIds: string[];
+      latitudes: number[];
+      longitudes: number[];
+    }
   >();
 
   for (const property of properties) {
@@ -84,10 +93,12 @@ function createGroups(properties: Property[]) {
     if (!dong) continue;
     const group = groups.get(dong) ?? {
       count: 0,
+      propertyIds: [],
       latitudes: [],
       longitudes: [],
     };
     group.count += 1;
+    group.propertyIds.push(property.id);
     if (
       Number.isFinite(property.latitude) &&
       Number.isFinite(property.longitude)
@@ -102,6 +113,7 @@ function createGroups(properties: Property[]) {
     .map(([dong, group]) => ({
       dong,
       count: group.count,
+      propertyIds: group.propertyIds,
       latitude: group.latitudes.length
         ? group.latitudes.reduce((sum, value) => sum + value, 0) /
           group.latitudes.length
@@ -196,6 +208,7 @@ async function resolveExactPropertyPoint(
     Number.isFinite(property.longitude)
   ) {
     return {
+      propertyId: property.id,
       propertyNumber: property.property_number,
       address,
       latitude: property.latitude as number,
@@ -222,6 +235,7 @@ async function resolveExactPropertyPoint(
       }
 
       resolve({
+        propertyId: property.id,
         propertyNumber: property.property_number,
         address,
         latitude,
@@ -241,7 +255,7 @@ type MarkerTheme = {
 function createCountMarker(
   group: DongGroup,
   theme: MarkerTheme,
-  onDongSelect: (dong: string) => void,
+  onGroupSelect: (group: DongGroup) => void,
 ) {
   const wrapper = document.createElement("div");
   wrapper.setAttribute("aria-label", `${group.dong} 매물 ${group.count}개`);
@@ -268,7 +282,7 @@ function createCountMarker(
   count.style.fontWeight = "800";
   count.style.cursor = "pointer";
   count.style.boxShadow = `0 8px 24px color-mix(in srgb, ${theme.accent} 30%, transparent)`;
-  count.addEventListener("click", () => onDongSelect(group.dong));
+  count.addEventListener("click", () => onGroupSelect(group));
 
   const label = document.createElement("span");
   label.textContent = group.dong;
@@ -285,8 +299,12 @@ function createCountMarker(
   return wrapper;
 }
 
-function createExactPropertyMarker(point: ExactPropertyPoint) {
-  const wrapper = document.createElement("div");
+function createExactPropertyMarker(
+  point: ExactPropertyPoint,
+  onPropertySelect: (propertyId: string) => void,
+) {
+  const wrapper = document.createElement("button");
+  wrapper.type = "button";
   wrapper.setAttribute(
     "aria-label",
     `${point.propertyNumber} ${point.address} 실제 위치`,
@@ -295,7 +313,15 @@ function createExactPropertyMarker(point: ExactPropertyPoint) {
   wrapper.style.position = "relative";
   wrapper.style.width = "34px";
   wrapper.style.height = "44px";
+  wrapper.style.padding = "0";
+  wrapper.style.border = "0";
+  wrapper.style.background = "transparent";
+  wrapper.style.cursor = "pointer";
   wrapper.style.filter = "drop-shadow(0 5px 7px rgb(127 29 29 / 0.35))";
+  wrapper.addEventListener("click", (event) => {
+    event.stopPropagation();
+    onPropertySelect(point.propertyId);
+  });
 
   const pin = document.createElement("span");
   pin.style.position = "absolute";
@@ -323,10 +349,12 @@ function createExactPropertyMarker(point: ExactPropertyPoint) {
 
 export function PropertyClusterMap({
   properties,
-  onDongSelect,
+  onVisiblePropertiesChange,
+  onPropertySelect,
 }: {
   properties: Property[];
-  onDongSelect: (dong: string) => void;
+  onVisiblePropertiesChange: (propertyIds: string[] | null) => void;
+  onPropertySelect: (propertyId: string | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -385,6 +413,14 @@ export function PropertyClusterMap({
           surface: rootStyle.getPropertyValue("--color-brand-surface").trim(),
         };
 
+        const focusGroup = (group: DongGroup) => {
+          if (group.latitude === null || group.longitude === null) return;
+          onPropertySelect(null);
+          onVisiblePropertiesChange(group.propertyIds);
+          map.setCenter(new maps.LatLng(group.latitude, group.longitude));
+          map.setLevel(5);
+        };
+
         const groupOverlays = visibleGroups.map(
           (group) =>
             new maps.CustomOverlay({
@@ -392,7 +428,7 @@ export function PropertyClusterMap({
                 group.latitude as number,
                 group.longitude as number,
               ),
-              content: createCountMarker(group, markerTheme, onDongSelect),
+              content: createCountMarker(group, markerTheme, focusGroup),
               yAnchor: 0.5,
             }),
         );
@@ -400,14 +436,15 @@ export function PropertyClusterMap({
           (point) =>
             new maps.CustomOverlay({
               position: new maps.LatLng(point.latitude, point.longitude),
-              content: createExactPropertyMarker(point),
+              content: createExactPropertyMarker(point, onPropertySelect),
               yAnchor: 1,
             }),
         );
 
-        const syncMarkersToZoom = () => {
+        const syncMapState = () => {
+          const level = map.getLevel();
           const showExactPoints =
-            exactPointOverlays.length > 0 && map.getLevel() <= 4;
+            exactPointOverlays.length > 0 && level <= 4;
 
           groupOverlays.forEach((overlay) =>
             overlay.setMap(showExactPoints ? null : map),
@@ -415,13 +452,43 @@ export function PropertyClusterMap({
           exactPointOverlays.forEach((overlay) =>
             overlay.setMap(showExactPoints ? map : null),
           );
+
+          if (level >= 7) {
+            onVisiblePropertiesChange(null);
+            onPropertySelect(null);
+            return;
+          }
+
+          const bounds = map.getBounds();
+          const visiblePropertyIds = showExactPoints
+            ? exactPoints
+                .filter((point) =>
+                  bounds.contain(
+                    new maps.LatLng(point.latitude, point.longitude),
+                  ),
+                )
+                .map((point) => point.propertyId)
+            : visibleGroups
+                .filter((group) =>
+                  bounds.contain(
+                    new maps.LatLng(
+                      group.latitude as number,
+                      group.longitude as number,
+                    ),
+                  ),
+                )
+                .flatMap((group) => group.propertyIds);
+
+          onVisiblePropertiesChange(visiblePropertyIds);
         };
 
-        maps.event.addListener(map, "zoom_changed", syncMarkersToZoom);
-        syncMarkersToZoom();
+        maps.event.addListener(map, "zoom_changed", syncMapState);
+        maps.event.addListener(map, "idle", syncMapState);
+        syncMapState();
 
         disposeMap = () => {
-          maps.event.removeListener(map, "zoom_changed", syncMarkersToZoom);
+          maps.event.removeListener(map, "zoom_changed", syncMapState);
+          maps.event.removeListener(map, "idle", syncMapState);
           [...groupOverlays, ...exactPointOverlays].forEach((overlay) =>
             overlay.setMap(null),
           );
@@ -436,7 +503,13 @@ export function PropertyClusterMap({
       disposeMap?.();
       container.replaceChildren();
     };
-  }, [appKey, groups, onDongSelect, properties]);
+  }, [
+    appKey,
+    groups,
+    onPropertySelect,
+    onVisiblePropertiesChange,
+    properties,
+  ]);
 
   if (!groups.length) {
     return (
@@ -463,7 +536,10 @@ export function PropertyClusterMap({
             <button
               type="button"
               key={group.dong}
-              onClick={() => onDongSelect(group.dong)}
+              onClick={() => {
+                onPropertySelect(null);
+                onVisiblePropertiesChange(group.propertyIds);
+              }}
               className="rounded-xl border border-brand-line bg-brand-surface p-4 text-center shadow-card"
             >
               <strong className="text-2xl text-brand-accent">

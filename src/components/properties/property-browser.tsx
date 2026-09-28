@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Building, List, Map as MapIcon, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PropertyClusterMap } from "@/components/map/property-cluster-map";
 import { formatPyeong, formatWon } from "@/lib/properties/format";
 import type { Property } from "@/types/database";
@@ -121,14 +121,27 @@ function writeStateToUrl(
   window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
 }
 
-function MapPropertyCard({ property }: { property: Property }) {
+function MapPropertyCard({
+  property,
+  selected,
+}: {
+  property: Property;
+  selected: boolean;
+}) {
   const image = property.image_urls[0];
   const pyeong = property.exclusive_area
     ? `${formatPyeong(property.exclusive_area)}평`
     : "협의";
 
   return (
-    <article className="group relative grid min-h-[172px] grid-cols-[38%_62%] overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card transition hover:border-brand-accent hover:shadow-card-hover sm:grid-cols-[42%_58%]">
+    <article
+      aria-current={selected ? "true" : undefined}
+      className={`group relative grid min-h-[172px] grid-cols-[38%_62%] overflow-hidden rounded-2xl border bg-brand-surface shadow-card transition hover:border-brand-accent hover:shadow-card-hover sm:grid-cols-[42%_58%] ${
+        selected
+          ? "border-brand-accent ring-2 ring-brand-accent/20"
+          : "border-brand-line"
+      }`}
+    >
       <TrackedPropertyLink
         propertyNumber={property.property_number}
         propertyCategory={property.category}
@@ -158,21 +171,25 @@ function MapPropertyCard({ property }: { property: Property }) {
         </h3>
         <div className="mt-3 grid grid-cols-[1.4fr_1fr_0.7fr] gap-1 border-t border-brand-line pt-3 text-[13px] text-brand-muted sm:grid-cols-3 sm:gap-2 sm:text-sm">
           <div>
-            <span className="block">보증금</span>
-            <b className="mt-1 block whitespace-nowrap text-base leading-tight text-brand-ink">
+            <span className="block text-sm font-bold sm:text-[15px]">
+              보증금
+            </span>
+            <b className="mt-1 block whitespace-nowrap text-[17px] leading-tight font-black text-brand-ink">
               {formatWon(property.deposit)}
             </b>
           </div>
           <div>
-            <span className="block">월세</span>
-            <b className="mt-1 block whitespace-nowrap text-base leading-tight text-brand-accent">
+            <span className="block text-sm font-bold sm:text-[15px]">월세</span>
+            <b className="mt-1 block whitespace-nowrap text-[17px] leading-tight font-black text-brand-accent">
               {formatWon(property.monthly_rent)}
             </b>
           </div>
           <div>
-            <span className="block sm:hidden">면적</span>
-            <span className="hidden sm:block">전용면적</span>
-            <b className="mt-1 block whitespace-nowrap text-base leading-tight text-brand-ink">
+            <span className="block text-sm font-bold sm:hidden">면적</span>
+            <span className="hidden text-[15px] font-bold sm:block">
+              전용면적
+            </span>
+            <b className="mt-1 block whitespace-nowrap text-[17px] leading-tight font-black text-brand-ink">
               {pyeong}
             </b>
           </div>
@@ -197,6 +214,13 @@ export function PropertyBrowser({
   const [rentFilter, setRentFilter] = useState<RentFilter>("all");
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [mapVisiblePropertyIds, setMapVisiblePropertyIds] = useState<
+    string[] | null
+  >(null);
+  const [selectedMapPropertyId, setSelectedMapPropertyId] = useState<
+    string | null
+  >(null);
+  const mapListRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState<SearchState>({
     number: "",
     dong: "",
@@ -271,6 +295,23 @@ export function PropertyBrowser({
     });
   }, [properties, search]);
 
+  const mapVisibleProperties = useMemo(() => {
+    const visibleIds = mapVisiblePropertyIds
+      ? new Set(mapVisiblePropertyIds)
+      : null;
+    const visibleProperties = visibleIds
+      ? filtered.filter((property) => visibleIds.has(property.id))
+      : filtered;
+
+    if (!selectedMapPropertyId) return visibleProperties;
+
+    return [...visibleProperties].sort((a, b) => {
+      if (a.id === selectedMapPropertyId) return -1;
+      if (b.id === selectedMapPropertyId) return 1;
+      return 0;
+    });
+  }, [filtered, mapVisiblePropertyIds, selectedMapPropertyId]);
+
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
     const nextSearch: SearchState = {
@@ -284,6 +325,8 @@ export function PropertyBrowser({
 
     setPropertyNumber(nextSearch.number);
     setSearch(nextSearch);
+    setMapVisiblePropertyIds(null);
+    setSelectedMapPropertyId(null);
     writeStateToUrl(pathname, nextSearch, viewMode);
 
     if (isDefaultSearch(nextSearch)) {
@@ -296,22 +339,33 @@ export function PropertyBrowser({
 
   function changeViewMode(nextViewMode: ViewMode) {
     setViewMode(nextViewMode);
+    setMapVisiblePropertyIds(null);
+    setSelectedMapPropertyId(null);
     writeStateToUrl(window.location.pathname, search, nextViewMode);
   }
 
-  const selectDongFromMap = useCallback(
-    (selectedDong: string) => {
-      const nextSearch = { ...search, dong: selectedDong };
-      const pathname = window.location.pathname;
-      const storageKey = `${searchStoragePrefix}${pathname}`;
-
-      setDong(selectedDong);
-      setSearch(nextSearch);
-      writeStateToUrl(pathname, nextSearch, "map");
-      window.sessionStorage.setItem(storageKey, JSON.stringify(nextSearch));
+  const updateMapVisibleProperties = useCallback(
+    (propertyIds: string[] | null) => {
+      setMapVisiblePropertyIds(propertyIds);
+      setSelectedMapPropertyId((current) => {
+        if (!current || propertyIds === null) return null;
+        return propertyIds.includes(current) ? current : null;
+      });
     },
-    [search],
+    [],
   );
+
+  const selectPropertyFromMap = useCallback((propertyId: string | null) => {
+    setSelectedMapPropertyId(propertyId);
+    if (!propertyId) return;
+
+    window.requestAnimationFrame(() => {
+      mapListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, []);
+
+  const visiblePropertyCount =
+    viewMode === "map" ? mapVisibleProperties.length : filtered.length;
 
   return (
     <section
@@ -321,7 +375,7 @@ export function PropertyBrowser({
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div>
           <p className="text-sm font-bold text-brand-accent">
-            {filtered.length}개의 매물
+            {visiblePropertyCount}개의 매물
           </p>
           <h1 className="mt-1 text-3xl font-black tracking-[-0.03em] text-brand-ink md:text-4xl">
             {title}
@@ -418,15 +472,28 @@ export function PropertyBrowser({
       {filtered.length ? (
         viewMode === "map" ? (
           <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
-            <div className="space-y-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2">
-              {filtered.map((property) => (
-                <MapPropertyCard key={property.id} property={property} />
+            <div
+              ref={mapListRef}
+              className="space-y-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
+            >
+              {mapVisibleProperties.map((property) => (
+                <MapPropertyCard
+                  key={property.id}
+                  property={property}
+                  selected={property.id === selectedMapPropertyId}
+                />
               ))}
+              {!mapVisibleProperties.length ? (
+                <div className="rounded-2xl border border-dashed border-brand-line bg-brand-surface p-10 text-center text-sm text-brand-muted">
+                  현재 지도 범위에 표시할 매물이 없습니다.
+                </div>
+              ) : null}
             </div>
             <div className="min-h-[520px] lg:sticky lg:top-[92px] lg:h-[720px]">
               <PropertyClusterMap
                 properties={filtered}
-                onDongSelect={selectDongFromMap}
+                onVisiblePropertiesChange={updateMapVisibleProperties}
+                onPropertySelect={selectPropertyFromMap}
               />
             </div>
           </div>
