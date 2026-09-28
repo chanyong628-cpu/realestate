@@ -170,7 +170,8 @@ function MapPropertyCard({ property }: { property: Property }) {
             </b>
           </div>
           <div>
-            <span className="block">전용면적</span>
+            <span className="block sm:hidden">면적</span>
+            <span className="hidden sm:block">전용면적</span>
             <b className="mt-1 block whitespace-nowrap text-base leading-tight text-brand-ink">
               {pyeong}
             </b>
