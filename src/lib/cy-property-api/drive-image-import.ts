@@ -1,7 +1,5 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
-import sharp from "sharp";
 import {
   downloadGoogleDriveImage,
   findGoogleDriveChildFoldersByName,
@@ -9,20 +7,23 @@ import {
   listGoogleDriveImages,
   readGoogleDriveImageBuffer,
 } from "../google-drive";
-import { createAdminClient } from "../supabase/admin";
 import {
   DriveImageApiError,
   type DriveImageImportResult,
 } from "./drive-image-handler";
+import {
+  ImageProcessingError,
+  MAX_PROPERTY_IMAGES,
+  PROPERTY_IMAGE_BUCKET,
+  ensurePropertyImageBucket,
+  hashValue as hash,
+  optimizePropertyImage,
+  uploadWebp,
+} from "./image-storage";
 
-const PROPERTY_IMAGE_BUCKET = "property-images";
-const MAX_PROPERTY_IMAGES = 40;
-const MAX_WEBP_SIZE = 700 * 1024;
-const INITIAL_MAX_WIDTH = 1600;
-
-function hash(value: string | Buffer, length = 16) {
-  return createHash("sha256").update(value).digest("hex").slice(0, length);
-}
+// 2026-09-28: 사진 최적화(optimizePropertyImage)/버킷 준비(ensurePropertyImageBucket)/
+// 업로드(uploadWebp) 로직은 image-storage.ts로 옮겨 로컬 업로드 경로와 공유한다.
+// 이 파일의 나머지 동작(구글 드라이브 조회 자체)은 전혀 바뀌지 않았다.
 
 export function buildDriveImageStoragePath(
   folderId: string,
@@ -30,91 +31,6 @@ export function buildDriveImageStoragePath(
   webp: Buffer,
 ) {
   return `drive-imports/${hash(folderId)}/${hash(fileId)}-${hash(webp)}.webp`;
-}
-
-async function optimizePropertyImage(source: Buffer) {
-  let width = INITIAL_MAX_WIDTH;
-  let quality = 82;
-
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const webp = await sharp(source, {
-      failOn: "error",
-      limitInputPixels: 80_000_000,
-    })
-      .rotate()
-      .resize({ width, height: width, fit: "inside", withoutEnlargement: true })
-      .webp({ quality, effort: 4 })
-      .toBuffer();
-
-    if (webp.byteLength <= MAX_WEBP_SIZE) return webp;
-    width = Math.max(800, Math.round(width * 0.85));
-    quality = Math.max(48, quality - 6);
-  }
-
-  throw new DriveImageApiError(
-    422,
-    "IMAGE_PROCESSING_FAILED",
-    "사진을 홈페이지 업로드 크기로 압축하지 못했습니다.",
-  );
-}
-
-function isMissingBucket(message: string) {
-  return message.toLowerCase().includes("not found");
-}
-
-async function ensurePropertyImageBucket() {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.storage.getBucket(PROPERTY_IMAGE_BUCKET);
-  if (data) return supabase;
-  if (error && !isMissingBucket(error.message)) throw error;
-
-  const { error: createError } = await supabase.storage.createBucket(
-    PROPERTY_IMAGE_BUCKET,
-    {
-      public: true,
-      fileSizeLimit: MAX_WEBP_SIZE,
-      allowedMimeTypes: ["image/webp"],
-    },
-  );
-  if (createError && !createError.message.toLowerCase().includes("already")) {
-    throw createError;
-  }
-  return supabase;
-}
-
-async function objectExists(
-  supabase: ReturnType<typeof createAdminClient>,
-  path: string,
-) {
-  const slash = path.lastIndexOf("/");
-  const prefix = path.slice(0, slash);
-  const fileName = path.slice(slash + 1);
-  const { data, error } = await supabase.storage
-    .from(PROPERTY_IMAGE_BUCKET)
-    .list(prefix, { limit: 2, search: fileName });
-  if (error) throw error;
-  return (data ?? []).some((item) => item.name === fileName);
-}
-
-async function uploadWebp(
-  supabase: ReturnType<typeof createAdminClient>,
-  path: string,
-  webp: Buffer,
-) {
-  if (await objectExists(supabase, path)) return false;
-
-  const { error } = await supabase.storage
-    .from(PROPERTY_IMAGE_BUCKET)
-    .upload(path, webp, {
-      contentType: "image/webp",
-      cacheControl: "31536000",
-      upsert: false,
-    });
-  if (!error) return true;
-
-  // A simultaneous retry can win between the existence check and upload.
-  if (await objectExists(supabase, path)) return false;
-  throw error;
 }
 
 function mapDriveError(error: GoogleDriveImportError) {
@@ -223,6 +139,9 @@ export async function importGoogleDrivePropertyImages(
       }
     }
     if (error instanceof DriveImageApiError) throw error;
+    if (error instanceof ImageProcessingError) {
+      throw new DriveImageApiError(error.status, error.code, error.message);
+    }
     if (error instanceof GoogleDriveImportError) throw mapDriveError(error);
     console.error("Drive property image import failed:", {
       code: "IMAGE_IMPORT_FAILED",
