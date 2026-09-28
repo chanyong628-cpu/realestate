@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Building, List, Map as MapIcon, MapPin, Search } from "lucide-react";
+import { Building, List, Map as MapIcon, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PropertyClusterMap } from "@/components/map/property-cluster-map";
 import { formatPyeong, formatWon } from "@/lib/properties/format";
@@ -156,10 +156,6 @@ function MapPropertyCard({ property }: { property: Property }) {
         <h3 className="mt-1 line-clamp-1 text-[17px] font-black tracking-[-0.025em] text-brand-ink">
           {property.title}
         </h3>
-        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-brand-muted">
-          <MapPin size={14} className="text-brand-accent" />
-          {property.public_address || "송파구"}
-        </p>
         <div className="mt-3 grid grid-cols-3 gap-1 border-t border-brand-line pt-3 text-xs text-brand-muted sm:gap-2">
           <div>
             <span className="block">보증금</span>

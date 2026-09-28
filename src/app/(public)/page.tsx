@@ -55,7 +55,7 @@ export default async function HomePage() {
             <p className="text-lg font-bold tracking-[-0.025em] text-brand-ink sm:text-xl">
               송파구 사무실 · 상가 전문
             </p>
-            <h1 className="mt-4 text-[42px] leading-[1.12] font-black tracking-[-0.045em] text-brand-ink sm:text-6xl lg:text-[68px]">
+            <h1 className="mt-4 text-[42px] leading-[1.12] font-black tracking-[-0.045em] text-brand-ink sm:text-6xl lg:text-[52px] xl:text-[64px] 2xl:text-[68px]">
               신뢰를 중개합니다.
               <br />
               <span className="text-brand-accent">C.Y 부동산</span>
