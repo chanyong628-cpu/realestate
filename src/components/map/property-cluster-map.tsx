@@ -5,7 +5,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 
 type MapInstance = {
+  getLevel: () => number;
   setLevel: (level: number) => void;
+};
+
+type MapOverlay = {
+  setMap: (map: MapInstance | null) => void;
 };
 
 type KakaoMaps = {
@@ -19,7 +24,19 @@ type KakaoMaps = {
     position: unknown;
     content: HTMLElement;
     yAnchor?: number;
-  }) => { setMap: (map: MapInstance | null) => void };
+  }) => MapOverlay;
+  event: {
+    addListener: (
+      target: MapInstance,
+      eventName: string,
+      handler: () => void,
+    ) => void;
+    removeListener: (
+      target: MapInstance,
+      eventName: string,
+      handler: () => void,
+    ) => void;
+  };
   services?: {
     Status: { OK: string };
     Geocoder: new () => {
@@ -43,6 +60,13 @@ type DongGroup = {
   count: number;
   latitude: number | null;
   longitude: number | null;
+};
+
+type ExactPropertyPoint = {
+  propertyNumber: string;
+  address: string;
+  latitude: number;
+  longitude: number;
 };
 
 function getDong(address: string | null) {
@@ -159,6 +183,54 @@ async function resolveGroupCoordinates(maps: KakaoMaps, group: DongGroup) {
   });
 }
 
+async function resolveExactPropertyPoint(
+  maps: KakaoMaps,
+  property: Property,
+) {
+  const address = property.public_address?.trim();
+
+  if (property.address_hidden || !address || !/\d/.test(address)) return null;
+
+  if (
+    Number.isFinite(property.latitude) &&
+    Number.isFinite(property.longitude)
+  ) {
+    return {
+      propertyNumber: property.property_number,
+      address,
+      latitude: property.latitude as number,
+      longitude: property.longitude as number,
+    } satisfies ExactPropertyPoint;
+  }
+
+  const services = maps.services;
+  if (!services) return null;
+
+  return new Promise<ExactPropertyPoint | null>((resolve) => {
+    new services.Geocoder().addressSearch(address, (result, status) => {
+      const first = result[0];
+      const latitude = Number(first?.y);
+      const longitude = Number(first?.x);
+
+      if (
+        status !== services.Status.OK ||
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)
+      ) {
+        resolve(null);
+        return;
+      }
+
+      resolve({
+        propertyNumber: property.property_number,
+        address,
+        latitude,
+        longitude,
+      });
+    });
+  });
+}
+
 type MarkerTheme = {
   accent: string;
   ink: string;
@@ -213,6 +285,42 @@ function createCountMarker(
   return wrapper;
 }
 
+function createExactPropertyMarker(point: ExactPropertyPoint) {
+  const wrapper = document.createElement("div");
+  wrapper.setAttribute(
+    "aria-label",
+    `${point.propertyNumber} ${point.address} 실제 위치`,
+  );
+  wrapper.title = `${point.propertyNumber} · ${point.address}`;
+  wrapper.style.position = "relative";
+  wrapper.style.width = "34px";
+  wrapper.style.height = "44px";
+  wrapper.style.filter = "drop-shadow(0 5px 7px rgb(127 29 29 / 0.35))";
+
+  const pin = document.createElement("span");
+  pin.style.position = "absolute";
+  pin.style.top = "1px";
+  pin.style.left = "3px";
+  pin.style.width = "28px";
+  pin.style.height = "28px";
+  pin.style.border = "3px solid white";
+  pin.style.borderRadius = "50% 50% 50% 0";
+  pin.style.background = "#dc2626";
+  pin.style.transform = "rotate(-45deg)";
+
+  const center = document.createElement("span");
+  center.style.position = "absolute";
+  center.style.top = "9px";
+  center.style.left = "11px";
+  center.style.width = "10px";
+  center.style.height = "10px";
+  center.style.borderRadius = "9999px";
+  center.style.background = "white";
+
+  wrapper.append(pin, center);
+  return wrapper;
+}
+
 export function PropertyClusterMap({
   properties,
   onDongSelect,
@@ -229,15 +337,26 @@ export function PropertyClusterMap({
     const container = containerRef.current;
     if (!appKey || !container || !groups.length) return;
     let cancelled = false;
+    let disposeMap: (() => void) | undefined;
 
     loadKakaoMaps(appKey)
       .then(async (maps) => {
-        const resolvedGroups = await Promise.all(
-          groups.map((group) => resolveGroupCoordinates(maps, group)),
-        );
+        const [resolvedGroups, resolvedExactPoints] = await Promise.all([
+          Promise.all(
+            groups.map((group) => resolveGroupCoordinates(maps, group)),
+          ),
+          Promise.all(
+            properties.map((property) =>
+              resolveExactPropertyPoint(maps, property),
+            ),
+          ),
+        ]);
         if (cancelled) return;
         const visibleGroups = resolvedGroups.filter(
           (group) => group.latitude !== null && group.longitude !== null,
+        );
+        const exactPoints = resolvedExactPoints.filter(
+          (point): point is ExactPropertyPoint => point !== null,
         );
         if (!visibleGroups.length) {
           setFailed(true);
@@ -266,16 +385,47 @@ export function PropertyClusterMap({
           surface: rootStyle.getPropertyValue("--color-brand-surface").trim(),
         };
 
-        for (const group of visibleGroups) {
-          new maps.CustomOverlay({
-            position: new maps.LatLng(
-              group.latitude as number,
-              group.longitude as number,
-            ),
-            content: createCountMarker(group, markerTheme, onDongSelect),
-            yAnchor: 0.5,
-          }).setMap(map);
-        }
+        const groupOverlays = visibleGroups.map(
+          (group) =>
+            new maps.CustomOverlay({
+              position: new maps.LatLng(
+                group.latitude as number,
+                group.longitude as number,
+              ),
+              content: createCountMarker(group, markerTheme, onDongSelect),
+              yAnchor: 0.5,
+            }),
+        );
+        const exactPointOverlays = exactPoints.map(
+          (point) =>
+            new maps.CustomOverlay({
+              position: new maps.LatLng(point.latitude, point.longitude),
+              content: createExactPropertyMarker(point),
+              yAnchor: 1,
+            }),
+        );
+
+        const syncMarkersToZoom = () => {
+          const showExactPoints =
+            exactPointOverlays.length > 0 && map.getLevel() <= 4;
+
+          groupOverlays.forEach((overlay) =>
+            overlay.setMap(showExactPoints ? null : map),
+          );
+          exactPointOverlays.forEach((overlay) =>
+            overlay.setMap(showExactPoints ? map : null),
+          );
+        };
+
+        maps.event.addListener(map, "zoom_changed", syncMarkersToZoom);
+        syncMarkersToZoom();
+
+        disposeMap = () => {
+          maps.event.removeListener(map, "zoom_changed", syncMarkersToZoom);
+          [...groupOverlays, ...exactPointOverlays].forEach((overlay) =>
+            overlay.setMap(null),
+          );
+        };
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -283,9 +433,10 @@ export function PropertyClusterMap({
 
     return () => {
       cancelled = true;
+      disposeMap?.();
       container.replaceChildren();
     };
-  }, [appKey, groups, onDongSelect]);
+  }, [appKey, groups, onDongSelect, properties]);
 
   if (!groups.length) {
     return (
