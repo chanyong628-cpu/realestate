@@ -156,7 +156,7 @@ function MapPropertyCard({ property }: { property: Property }) {
         <h3 className="mt-1 line-clamp-1 text-[17px] font-black tracking-[-0.025em] text-brand-ink">
           {property.title}
         </h3>
-        <div className="mt-3 grid grid-cols-3 gap-1 border-t border-brand-line pt-3 text-[13px] text-brand-muted sm:gap-2 sm:text-sm">
+        <div className="mt-3 grid grid-cols-[1.4fr_1fr_0.7fr] gap-1 border-t border-brand-line pt-3 text-[13px] text-brand-muted sm:grid-cols-3 sm:gap-2 sm:text-sm">
           <div>
             <span className="block">보증금</span>
             <b className="mt-1 block whitespace-nowrap text-base leading-tight text-brand-ink">
