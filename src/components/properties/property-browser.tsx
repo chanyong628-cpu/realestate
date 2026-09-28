@@ -162,7 +162,7 @@ function MapPropertyCard({
           </div>
         )}
       </div>
-      <div className="min-w-0 p-4">
+      <div className="min-w-0 p-3 sm:p-4">
         <p className="text-base font-black text-brand-accent">
           {property.property_number}
         </p>
