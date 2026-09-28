@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Heart, Menu, MessageSquareText, Phone, X } from "lucide-react";
 import { useState } from "react";
@@ -19,9 +20,15 @@ export function PublicHeader() {
     <header className="sticky top-0 z-40 border-b border-brand-line bg-brand-base/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0" aria-label="C.Y 부동산 홈">
-          <span className="text-[25px] font-black tracking-[-0.055em] text-brand-accent sm:text-[29px]">
-            C.Y 부동산
-          </span>
+          <Image
+            src="/images/cy-realestate-logo-header.png"
+            alt="C.Y REALESTATE"
+            width={500}
+            height={119}
+            priority
+            sizes="(max-width: 640px) 180px, 220px"
+            className="h-auto w-[180px] sm:w-[220px]"
+          />
         </Link>
         <nav className="hidden items-center gap-7 lg:flex">
           {navigation.map(([href, label]) => (

@@ -71,7 +71,7 @@ export default async function HomePage() {
                 href="/office?view=map"
                 className="inline-flex h-12 items-center gap-2 rounded-lg border border-brand-accent bg-brand-surface px-6 font-bold text-brand-accent transition hover:bg-brand-soft"
               >
-                <Map size={18} /> 지도로 보기
+                <Map size={18} /> 지도로 보기 <ArrowRight size={18} />
               </Link>
             </div>
           </div>

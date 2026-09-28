@@ -139,7 +139,7 @@ function SectionHeading({
       </div>
       <Link
         href={href}
-        className="shrink-0 text-sm font-bold text-brand-accent hover:underline"
+        className="shrink-0 text-base font-black text-brand-accent hover:underline"
       >
         전체보기 →
       </Link>

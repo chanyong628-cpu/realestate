@@ -166,7 +166,11 @@ type MarkerTheme = {
   surface: string;
 };
 
-function createCountMarker(group: DongGroup, theme: MarkerTheme) {
+function createCountMarker(
+  group: DongGroup,
+  theme: MarkerTheme,
+  onDongSelect: (dong: string) => void,
+) {
   const wrapper = document.createElement("div");
   wrapper.setAttribute("aria-label", `${group.dong} 매물 ${group.count}개`);
   wrapper.style.display = "flex";
@@ -175,8 +179,11 @@ function createCountMarker(group: DongGroup, theme: MarkerTheme) {
   wrapper.style.gap = "4px";
   wrapper.style.transform = "translateY(-8px)";
 
-  const count = document.createElement("span");
+  const count = document.createElement("button");
+  count.type = "button";
   count.textContent = String(group.count);
+  count.setAttribute("aria-label", `${group.dong} 매물 ${group.count}개 보기`);
+  count.title = `${group.dong} 매물 보기`;
   count.style.display = "grid";
   count.style.placeItems = "center";
   count.style.width = "50px";
@@ -187,7 +194,9 @@ function createCountMarker(group: DongGroup, theme: MarkerTheme) {
   count.style.color = theme.surface;
   count.style.fontSize = "16px";
   count.style.fontWeight = "800";
+  count.style.cursor = "pointer";
   count.style.boxShadow = `0 8px 24px color-mix(in srgb, ${theme.accent} 30%, transparent)`;
+  count.addEventListener("click", () => onDongSelect(group.dong));
 
   const label = document.createElement("span");
   label.textContent = group.dong;
@@ -204,7 +213,13 @@ function createCountMarker(group: DongGroup, theme: MarkerTheme) {
   return wrapper;
 }
 
-export function PropertyClusterMap({ properties }: { properties: Property[] }) {
+export function PropertyClusterMap({
+  properties,
+  onDongSelect,
+}: {
+  properties: Property[];
+  onDongSelect: (dong: string) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const groups = useMemo(() => createGroups(properties), [properties]);
@@ -257,7 +272,7 @@ export function PropertyClusterMap({ properties }: { properties: Property[] }) {
               group.latitude as number,
               group.longitude as number,
             ),
-            content: createCountMarker(group, markerTheme),
+            content: createCountMarker(group, markerTheme, onDongSelect),
             yAnchor: 0.5,
           }).setMap(map);
         }
@@ -270,7 +285,7 @@ export function PropertyClusterMap({ properties }: { properties: Property[] }) {
       cancelled = true;
       container.replaceChildren();
     };
-  }, [appKey, groups]);
+  }, [appKey, groups, onDongSelect]);
 
   if (!groups.length) {
     return (
@@ -294,15 +309,17 @@ export function PropertyClusterMap({ properties }: { properties: Property[] }) {
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
           {groups.map((group) => (
-            <div
+            <button
+              type="button"
               key={group.dong}
+              onClick={() => onDongSelect(group.dong)}
               className="rounded-xl border border-brand-line bg-brand-surface p-4 text-center shadow-card"
             >
               <strong className="text-2xl text-brand-accent">
                 {group.count}
               </strong>
               <span className="mt-1 block text-sm font-bold">{group.dong}</span>
-            </div>
+            </button>
           ))}
         </div>
         <p className="mt-5 text-sm text-brand-muted">
