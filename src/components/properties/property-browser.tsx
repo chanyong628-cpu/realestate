@@ -136,7 +136,7 @@ function MapPropertyCard({
   return (
     <article
       aria-current={selected ? "true" : undefined}
-      className={`group relative grid min-h-[172px] grid-cols-[38%_62%] overflow-hidden rounded-2xl border bg-brand-surface shadow-card transition hover:border-brand-accent hover:shadow-card-hover sm:grid-cols-[42%_58%] ${
+      className={`group relative grid min-h-[172px] grid-cols-[34%_66%] overflow-hidden rounded-2xl border bg-brand-surface shadow-card transition hover:border-brand-accent hover:shadow-card-hover sm:grid-cols-[42%_58%] ${
         selected
           ? "border-brand-accent ring-2 ring-brand-accent/20"
           : "border-brand-line"
@@ -162,7 +162,7 @@ function MapPropertyCard({
           </div>
         )}
       </div>
-      <div className="min-w-0 p-3 sm:p-4">
+      <div className="min-w-0 p-2 sm:p-4">
         <p className="text-base font-black text-brand-accent">
           {property.property_number}
         </p>
