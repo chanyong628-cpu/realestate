@@ -280,21 +280,16 @@ export function PropertyQuickViewContent({
 
               <section className="mt-8 border-t border-brand-line pt-7">
                 <h3 className="text-xl font-black text-brand-ink">건축물 정보</h3>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="mt-4 grid gap-x-8 md:grid-cols-2">
                   {[buildingRows.slice(0, 4), buildingRows.slice(4)].map(
                     (rows, columnIndex) => (
-                      <div
-                        key={columnIndex}
-                        className="overflow-hidden rounded-2xl border border-brand-line"
-                      >
-                        {rows.map(([label, value], index) => (
+                      <div key={columnIndex}>
+                        {rows.map(([label, value]) => (
                           <div
                             key={label}
-                            className={`grid grid-cols-[130px_1fr] ${
-                              index > 0 ? "border-t border-brand-line" : ""
-                            }`}
+                            className="grid grid-cols-[130px_1fr] border-b border-brand-line"
                           >
-                            <div className="bg-brand-soft px-3 py-3 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
+                            <div className="bg-brand-soft/60 px-3 py-3 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
                               {label}
                             </div>
                             <div

@@ -389,21 +389,16 @@ export default async function PropertyDetailPage({
 
           <section className="mt-12 border-t border-brand-line pt-10">
             <h2 className="text-2xl font-black">건축물 정보</h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-x-10 md:grid-cols-2">
               {[buildingRows.slice(0, 4), buildingRows.slice(4)].map(
                 (rows, columnIndex) => (
-                  <div
-                    key={columnIndex}
-                    className="overflow-hidden rounded-2xl border border-brand-line"
-                  >
-                    {rows.map(([label, value], index) => (
+                  <div key={columnIndex}>
+                    {rows.map(([label, value]) => (
                       <div
                         key={label}
-                        className={`grid grid-cols-[140px_1fr] ${
-                          index > 0 ? "border-t border-brand-line" : ""
-                        }`}
+                        className="grid grid-cols-[140px_1fr] border-b border-brand-line"
                       >
-                        <div className="bg-brand-soft px-4 py-3.5 text-sm font-bold text-brand-slate">
+                        <div className="bg-brand-soft/60 px-4 py-3.5 text-sm font-bold text-brand-slate">
                           {label}
                         </div>
                         <div
