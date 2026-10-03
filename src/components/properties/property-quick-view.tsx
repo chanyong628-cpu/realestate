@@ -14,6 +14,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
+import { KakaoMap } from "@/components/map/kakao-map";
 import { ContactActions } from "./contact-actions";
 import { FavoriteButton } from "./favorite-button";
 import { PropertyGallery } from "./property-gallery";
@@ -65,20 +66,50 @@ function formatDescription(description: string | null) {
     .join("\n\n");
 }
 
+function formatApprovalDate(value: string | null) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
+function formatExactLocationHeading(property: Property) {
+  if (property.address_hidden) return null;
+  const address = property.public_address?.trim();
+  if (!address) return null;
+
+  const normalized = address
+    .replace(/^서울(?:특별시)?\s*/g, "")
+    .replace(/^송파구\s*/g, "")
+    .replace(/\s+/g, " ");
+  const parcel = normalized.match(
+    /([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
+  );
+
+  if (!parcel) return normalized;
+  return `${parcel[1]} ${parcel[2].replace(/\s+/g, " ")}번지`;
+}
+
 export function PropertyQuickViewContent({
   property,
   onClose,
   compact = false,
+  fullDetail = false,
 }: {
   property: Property;
   onClose: () => void;
   compact?: boolean;
+  fullDetail?: boolean;
 }) {
+  const location = formatLocation(property);
+  const exactLocationHeading = formatExactLocationHeading(property);
   const metrics = [
     {
       icon: MapPin,
       label: "위치",
-      value: formatLocation(property),
+      value: location,
     },
     {
       icon: Building,
@@ -198,6 +229,90 @@ export function PropertyQuickViewContent({
             </p>
           </section>
 
+          {fullDetail ? (
+            <>
+              <section className="mt-7 border-t border-brand-line pt-6">
+                <h3 className="text-lg font-black text-brand-ink">
+                  건축물 기본정보
+                </h3>
+                <div className="mt-4 overflow-hidden rounded-2xl border border-brand-line">
+                  {[
+                    ["건축물용도", property.building_use || "-"],
+                    ["사용승인일", formatApprovalDate(property.approval_date)],
+                    [
+                      "공급면적 / 전용면적",
+                      `${property.supply_area ?? "-"}㎡ / ${
+                        property.exclusive_area ?? "-"
+                      }㎡`,
+                    ],
+                    [
+                      "총주차 / 가능주차",
+                      `총 ${property.total_parking_count ?? 0}대 / 가능 ${
+                        property.available_parking_count ??
+                        (property.parking_available ? 1 : 0)
+                      }대`,
+                    ],
+                    ["건축물방향", property.building_direction || "-"],
+                    [
+                      "룸 / 화장실",
+                      `${property.room_count ?? 0} / ${
+                        property.restroom_count ?? 0
+                      }`,
+                    ],
+                    ["냉난방", property.air_conditioner_type || "-"],
+                    [
+                      "위반건축물 여부",
+                      property.is_violating_building ? "위반" : "적법",
+                    ],
+                  ].map(([label, value], index) => (
+                    <div
+                      key={label}
+                      className={`grid grid-cols-[130px_1fr] sm:grid-cols-[190px_1fr] ${
+                        index > 0 ? "border-t border-brand-line" : ""
+                      }`}
+                    >
+                      <div className="bg-brand-soft px-4 py-3.5 text-sm font-bold text-brand-slate sm:px-5">
+                        {label}
+                      </div>
+                      <div
+                        className={`px-4 py-3.5 text-sm font-semibold sm:px-5 ${
+                          label === "위반건축물 여부" &&
+                          property.is_violating_building
+                            ? "text-red-600"
+                            : "text-brand-ink"
+                        }`}
+                      >
+                        {value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="mt-7 border-t border-brand-line pt-6">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h3 className="text-2xl font-black text-brand-accent">
+                    위치
+                  </h3>
+                  {exactLocationHeading ? (
+                    <p className="text-sm font-semibold text-brand-muted/70">
+                      {exactLocationHeading}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="mt-4">
+                  <KakaoMap
+                    latitude={property.latitude}
+                    longitude={property.longitude}
+                    address={property.public_address}
+                    displayAddress={location}
+                    isAddressHidden={property.address_hidden ?? false}
+                  />
+                </div>
+              </section>
+            </>
+          ) : null}
+
           <section className="mt-7 rounded-2xl bg-brand-card p-4">
             <h3 className="font-black text-brand-ink">
               이 매물이 궁금하신가요?
@@ -214,12 +329,14 @@ export function PropertyQuickViewContent({
             </div>
           </section>
 
-          <Link
-            href={`/properties/${property.property_number}`}
-            className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl border border-brand-line bg-brand-surface text-sm font-bold text-brand-ink transition hover:border-brand-accent hover:text-brand-accent"
-          >
-            전체 상세페이지 열기 <ExternalLink size={16} />
-          </Link>
+          {!fullDetail ? (
+            <Link
+              href={`/properties/${property.property_number}`}
+              className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl border border-brand-line bg-brand-surface text-sm font-bold text-brand-ink transition hover:border-brand-accent hover:text-brand-accent"
+            >
+              전체 상세페이지 열기 <ExternalLink size={16} />
+            </Link>
+          ) : null}
         </article>
       </div>
     </div>
@@ -230,10 +347,12 @@ export function PropertyQuickViewModal({
   property,
   onClose,
   mobileOnly = false,
+  fullDetail = false,
 }: {
   property: Property;
   onClose: () => void;
   mobileOnly?: boolean;
+  fullDetail?: boolean;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [isEnabled, setIsEnabled] = useState(!mobileOnly);
@@ -281,9 +400,15 @@ export function PropertyQuickViewModal({
         aria-modal="true"
         aria-label={`${property.property_number} ${property.title} 상세보기`}
         tabIndex={-1}
-        className="h-[calc(100dvh-1rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-2xl outline-none sm:h-[min(90dvh,900px)] sm:rounded-3xl"
+        className={`h-[calc(100dvh-1rem)] w-full overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-2xl outline-none sm:h-[min(90dvh,900px)] sm:rounded-3xl ${
+          fullDetail ? "max-w-6xl" : "max-w-5xl"
+        }`}
       >
-        <PropertyQuickViewContent property={property} onClose={onClose} />
+        <PropertyQuickViewContent
+          property={property}
+          onClose={onClose}
+          fullDetail={fullDetail}
+        />
       </div>
     </div>
   );

@@ -599,6 +599,7 @@ export function PropertyBrowser({
           <PropertyQuickViewModal
             property={selectedListProperty}
             onClose={() => setSelectedListPropertyId(null)}
+            fullDetail
           />
         </>
       ) : null}
