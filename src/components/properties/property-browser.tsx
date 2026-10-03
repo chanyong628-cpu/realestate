@@ -357,10 +357,6 @@ export function PropertyBrowser({
   const updateMapVisibleProperties = useCallback(
     (propertyIds: string[] | null) => {
       setMapVisiblePropertyIds(propertyIds);
-      setSelectedMapPropertyId((current) => {
-        if (!current || propertyIds === null) return null;
-        return propertyIds.includes(current) ? current : null;
-      });
     },
     [],
   );

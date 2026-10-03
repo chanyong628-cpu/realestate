@@ -456,7 +456,6 @@ export function PropertyClusterMap({
 
           if (level >= 7) {
             onVisiblePropertiesChange(null);
-            onPropertySelect(null);
             return;
           }
 
