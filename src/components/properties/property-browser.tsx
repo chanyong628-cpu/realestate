@@ -519,7 +519,7 @@ export function PropertyBrowser({
           <div
             className={`grid gap-5 lg:items-start ${
               selectedMapProperty
-                ? "lg:grid-cols-2 xl:grid-cols-[minmax(360px,0.9fr)_minmax(400px,1fr)_minmax(420px,1.2fr)]"
+                ? "lg:grid-cols-2 xl:grid-cols-[minmax(430px,1fr)_minmax(400px,0.95fr)_minmax(420px,1.1fr)]"
                 : "lg:grid-cols-2"
             }`}
           >
