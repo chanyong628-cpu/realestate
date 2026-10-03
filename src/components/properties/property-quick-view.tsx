@@ -39,6 +39,11 @@ function formatPriceNumber(value: number | null) {
   return value === null ? "-" : value.toLocaleString("ko-KR");
 }
 
+function formatDetailArea(area: number | null) {
+  if (area === null) return "협의";
+  return `실${formatPyeong(area)}평 (${area.toLocaleString("ko-KR")}㎡)`;
+}
+
 function descriptionItems(description: string) {
   return description
     .split(/\r?\n+/)
@@ -129,7 +134,12 @@ export function PropertyQuickViewContent({
     property.total_floor ||
     inferTotalFloorFromAdvertisement(property.description) ||
     null;
-  const metrics = [
+  const metrics: Array<{
+    icon: typeof MapPin;
+    label: string;
+    value: string;
+    subValue?: string;
+  }> = [
     {
       icon: MapPin,
       label: "위치",
@@ -137,15 +147,14 @@ export function PropertyQuickViewContent({
     },
     {
       icon: Building,
-      label: "층수(해당/총)",
-      value: `${formatFloor(property.floor)} / 총${formatTotalFloor(totalFloor)}`,
+      label: "층수",
+      value: formatFloor(property.floor),
+      subValue: `(총 ${formatTotalFloor(totalFloor)})`,
     },
     {
       icon: Ruler,
       label: "전용면적",
-      value: property.exclusive_area
-        ? `${property.exclusive_area.toLocaleString("ko-KR")}㎡ / ${formatPyeong(property.exclusive_area)}평`
-        : "협의",
+      value: formatDetailArea(property.exclusive_area),
     },
     {
       icon: ArrowUpDown,
@@ -214,10 +223,10 @@ export function PropertyQuickViewContent({
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
             <main className="min-w-0">
               <div>
-                <p className="text-sm font-black tracking-wide text-brand-accent sm:text-base">
+                <p className="break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-accent sm:text-3xl">
                   {property.property_number}
                 </p>
-                <h2 className="mt-2 break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-ink sm:text-3xl">
+                <h2 className="mt-2 break-keep text-sm leading-snug font-black tracking-wide text-brand-ink sm:text-base">
                   {property.title}
                 </h2>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -227,7 +236,7 @@ export function PropertyQuickViewContent({
                         추천매물
                       </span>
                     ) : null}
-                    <span className="rounded-md border border-brand-line bg-brand-surface px-3 py-1 text-xs font-black text-brand-ink">
+                    <span className="rounded-md border border-brand-accent bg-brand-soft px-3 py-1 text-xs font-black text-brand-accent">
                       {categoryLabels[property.category]}
                     </span>
                   </div>
@@ -266,7 +275,7 @@ export function PropertyQuickViewContent({
                     <dt className="text-sm font-semibold text-brand-muted">
                       월세
                     </dt>
-                    <dd className="text-lg font-black text-brand-ink">
+                    <dd className="text-lg font-black text-brand-accent">
                       {formatPriceNumber(property.monthly_rent)}만원
                     </dd>
                   </div>
@@ -290,7 +299,7 @@ export function PropertyQuickViewContent({
               <section className="mt-8">
                 <h3 className="text-xl font-black text-brand-ink">주요 정보</h3>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {metrics.map(({ icon: Icon, label, value }) => (
+                  {metrics.map(({ icon: Icon, label, value, subValue }) => (
                     <div
                       key={label}
                       className="rounded-xl border border-brand-line bg-brand-surface p-4"
@@ -301,6 +310,11 @@ export function PropertyQuickViewContent({
                       </p>
                       <b className="mt-1 block break-keep text-sm leading-snug text-brand-ink sm:text-base">
                         {value}
+                        {subValue ? (
+                          <span className="ml-1.5 text-xs font-bold text-brand-muted sm:text-sm">
+                            {subValue}
+                          </span>
+                        ) : null}
                       </b>
                     </div>
                   ))}
@@ -328,13 +342,13 @@ export function PropertyQuickViewContent({
                     {buildingRows.map(([label, value]) => (
                       <div
                         key={label}
-                        className="grid grid-cols-[124px_1fr] border-b border-brand-line last:border-b-0"
+                        className="grid grid-cols-[148px_minmax(0,1fr)] border-b border-brand-line last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)]"
                       >
-                        <div className="bg-brand-soft/60 px-3 py-2.5 text-xs font-bold text-brand-slate sm:text-sm">
+                        <div className="whitespace-nowrap bg-brand-soft/60 px-3 py-2.5 text-xs font-bold text-brand-slate sm:text-sm">
                           {label}
                         </div>
                         <div
-                          className={`px-3 py-2.5 text-xs font-semibold sm:text-sm ${
+                          className={`whitespace-nowrap px-3 py-2.5 text-xs font-semibold sm:text-sm ${
                             label === "위반건축물 여부" &&
                             property.is_violating_building
                               ? "text-red-600"
@@ -393,7 +407,7 @@ export function PropertyQuickViewContent({
                   <dt className="text-sm font-semibold text-brand-muted">
                     월세
                   </dt>
-                  <dd className="text-lg font-black text-brand-ink">
+                  <dd className="text-lg font-black text-brand-accent">
                     {formatPriceNumber(property.monthly_rent)}만원
                   </dd>
                 </div>
@@ -449,7 +463,7 @@ export function PropertyQuickViewContent({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-black text-brand-ink">
+                <span className="rounded-full border border-brand-accent bg-brand-soft px-3 py-1 text-xs font-black text-brand-accent">
                   {categoryLabels[property.category]}
                 </span>
                 {property.is_recommended ? (
@@ -468,7 +482,9 @@ export function PropertyQuickViewContent({
           <p className="mt-5 text-xl font-black tracking-[-0.025em] text-brand-ink sm:text-2xl">
             보증금 {formatWon(property.deposit)}
             <span className="mx-2 text-brand-line">/</span>
-            월세 {formatWon(property.monthly_rent)}
+            <span className="text-brand-accent">
+              월세 {formatWon(property.monthly_rent)}
+            </span>
           </p>
           <p className="mt-1.5 text-base font-semibold text-brand-muted">
             관리비 {formatWon(property.maintenance_fee)}
@@ -479,7 +495,7 @@ export function PropertyQuickViewContent({
               compact ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-2 lg:grid-cols-3"
             }`}
           >
-            {metrics.map(({ icon: Icon, label, value }) => (
+            {metrics.map(({ icon: Icon, label, value, subValue }) => (
               <div
                 key={label}
                 className="rounded-xl border border-brand-line bg-brand-card p-3.5"
@@ -490,6 +506,11 @@ export function PropertyQuickViewContent({
                 </p>
                 <b className="mt-1 block break-keep text-sm leading-snug text-brand-ink">
                   {value}
+                  {subValue ? (
+                    <span className="ml-1 text-xs font-bold text-brand-muted">
+                      {subValue}
+                    </span>
+                  ) : null}
                 </b>
               </div>
             ))}
@@ -540,15 +561,15 @@ export function PropertyQuickViewContent({
                   ].map(([label, value], index) => (
                     <div
                       key={label}
-                      className={`grid grid-cols-[130px_1fr] sm:grid-cols-[190px_1fr] ${
+                      className={`grid grid-cols-[148px_minmax(0,1fr)] sm:grid-cols-[190px_minmax(0,1fr)] ${
                         index > 0 ? "border-t border-brand-line" : ""
                       }`}
                     >
-                      <div className="bg-brand-soft px-4 py-3.5 text-sm font-bold text-brand-slate sm:px-5">
+                      <div className="whitespace-nowrap bg-brand-soft px-3 py-3.5 text-xs font-bold text-brand-slate sm:px-5 sm:text-sm">
                         {label}
                       </div>
                       <div
-                        className={`px-4 py-3.5 text-sm font-semibold sm:px-5 ${
+                        className={`whitespace-nowrap px-4 py-3.5 text-sm font-semibold sm:px-5 ${
                           label === "위반건축물 여부" &&
                           property.is_violating_building
                             ? "text-red-600"

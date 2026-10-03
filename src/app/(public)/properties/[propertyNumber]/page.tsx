@@ -94,7 +94,7 @@ function descriptionItems(description: string) {
 
 function formatDetailArea(area: number | null) {
   if (area === null) return "-";
-  return `${area.toLocaleString("ko-KR")}㎡ / (실${formatPyeong(area)}평)`;
+  return `실${formatPyeong(area)}평 (${area.toLocaleString("ko-KR")}㎡)`;
 }
 
 function formatApprovalDate(value: string | null) {
@@ -203,6 +203,50 @@ export default async function PropertyDetailPage({
   const publicDescriptionItems = descriptionItems(
     formatPublicDescription(property.description),
   );
+  const detailMetrics: Array<{
+    icon: LucideIcon;
+    label: string;
+    value: string;
+    subValue?: string;
+  }> = [
+    {
+      icon: MapPin,
+      label: "위치",
+      value: publicLocation,
+    },
+    {
+      icon: Building,
+      label: "층수",
+      value: formatFloor(property.floor),
+      subValue: `(총 ${formatTotalFloor(totalFloor) ?? "-층"})`,
+    },
+    {
+      icon: Ruler,
+      label: "면적",
+      value: formatDetailArea(property.exclusive_area),
+    },
+    {
+      icon: ArrowUpDown,
+      label: "E/V",
+      value: property.elevator_available ? "有" : "無",
+    },
+    {
+      icon: Toilet,
+      label: "화장실",
+      value:
+        property.restroom_type === "internal_private"
+          ? "남녀 분리형 화장실"
+          : "단독 화장실",
+    },
+    {
+      icon: Car,
+      label: "주차대수",
+      value: `총 ${property.total_parking_count ?? 0}대 / 가능 ${
+        property.available_parking_count ??
+        (property.parking_available ? 1 : 0)
+      }대`,
+    },
+  ];
 
   if (property.category === "etc") {
     return <EtcArticleDetail article={property} />;
@@ -233,10 +277,10 @@ export default async function PropertyDetailPage({
         <div className="min-w-0">
           <article>
           <div>
-            <p className="text-base font-black tracking-wide text-brand-accent">
+            <p className="break-keep text-3xl leading-tight font-black tracking-[-0.03em] text-brand-accent md:text-4xl">
               {property.property_number}
             </p>
-            <h1 className="mt-2 break-keep text-3xl leading-tight font-black tracking-[-0.03em] md:text-4xl">
+            <h1 className="mt-2 break-keep text-base leading-snug font-black tracking-wide text-brand-ink">
               {property.title}
             </h1>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -246,7 +290,7 @@ export default async function PropertyDetailPage({
                     추천매물
                   </span>
                 )}
-                <span className="rounded-md border border-brand-line bg-brand-surface px-3 py-1 text-xs font-black">
+                <span className="rounded-md border border-brand-accent bg-brand-soft px-3 py-1 text-xs font-black text-brand-accent">
                   {categoryLabels[property.category]}
                 </span>
               </div>
@@ -300,7 +344,7 @@ export default async function PropertyDetailPage({
               </div>
               <div className="flex items-center justify-between py-3">
                 <dt className="text-sm font-semibold text-brand-muted">월세</dt>
-                <dd className="text-lg font-black text-brand-ink">
+                <dd className="text-lg font-black text-brand-accent">
                   {formatPriceNumber(property.monthly_rent)}만원
                 </dd>
               </div>
@@ -317,48 +361,7 @@ export default async function PropertyDetailPage({
           </section>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {([
-              {
-                icon: MapPin,
-                label: "위치",
-                value: publicLocation,
-              },
-              {
-                icon: Building,
-                label: "층수(해당/총)",
-                value: `${formatFloor(property.floor)} / 총${formatTotalFloor(totalFloor) ?? "-층"}`,
-              },
-              {
-                icon: Ruler,
-                label: "면적",
-                value: formatDetailArea(property.exclusive_area),
-              },
-              {
-                icon: ArrowUpDown,
-                label: "E/V",
-                value: property.elevator_available ? "有" : "無",
-              },
-              {
-                icon: Toilet,
-                label: "화장실",
-                value:
-                  property.restroom_type === "internal_private"
-                    ? "남녀 분리형 화장실"
-                    : "단독 화장실",
-              },
-              {
-                icon: Car,
-                label: "주차대수",
-                value: `총 ${property.total_parking_count ?? 0}대 / 가능 ${
-                  property.available_parking_count ??
-                  (property.parking_available ? 1 : 0)
-                }대`,
-              },
-            ] satisfies Array<{
-              icon: LucideIcon;
-              label: string;
-              value: string;
-            }>).map(({ icon: ItemIcon, label, value }) => {
+            {detailMetrics.map(({ icon: ItemIcon, label, value, subValue }) => {
               return (
                 <div
                   key={label}
@@ -372,6 +375,11 @@ export default async function PropertyDetailPage({
                     className="mt-1 block break-keep text-base leading-snug sm:text-lg"
                   >
                     {value}
+                    {subValue ? (
+                      <span className="ml-1.5 text-sm font-bold text-brand-muted sm:text-base">
+                        {subValue}
+                      </span>
+                    ) : null}
                   </b>
                 </div>
               );
@@ -399,13 +407,13 @@ export default async function PropertyDetailPage({
                 {buildingRows.map(([label, value]) => (
                   <div
                     key={label}
-                    className="grid grid-cols-[132px_1fr] border-b border-brand-line last:border-b-0"
+                    className="grid grid-cols-[152px_minmax(0,1fr)] border-b border-brand-line last:border-b-0 sm:grid-cols-[164px_minmax(0,1fr)]"
                   >
-                    <div className="bg-brand-soft/60 px-3 py-2.5 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
+                    <div className="whitespace-nowrap bg-brand-soft/60 px-3 py-2.5 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
                       {label}
                     </div>
                     <div
-                      className={`px-3 py-2.5 text-xs font-semibold sm:px-4 sm:text-sm ${
+                      className={`whitespace-nowrap px-3 py-2.5 text-xs font-semibold sm:px-4 sm:text-sm ${
                         label === "위반건축물 여부" &&
                         property.is_violating_building
                           ? "text-red-600"
@@ -459,7 +467,7 @@ export default async function PropertyDetailPage({
             </div>
             <div className="flex items-center justify-between py-4">
               <dt className="text-sm font-semibold text-brand-muted">월세</dt>
-              <dd className="text-lg font-black text-brand-ink">
+              <dd className="text-lg font-black text-brand-accent">
                 {formatPriceNumber(property.monthly_rent)}만원
               </dd>
             </div>

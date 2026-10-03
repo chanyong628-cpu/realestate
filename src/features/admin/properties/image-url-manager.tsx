@@ -101,25 +101,19 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
     setUploading(true);
     setUploadError("");
     setProgress({ done: 0, total: files.length });
-    const uploadedUrls: string[] = [];
 
     try {
       for (let index = 0; index < files.length; index += 1) {
-        uploadedUrls.push(await saveImage(files[index]));
+        const uploadedUrl = await saveImage(files[index]);
+        setUrls((current) =>
+          current.includes(uploadedUrl) ? current : [...current, uploadedUrl],
+        );
         setProgress({ done: index + 1, total: files.length });
       }
-
-      setUrls((current) => [
-        ...current,
-        ...uploadedUrls.filter((url) => !current.includes(url)),
-      ]);
     } catch (error) {
       setUploadError(
         error instanceof Error ? error.message : "사진 저장에 실패했습니다.",
       );
-      if (uploadedUrls.length) {
-        setUrls((current) => [...current, ...uploadedUrls]);
-      }
     } finally {
       setUploading(false);
       if (filesInputRef.current) filesInputRef.current.value = "";
@@ -201,7 +195,7 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
       </div>
 
       {urls.length > 0 && (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 xl:grid-cols-2">
           {urls.map((url, index) => (
             <article
               key={`${url}-${index}`}
@@ -218,12 +212,12 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
                 size={19}
                 className="shrink-0 cursor-grab text-stone-400"
               />
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-stone-200">
+              <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-stone-200 sm:h-28 sm:w-40">
                 <Image
                   src={url}
                   alt={`매물 이미지 ${index + 1}`}
                   fill
-                  sizes="80px"
+                  sizes="(min-width: 640px) 160px, 128px"
                   className="object-cover"
                 />
               </div>
