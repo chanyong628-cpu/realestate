@@ -15,16 +15,32 @@ import { useEffect, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
 import { KakaoMap } from "@/components/map/kakao-map";
-import { ContactActions } from "./contact-actions";
+import { ContactActions, ShareLinkButton } from "./contact-actions";
 import { FavoriteButton } from "./favorite-button";
 import { PropertyGallery } from "./property-gallery";
 
-function formatFloor(floor: string | null, totalFloor: string | null) {
+function formatFloor(floor: string | null) {
   if (!floor?.trim()) return "-";
   const current = floor.match(/(\d+)\s*층?/)?.[1];
-  const total = totalFloor?.match(/(\d+)\s*층?/)?.[1];
   if (!current) return floor;
-  return `${current}층 (총 ${total ?? "-"}층)`;
+  return `${current}층`;
+}
+
+function formatFloorSummary(floor: string | null, totalFloor: string | null) {
+  const current = formatFloor(floor);
+  if (current === "-") return "-";
+  const total = totalFloor?.match(/(\d+)\s*층?/)?.[1];
+  return `${current} (총 ${total ?? "-"}층)`;
+}
+
+function formatPriceNumber(value: number | null) {
+  return value === null ? "-" : value.toLocaleString("ko-KR");
+}
+
+function splitDescription(description: string) {
+  const items = description.split(/\n{2,}/).filter(Boolean);
+  const midpoint = Math.ceil(items.length / 2);
+  return [items.slice(0, midpoint), items.slice(midpoint)];
 }
 
 function formatLocation(property: Property) {
@@ -115,7 +131,7 @@ export function PropertyQuickViewContent({
     {
       icon: Building,
       label: "층수",
-      value: formatFloor(property.floor, property.total_floor),
+      value: formatFloor(property.floor),
     },
     {
       icon: Ruler,
@@ -168,6 +184,9 @@ export function PropertyQuickViewContent({
     ["냉난방", property.air_conditioner_type || "-"],
     ["위반건축물 여부", property.is_violating_building ? "위반" : "적법"],
   ];
+  const descriptionColumns = splitDescription(
+    formatDescription(property.description),
+  );
 
   if (fullDetail) {
     return (
@@ -187,23 +206,31 @@ export function PropertyQuickViewContent({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6 lg:px-8">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
             <main className="min-w-0">
-              <div className="flex items-start justify-between gap-4">
-                <div>
+              <div>
+                <p className="text-sm font-black tracking-wide text-brand-accent sm:text-base">
+                  {property.property_number}
+                </p>
+                <h2 className="mt-2 break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-ink sm:text-3xl">
+                  {property.title}
+                </h2>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2">
                     {property.is_recommended ? (
                       <span className="rounded-md bg-brand-accent px-3 py-1 text-xs font-bold text-white">
                         추천매물
                       </span>
                     ) : null}
-                    <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-black text-brand-ink">
+                    <span className="rounded-md border border-brand-line bg-brand-surface px-3 py-1 text-xs font-black text-brand-ink">
                       {categoryLabels[property.category]}
                     </span>
                   </div>
-                  <h2 className="mt-3 break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-ink sm:text-4xl">
-                    {property.title}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <FavoriteButton propertyId={property.id} detail />
+                    <ShareLinkButton
+                      sharePath={`/properties/${property.property_number}`}
+                    />
+                  </div>
                 </div>
-                <FavoriteButton propertyId={property.id} compact />
               </div>
 
               <div className="mt-6">
@@ -216,30 +243,34 @@ export function PropertyQuickViewContent({
               </div>
 
               <section className="mt-6 rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:hidden">
-                <p className="text-2xl font-black tracking-wide text-red-600">
+                <p className="text-2xl font-black tracking-wide text-brand-accent">
                   {property.property_number}
                 </p>
                 <dl className="mt-4 divide-y divide-brand-line">
                   <div className="flex items-center justify-between py-3">
                     <dt className="text-sm font-semibold text-brand-muted">
-                      보증금
+                      층수
                     </dt>
                     <dd className="text-base font-black text-brand-ink">
-                      {formatWon(property.deposit)}
-                    </dd>
-                  </div>
-                  <div className="flex items-center justify-between py-3">
-                    <dt className="font-bold text-brand-accent">월세</dt>
-                    <dd className="text-2xl font-black text-brand-accent">
-                      {formatWon(property.monthly_rent)}
+                      {formatFloorSummary(property.floor, property.total_floor)}
                     </dd>
                   </div>
                   <div className="flex items-center justify-between py-3">
                     <dt className="text-sm font-semibold text-brand-muted">
-                      관리비
+                      금액
+                    </dt>
+                    <dd className="text-lg font-black text-brand-ink">
+                      {formatPriceNumber(property.deposit)} / {formatPriceNumber(property.monthly_rent)} / {formatPriceNumber(property.maintenance_fee)}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <dt className="text-sm font-semibold text-brand-muted">
+                      평수
                     </dt>
                     <dd className="text-base font-black text-brand-ink">
-                      {formatWon(property.maintenance_fee)}
+                      {property.exclusive_area === null
+                        ? "-"
+                        : `실 ${formatPyeong(property.exclusive_area)}평`}
                     </dd>
                   </div>
                 </dl>
@@ -273,9 +304,20 @@ export function PropertyQuickViewContent({
 
               <section className="mt-8 border-t border-brand-line pt-7">
                 <h3 className="text-xl font-black text-brand-ink">매물 설명</h3>
-                <p className="mt-4 whitespace-pre-wrap break-keep text-base leading-8 text-brand-slate">
-                  {formatDescription(property.description)}
-                </p>
+                <div className="mt-4 grid gap-x-10 gap-y-3 md:grid-cols-2">
+                  {descriptionColumns.map((column, columnIndex) => (
+                    <div key={columnIndex} className="space-y-3">
+                      {column.map((item, itemIndex) => (
+                        <p
+                          key={`${columnIndex}-${itemIndex}`}
+                          className="break-keep text-base leading-8 text-brand-slate"
+                        >
+                          {item}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </section>
 
               <section className="mt-8 border-t border-brand-line pt-7">
@@ -338,30 +380,34 @@ export function PropertyQuickViewContent({
             </main>
 
             <aside className="hidden h-fit rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:sticky lg:top-5 lg:block">
-              <p className="text-2xl font-black tracking-wide text-red-600">
+              <p className="text-2xl font-black tracking-wide text-brand-accent">
                 {property.property_number}
               </p>
               <dl className="mt-5 divide-y divide-brand-line">
                 <div className="flex items-center justify-between py-4">
                   <dt className="text-sm font-semibold text-brand-muted">
-                    보증금
+                    층수
                   </dt>
                   <dd className="text-base font-black text-brand-ink">
-                    {formatWon(property.deposit)}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between py-4">
-                  <dt className="font-bold text-brand-accent">월세</dt>
-                  <dd className="text-3xl font-black text-brand-accent">
-                    {formatWon(property.monthly_rent)}
+                    {formatFloorSummary(property.floor, property.total_floor)}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between py-4">
                   <dt className="text-sm font-semibold text-brand-muted">
-                    관리비
+                    금액
+                  </dt>
+                  <dd className="text-lg font-black text-brand-ink">
+                    {formatPriceNumber(property.deposit)} / {formatPriceNumber(property.monthly_rent)} / {formatPriceNumber(property.maintenance_fee)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between py-4">
+                  <dt className="text-sm font-semibold text-brand-muted">
+                    평수
                   </dt>
                   <dd className="text-base font-black text-brand-ink">
-                    {formatWon(property.maintenance_fee)}
+                    {property.exclusive_area === null
+                      ? "-"
+                      : `실 ${formatPyeong(property.exclusive_area)}평`}
                   </dd>
                 </div>
               </dl>

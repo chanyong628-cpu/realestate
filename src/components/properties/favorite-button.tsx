@@ -48,9 +48,11 @@ export function useFavoriteIds() {
 export function FavoriteButton({
   propertyId,
   compact = false,
+  detail = false,
 }: {
   propertyId: string;
   compact?: boolean;
+  detail?: boolean;
 }) {
   const ids = useFavoriteIds();
   const [destinations, setDestinations] = useState<Destination[] | null>(null);
@@ -138,8 +140,12 @@ export function FavoriteButton({
         aria-label={saved ? "즐겨찾기 관리" : "즐겨찾기 추가"}
         onClick={openOrToggle}
         disabled={loading}
-        className={`flex items-center justify-center gap-2 rounded-full border font-bold transition ${
-          compact ? "size-11" : "h-11 px-4"
+        className={`flex items-center justify-center gap-2 border font-bold transition ${
+          detail
+            ? "h-11 rounded-lg px-4"
+            : compact
+              ? "size-11 rounded-full"
+              : "h-11 rounded-full px-4"
         } ${
           saved
             ? "border-brand-sage bg-brand-sage text-white"
@@ -151,7 +157,7 @@ export function FavoriteButton({
         ) : (
           <Heart size={18} fill={saved ? "currentColor" : "none"} />
         )}
-        {!compact && (saved ? "저장됨" : "즐겨찾기")}
+        {(!compact || detail) && (saved ? "저장됨" : "즐겨찾기")}
       </button>
 
       {destinations && (

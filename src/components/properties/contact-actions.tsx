@@ -1,8 +1,30 @@
 "use client";
 
-import { Check, Copy, MessageCircle, Phone } from "lucide-react";
+import { Check, Copy, MessageCircle, Phone, Share2 } from "lucide-react";
 import { trackConversion } from "@/components/analytics/google-analytics";
 import { useState } from "react";
+
+export function ShareLinkButton({ sharePath }: { sharePath: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copyLink() {
+    const value = new URL(sharePath, window.location.origin).toString();
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copyLink}
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand-line bg-brand-surface px-4 text-sm font-bold text-brand-slate transition hover:border-brand-accent hover:text-brand-accent"
+    >
+      {copied ? <Check size={18} /> : <Share2 size={18} />}
+      {copied ? "복사됨" : "공유하기"}
+    </button>
+  );
+}
 
 export function ContactActions({
   propertyNumber,
