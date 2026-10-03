@@ -24,7 +24,7 @@ function formatFloor(floor: string | null, totalFloor: string | null) {
   const current = floor.match(/(\d+)\s*층?/)?.[1];
   const total = totalFloor?.match(/(\d+)\s*층?/)?.[1];
   if (!current) return floor;
-  return total ? `${current}층 (총 ${total}층)` : `${current}층`;
+  return `${current}층 (총 ${total ?? "-"}층)`;
 }
 
 function formatLocation(property: Property) {
@@ -82,11 +82,14 @@ function formatExactLocationHeading(property: Property) {
   const normalized = address
     .replace(/^서울(?:특별시)?\s*/g, "")
     .replace(/\s+/g, " ");
-  const parcel = normalized.match(
+  const districtAddress = /^[가-힣0-9]+구\s/.test(normalized)
+    ? normalized
+    : `송파구 ${normalized}`;
+  const parcel = districtAddress.match(
     /([가-힣0-9]+구)\s+([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
   );
 
-  if (!parcel) return normalized;
+  if (!parcel) return districtAddress;
   return `${parcel[1]} ${parcel[2]} ${parcel[3].replace(/\s+/g, " ")}`;
 }
 
