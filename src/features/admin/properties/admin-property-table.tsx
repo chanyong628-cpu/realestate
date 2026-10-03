@@ -227,20 +227,20 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
         </p>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1240px] border-collapse text-left">
+      <div>
+        <table className="w-full table-fixed border-collapse text-left">
           <thead>
             <tr className="border-b border-stone-200 bg-stone-50 text-xs text-stone-500">
-              <th className="px-4 py-4 text-center">선택</th>
+              <th className="w-14 px-2 py-4 text-center">선택</th>
               <th className="px-5 py-4">매물</th>
-              <th className="px-4 py-4">카테고리</th>
-              <th className="px-4 py-4">공개 주소</th>
-              <th className="px-4 py-4 text-center">주소 표시</th>
-              <th className="px-4 py-4 text-center">노출</th>
-              <th className="px-4 py-4 text-center">추천</th>
-              <th className="px-4 py-4 text-center">사진</th>
-              <th className="px-3 py-4 text-center">즐겨찾기</th>
-              <th className="px-4 py-4 text-right">관리</th>
+              <th className="hidden w-20 px-2 py-4 xl:table-cell">분류</th>
+              <th className="hidden w-32 px-2 py-4 2xl:table-cell">공개 주소</th>
+              <th className="hidden w-24 px-2 py-4 text-center 2xl:table-cell">주소 표시</th>
+              <th className="w-20 px-2 py-4 text-center">노출</th>
+              <th className="w-20 px-2 py-4 text-center">추천</th>
+              <th className="hidden w-24 px-2 py-4 text-center xl:table-cell">사진</th>
+              <th className="hidden w-16 px-2 py-4 text-center 2xl:table-cell">찜</th>
+              <th className="w-48 px-3 py-4 text-right">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -260,7 +260,7 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                         : "border-stone-100"
                   }`}
                 >
-                  <td className="px-4 py-4 text-center">
+                  <td className="px-2 py-4 text-center">
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -276,11 +276,11 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                       {preview && <span className="mt-1.5 block max-w-[390px] truncate text-xs font-semibold text-red-600">{preview}</span>}
                     </Link>
                   </td>
-                  <td className="px-4 py-4 text-sm">{categoryLabels[property.category]}</td>
-                  <td className="max-w-56 truncate px-4 py-4 text-sm text-stone-600">
+                  <td className="hidden px-2 py-4 text-sm xl:table-cell">{categoryLabels[property.category]}</td>
+                  <td className="hidden truncate px-2 py-4 text-sm text-stone-600 2xl:table-cell">
                     {resolvePublicAddress(property.public_address, property.private_address) || "-"}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-center">
+                  <td className="hidden whitespace-nowrap px-2 py-4 text-center 2xl:table-cell">
                     <span className={`rounded-full px-3 py-1.5 text-xs font-black ${
                       isStoredAddressHidden(property.public_address)
                         ? "bg-amber-100 text-amber-800"
@@ -289,21 +289,21 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                       {isStoredAddressHidden(property.public_address) ? "반경 표시" : "주소 공개"}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-center">
+                  <td className="whitespace-nowrap px-2 py-4 text-center">
                     <form className="inline-flex" action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}>
                       <button className={`rounded-full px-3 py-1.5 text-xs font-black ${property.is_published ? "bg-forest-100 text-forest-700" : "bg-stone-100 text-stone-500"}`}>
                         {property.is_published ? "노출" : "비노출"}
                       </button>
                     </form>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-center">
+                  <td className="whitespace-nowrap px-2 py-4 text-center">
                     <form className="inline-flex" action={setPropertyRecommendedAction.bind(null, property.id, !property.is_recommended)}>
                       <button className={`rounded-full px-3 py-1.5 text-xs font-black ${property.is_recommended ? "bg-amber-100 text-amber-800" : "bg-stone-100 text-stone-500"}`}>
                         {property.is_recommended ? "추천" : "일반"}
                       </button>
                     </form>
                   </td>
-                  <td className="px-4 py-4 text-center">
+                  <td className="hidden px-2 py-4 text-center xl:table-cell">
                     {hasImages ? (
                       <span className="inline-flex min-w-20 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-800" title={`${property.image_urls.length}장 등록됨`}>
                         사진 {property.image_urls.length}장
@@ -314,9 +314,9 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-4 text-center"><FavoriteButton propertyId={property.id} compact /></td>
-                  <td className="whitespace-nowrap px-4 py-4">
-                    <div className="flex min-w-[184px] flex-nowrap justify-end gap-2">
+                  <td className="hidden px-2 py-4 text-center 2xl:table-cell"><FavoriteButton propertyId={property.id} compact /></td>
+                  <td className="whitespace-nowrap px-3 py-4">
+                    <div className="flex flex-nowrap justify-end gap-2">
                       <PropertyProposalButton id={property.id} propertyNumber={property.property_number} />
                       <Link href={`/admin/properties/${property.id}/edit`} className="whitespace-nowrap rounded-lg border border-stone-300 px-3 py-2 text-xs font-bold hover:bg-stone-50">수정</Link>
                       <DeletePropertyButton id={property.id} propertyNumber={property.property_number} />

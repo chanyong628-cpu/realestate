@@ -35,7 +35,7 @@ export default async function AdminLayout({
           </form>
         </div>
       </header>
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-[210px_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-[210px_minmax(0,1fr)]">
         <nav className="h-fit rounded-2xl bg-white p-3 shadow-sm">
           {links.map(([href, label]) => (
             <Link
@@ -47,7 +47,7 @@ export default async function AdminLayout({
             </Link>
           ))}
         </nav>
-        <main>{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

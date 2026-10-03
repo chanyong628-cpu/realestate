@@ -280,7 +280,7 @@ export default async function PropertyDetailPage({
             <p className="break-keep text-3xl leading-tight font-black tracking-[-0.03em] text-brand-accent md:text-4xl">
               {property.property_number}
             </p>
-            <h1 className="mt-2 break-keep text-base leading-snug font-black tracking-wide text-brand-ink">
+            <h1 className="mt-2 break-keep text-lg leading-snug font-black tracking-wide text-brand-ink">
               {property.title}
             </h1>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -389,11 +389,11 @@ export default async function PropertyDetailPage({
           <div className="mt-12 grid items-stretch gap-6 border-t border-brand-line pt-10 md:grid-cols-2">
             <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-6">
               <h2 className="text-2xl font-black">매물 설명</h2>
-              <div className="mt-5 space-y-3">
+              <div className="mt-5 space-y-6 rounded-xl bg-brand-soft/60 p-5">
                 {publicDescriptionItems.map((item, itemIndex) => (
                   <p
                     key={itemIndex}
-                    className="break-keep text-base leading-7 text-brand-slate"
+                    className="break-keep text-base leading-8 text-brand-ink"
                   >
                     {item}
                   </p>

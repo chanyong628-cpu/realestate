@@ -195,7 +195,7 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
       </div>
 
       {urls.length > 0 && (
-        <div className="mt-5 grid gap-3 xl:grid-cols-2">
+        <div className="mx-auto mt-5 grid w-full max-w-5xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {urls.map((url, index) => (
             <article
               key={`${url}-${index}`}
@@ -206,27 +206,24 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
                 if (dragIndex !== null) move(dragIndex, index);
                 setDragIndex(null);
               }}
-              className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3"
+              className="relative min-w-0 rounded-xl border border-stone-200 bg-stone-50 p-2"
             >
               <GripVertical
                 size={19}
-                className="shrink-0 cursor-grab text-stone-400"
+                className="absolute top-3 left-3 z-10 cursor-grab rounded-md bg-white/90 p-0.5 text-stone-500 shadow-sm"
               />
-              <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-stone-200 sm:h-28 sm:w-40">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-stone-200">
                 <Image
                   src={url}
                   alt={`매물 이미지 ${index + 1}`}
                   fill
-                  sizes="(min-width: 640px) 160px, 128px"
+                  sizes="(min-width: 1280px) 170px, (min-width: 1024px) 20vw, (min-width: 640px) 28vw, 44vw"
                   className="object-cover"
                 />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-black text-forest-600">
-                  {index === 0 ? "대표 사진" : `${index + 1}번째 사진`}
-                </p>
-                <p className="mt-1 truncate text-xs text-stone-500">{url}</p>
-              </div>
+              <p className="mt-2 text-center text-sm font-black text-forest-600">
+                {index === 0 ? "대표" : index}
+              </p>
               <button
                 type="button"
                 aria-label="이미지 삭제"
@@ -235,7 +232,7 @@ export function ImageUrlManager({ initialUrls }: { initialUrls: string[] }) {
                     current.filter((_, currentIndex) => currentIndex !== index),
                   )
                 }
-                className="grid size-9 shrink-0 place-items-center rounded-lg text-red-600 hover:bg-red-50"
+                className="absolute top-3 right-3 z-10 grid size-8 place-items-center rounded-lg bg-white/90 text-red-600 shadow-sm hover:bg-red-50"
               >
                 <Trash2 size={17} />
               </button>

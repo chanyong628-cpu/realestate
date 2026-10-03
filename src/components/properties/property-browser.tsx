@@ -14,7 +14,6 @@ import {
   PropertyQuickViewContent,
   PropertyQuickViewModal,
 } from "./property-quick-view";
-import { TrackedPropertyLink } from "./tracked-property-link";
 
 type RentFilter =
   | "all"
@@ -131,10 +130,12 @@ function MapPropertyCard({
   property,
   selected,
   narrowList = false,
+  onSelect,
 }: {
   property: Property;
   selected: boolean;
   narrowList?: boolean;
+  onSelect: () => void;
 }) {
   const image = property.image_urls[0];
   const pyeong = property.exclusive_area
@@ -152,11 +153,14 @@ function MapPropertyCard({
           : "border-brand-line"
       }`}
     >
-      <TrackedPropertyLink
-        propertyNumber={property.property_number}
-        propertyCategory={property.category}
-        propertyTitle={property.title}
-      />
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-label={`${property.property_number} ${property.title} 상세보기`}
+        className="absolute inset-0 z-10 cursor-pointer"
+      >
+        <span className="sr-only">매물 상세보기</span>
+      </button>
       <div className="relative min-h-[172px] bg-brand-soft">
         {image ? (
           <Image
@@ -374,6 +378,18 @@ export function PropertyBrowser({
     });
   }, []);
 
+  const selectPropertyFromList = useCallback((property: Property) => {
+    trackConversion("property_card_click", {
+      property_number: property.property_number,
+      property_category: property.category,
+      source_path: window.location.pathname,
+    });
+    setSelectedMapPropertyId(property.id);
+    window.requestAnimationFrame(() => {
+      mapListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, []);
+
   const visiblePropertyCount =
     viewMode === "map" ? mapVisibleProperties.length : filtered.length;
   const selectedMapProperty = selectedMapPropertyId
@@ -384,7 +400,7 @@ export function PropertyBrowser({
     : null;
 
   const openPreviewFromCard = useCallback(
-    (event: React.MouseEvent<HTMLElement>, mode: ViewMode) => {
+    (event: React.MouseEvent<HTMLElement>) => {
       const target = event.target as HTMLElement;
       const link = target.closest<HTMLAnchorElement>('a[href^="/properties/"]');
       if (!link) return;
@@ -404,14 +420,7 @@ export function PropertyBrowser({
         property_category: property.category,
         source_path: window.location.pathname,
       });
-      if (mode === "map") {
-        setSelectedMapPropertyId(property.id);
-        window.requestAnimationFrame(() => {
-          mapListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-        });
-      } else {
-        setSelectedListPropertyId(property.id);
-      }
+      setSelectedListPropertyId(property.id);
     },
     [properties],
   );
@@ -523,14 +532,13 @@ export function PropertyBrowser({
           <div
             className={`grid gap-5 lg:items-start ${
               selectedMapProperty
-                ? "lg:grid-cols-2 xl:grid-cols-[minmax(430px,1fr)_minmax(400px,0.95fr)_minmax(420px,1.1fr)]"
+                ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.95fr)_minmax(0,1.15fr)]"
                 : "lg:grid-cols-2"
             }`}
           >
             <div
               ref={mapListRef}
-              onClickCapture={(event) => openPreviewFromCard(event, "map")}
-              className="space-y-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
+              className="min-w-0 space-y-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
             >
               {mapVisibleProperties.map((property) => (
                 <MapPropertyCard
@@ -538,6 +546,7 @@ export function PropertyBrowser({
                   property={property}
                   selected={property.id === selectedMapPropertyId}
                   narrowList={Boolean(selectedMapProperty)}
+                  onSelect={() => selectPropertyFromList(property)}
                 />
               ))}
               {!mapVisibleProperties.length ? (
@@ -547,7 +556,7 @@ export function PropertyBrowser({
               ) : null}
             </div>
             {selectedMapProperty ? (
-              <aside className="hidden h-[720px] overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
+              <aside className="hidden h-[720px] min-w-0 overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
                 <PropertyQuickViewContent
                   key={selectedMapProperty.id}
                   property={selectedMapProperty}
@@ -556,7 +565,7 @@ export function PropertyBrowser({
                 />
               </aside>
             ) : null}
-            <div className="min-h-[520px] lg:sticky lg:top-[92px] lg:h-[720px]">
+            <div className="min-h-[520px] min-w-0 lg:sticky lg:top-[92px] lg:h-[720px]">
               <PropertyClusterMap
                 properties={filtered}
                 onVisiblePropertiesChange={updateMapVisibleProperties}
@@ -566,7 +575,7 @@ export function PropertyBrowser({
           </div>
         ) : (
           <div
-            onClickCapture={(event) => openPreviewFromCard(event, "list")}
+            onClickCapture={openPreviewFromCard}
             className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
             {filtered.map((property) => (

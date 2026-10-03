@@ -226,7 +226,7 @@ export function PropertyQuickViewContent({
                 <p className="break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-accent sm:text-3xl">
                   {property.property_number}
                 </p>
-                <h2 className="mt-2 break-keep text-sm leading-snug font-black tracking-wide text-brand-ink sm:text-base">
+                <h2 className="mt-2 break-keep text-base leading-snug font-black tracking-wide text-brand-ink sm:text-lg">
                   {property.title}
                 </h2>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -324,11 +324,11 @@ export function PropertyQuickViewContent({
               <div className="mt-8 grid items-stretch gap-5 border-t border-brand-line pt-7 md:grid-cols-2">
                 <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-5">
                   <h3 className="text-xl font-black text-brand-ink">매물 설명</h3>
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-6 rounded-xl bg-brand-soft/60 p-5">
                     {publicDescriptionItems.map((item, itemIndex) => (
                       <p
                         key={itemIndex}
-                        className="break-keep text-base leading-7 text-brand-slate"
+                        className="break-keep text-base leading-8 text-brand-ink"
                       >
                         {item}
                       </p>
@@ -472,7 +472,7 @@ export function PropertyQuickViewContent({
                   </span>
                 ) : null}
               </div>
-              <h2 className="mt-3 break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-ink sm:text-3xl">
+              <h2 className="mt-3 break-keep text-3xl leading-tight font-black tracking-[-0.03em] text-brand-ink sm:text-4xl">
                 {property.title}
               </h2>
             </div>
@@ -518,7 +518,7 @@ export function PropertyQuickViewContent({
 
           <section className="mt-7 border-t border-brand-line pt-6">
             <h3 className="text-lg font-black text-brand-ink">매물 설명</h3>
-            <p className="mt-3 whitespace-pre-wrap break-keep text-sm leading-7 text-brand-slate">
+            <p className="mt-3 whitespace-pre-wrap break-keep rounded-xl bg-brand-soft/60 p-4 text-sm leading-8 text-brand-ink">
               {formatDescription(property.description)}
             </p>
           </section>
