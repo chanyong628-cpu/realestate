@@ -4,10 +4,16 @@ import Image from "next/image";
 import { Building, List, Map as MapIcon, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PropertyClusterMap } from "@/components/map/property-cluster-map";
+import { PropertyViewTracker } from "@/components/analytics/property-view-tracker";
+import { trackConversion } from "@/components/analytics/google-analytics";
 import { formatPyeong, formatWon } from "@/lib/properties/format";
 import type { Property } from "@/types/database";
 import { FavoriteButton } from "./favorite-button";
 import { PropertyCard } from "./property-card";
+import {
+  PropertyQuickViewContent,
+  PropertyQuickViewModal,
+} from "./property-quick-view";
 import { TrackedPropertyLink } from "./tracked-property-link";
 
 type RentFilter =
@@ -220,6 +226,9 @@ export function PropertyBrowser({
   const [selectedMapPropertyId, setSelectedMapPropertyId] = useState<
     string | null
   >(null);
+  const [selectedListPropertyId, setSelectedListPropertyId] = useState<
+    string | null
+  >(null);
   const mapListRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState<SearchState>({
     number: "",
@@ -341,6 +350,7 @@ export function PropertyBrowser({
     setViewMode(nextViewMode);
     setMapVisiblePropertyIds(null);
     setSelectedMapPropertyId(null);
+    setSelectedListPropertyId(null);
     writeStateToUrl(window.location.pathname, search, nextViewMode);
   }
 
@@ -366,6 +376,45 @@ export function PropertyBrowser({
 
   const visiblePropertyCount =
     viewMode === "map" ? mapVisibleProperties.length : filtered.length;
+  const selectedMapProperty = selectedMapPropertyId
+    ? properties.find((property) => property.id === selectedMapPropertyId) ?? null
+    : null;
+  const selectedListProperty = selectedListPropertyId
+    ? properties.find((property) => property.id === selectedListPropertyId) ?? null
+    : null;
+
+  const openPreviewFromCard = useCallback(
+    (event: React.MouseEvent<HTMLElement>, mode: ViewMode) => {
+      const target = event.target as HTMLElement;
+      const link = target.closest<HTMLAnchorElement>('a[href^="/properties/"]');
+      if (!link) return;
+
+      const propertyNumber = decodeURIComponent(
+        link.getAttribute("href")?.split("/").filter(Boolean).at(-1) ?? "",
+      );
+      const property = properties.find(
+        (item) => item.property_number === propertyNumber,
+      );
+      if (!property) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      trackConversion("property_card_click", {
+        property_number: property.property_number,
+        property_category: property.category,
+        source_path: window.location.pathname,
+      });
+      if (mode === "map") {
+        setSelectedMapPropertyId(property.id);
+        window.requestAnimationFrame(() => {
+          mapListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      } else {
+        setSelectedListPropertyId(property.id);
+      }
+    },
+    [properties],
+  );
 
   return (
     <section
@@ -471,9 +520,16 @@ export function PropertyBrowser({
 
       {filtered.length ? (
         viewMode === "map" ? (
-          <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+          <div
+            className={`grid gap-5 lg:items-start ${
+              selectedMapProperty
+                ? "lg:grid-cols-[minmax(260px,0.78fr)_minmax(340px,1fr)_minmax(420px,1.25fr)]"
+                : "lg:grid-cols-2"
+            }`}
+          >
             <div
               ref={mapListRef}
+              onClickCapture={(event) => openPreviewFromCard(event, "map")}
               className="space-y-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
             >
               {mapVisibleProperties.map((property) => (
@@ -489,6 +545,15 @@ export function PropertyBrowser({
                 </div>
               ) : null}
             </div>
+            {selectedMapProperty ? (
+              <aside className="hidden h-[720px] overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card lg:sticky lg:top-[92px] lg:block">
+                <PropertyQuickViewContent
+                  property={selectedMapProperty}
+                  onClose={() => setSelectedMapPropertyId(null)}
+                  compact
+                />
+              </aside>
+            ) : null}
             <div className="min-h-[520px] lg:sticky lg:top-[92px] lg:h-[720px]">
               <PropertyClusterMap
                 properties={filtered}
@@ -498,7 +563,10 @@ export function PropertyBrowser({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div
+            onClickCapture={(event) => openPreviewFromCard(event, "list")}
+            className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          >
             {filtered.map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))}
@@ -510,6 +578,29 @@ export function PropertyBrowser({
           <p className="mt-2 text-brand-muted">검색 조건을 바꿔 확인해 주세요.</p>
         </div>
       )}
+      {selectedMapProperty ? (
+        <>
+          <PropertyViewTracker
+            propertyNumber={selectedMapProperty.property_number}
+          />
+          <PropertyQuickViewModal
+            property={selectedMapProperty}
+            onClose={() => setSelectedMapPropertyId(null)}
+            mobileOnly
+          />
+        </>
+      ) : null}
+      {selectedListProperty ? (
+        <>
+          <PropertyViewTracker
+            propertyNumber={selectedListProperty.property_number}
+          />
+          <PropertyQuickViewModal
+            property={selectedListProperty}
+            onClose={() => setSelectedListPropertyId(null)}
+          />
+        </>
+      ) : null}
     </section>
   );
 }

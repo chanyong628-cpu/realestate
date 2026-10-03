@@ -7,6 +7,7 @@ import type { Property } from "@/types/database";
 type MapInstance = {
   getBounds: () => { contain: (position: unknown) => boolean };
   getLevel: () => number;
+  relayout: () => void;
   setCenter: (position: unknown) => void;
   setLevel: (level: number) => void;
 };
@@ -484,9 +485,12 @@ export function PropertyClusterMap({
 
         maps.event.addListener(map, "zoom_changed", syncMapState);
         maps.event.addListener(map, "idle", syncMapState);
+        const resizeObserver = new ResizeObserver(() => map.relayout());
+        resizeObserver.observe(container);
         syncMapState();
 
         disposeMap = () => {
+          resizeObserver.disconnect();
           maps.event.removeListener(map, "zoom_changed", syncMapState);
           maps.event.removeListener(map, "idle", syncMapState);
           [...groupOverlays, ...exactPointOverlays].forEach((overlay) =>

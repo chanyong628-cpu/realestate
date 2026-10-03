@@ -7,16 +7,20 @@ import { useState } from "react";
 export function ContactActions({
   propertyNumber,
   compact = false,
+  sharePath,
 }: {
   propertyNumber: string;
   compact?: boolean;
+  sharePath?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const phone = process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "01065465997";
   const message = `안녕하세요. ${propertyNumber} 매물 보고 문의드립니다.`;
 
   async function copyLink() {
-    const value = location.href;
+    const value = sharePath
+      ? new URL(sharePath, window.location.origin).toString()
+      : location.href;
     await navigator.clipboard.writeText(value);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
