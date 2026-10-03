@@ -240,7 +240,7 @@ export function PropertyQuickViewModal({
 
   useEffect(() => {
     if (!mobileOnly) return;
-    const media = window.matchMedia("(max-width: 1023px)");
+    const media = window.matchMedia("(max-width: 1279px)");
     const sync = () => setIsEnabled(media.matches);
     sync();
     media.addEventListener("change", sync);

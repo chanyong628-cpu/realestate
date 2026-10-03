@@ -519,7 +519,7 @@ export function PropertyBrowser({
           <div
             className={`grid gap-5 lg:items-start ${
               selectedMapProperty
-                ? "lg:grid-cols-[minmax(260px,0.78fr)_minmax(340px,1fr)_minmax(420px,1.25fr)]"
+                ? "lg:grid-cols-2 xl:grid-cols-[minmax(360px,0.9fr)_minmax(400px,1fr)_minmax(420px,1.2fr)]"
                 : "lg:grid-cols-2"
             }`}
           >
@@ -542,7 +542,7 @@ export function PropertyBrowser({
               ) : null}
             </div>
             {selectedMapProperty ? (
-              <aside className="hidden h-[720px] overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card lg:sticky lg:top-[92px] lg:block">
+              <aside className="hidden h-[720px] overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
                 <PropertyQuickViewContent
                   property={selectedMapProperty}
                   onClose={() => setSelectedMapPropertyId(null)}
