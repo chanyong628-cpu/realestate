@@ -130,9 +130,11 @@ function writeStateToUrl(
 function MapPropertyCard({
   property,
   selected,
+  narrowList = false,
 }: {
   property: Property;
   selected: boolean;
+  narrowList?: boolean;
 }) {
   const image = property.image_urls[0];
   const pyeong = property.exclusive_area
@@ -143,6 +145,8 @@ function MapPropertyCard({
     <article
       aria-current={selected ? "true" : undefined}
       className={`group relative grid min-h-[172px] grid-cols-[34%_66%] overflow-hidden rounded-2xl border bg-brand-surface shadow-card transition hover:border-brand-accent hover:shadow-card-hover sm:grid-cols-[42%_58%] ${
+        narrowList ? "xl:grid-cols-[36%_64%]" : ""
+      } ${
         selected
           ? "border-brand-accent ring-2 ring-brand-accent/20"
           : "border-brand-line"
@@ -533,6 +537,7 @@ export function PropertyBrowser({
                   key={property.id}
                   property={property}
                   selected={property.id === selectedMapPropertyId}
+                  narrowList={Boolean(selectedMapProperty)}
                 />
               ))}
               {!mapVisibleProperties.length ? (
