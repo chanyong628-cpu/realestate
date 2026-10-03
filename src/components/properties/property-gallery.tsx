@@ -7,9 +7,11 @@ import { useRef, useState } from "react";
 export function PropertyGallery({
   images,
   title,
+  carouselOnly = false,
 }: {
   images: string[];
   title: string;
+  carouselOnly?: boolean;
 }) {
   const [current, setCurrent] = useState(0);
   const touchStart = useRef<number | null>(null);
@@ -77,7 +79,9 @@ export function PropertyGallery({
             </span>
             <div
               aria-label={`${current + 1} / ${images.length}`}
-              className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-brand-dark/55 px-2.5 py-2 md:hidden"
+              className={`absolute bottom-3 left-1/2 -translate-x-1/2 gap-1.5 rounded-full bg-brand-dark/55 px-2.5 py-2 ${
+                carouselOnly ? "flex" : "flex md:hidden"
+              }`}
             >
               {images.map((_, index) => (
                 <button
@@ -96,7 +100,7 @@ export function PropertyGallery({
         )}
       </div>
 
-      {images.length > 1 && (
+      {images.length > 1 && !carouselOnly && (
         <div className="mt-3 hidden gap-2 overflow-x-auto pb-1 md:flex">
           {images.map((image, index) => (
             <button

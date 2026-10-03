@@ -55,14 +55,13 @@ function formatExactLocationHeading(address: string | null) {
   const normalized = address
     .trim()
     .replace(/^서울(?:특별시)?\s*/g, "")
-    .replace(/^송파구\s*/g, "")
     .replace(/\s+/g, " ");
   const parcel = normalized.match(
-    /([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
+    /([가-힣0-9]+구)\s+([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
   );
 
   if (!parcel) return normalized;
-  return `${parcel[1]} ${parcel[2].replace(/\s+/g, " ")}번지`;
+  return `${parcel[1]} ${parcel[2]} ${parcel[3].replace(/\s+/g, " ")}`;
 }
 
 function formatFloor(floor: string | null) {
@@ -177,9 +176,32 @@ export default async function PropertyDetailPage({
   const isAdmin = Boolean(await getAdminSession());
   const publicAddress =
     property.public_address || derivePublicAddress(property.title);
+  const publicLocation = formatPublicLocation(publicAddress);
   const exactLocationHeading = property.address_hidden
     ? null
     : formatExactLocationHeading(publicAddress);
+  const buildingRows = [
+    ["건축물용도", property.building_use || "-"],
+    ["사용승인일", formatApprovalDate(property.approval_date)],
+    [
+      "공급면적 / 전용면적",
+      `${property.supply_area ?? "-"}㎡ / ${property.exclusive_area ?? "-"}㎡`,
+    ],
+    [
+      "총주차 / 가능주차",
+      `총 ${property.total_parking_count ?? 0}대 / 가능 ${
+        property.available_parking_count ??
+        (property.parking_available ? 1 : 0)
+      }대`,
+    ],
+    ["건축물방향", property.building_direction || "-"],
+    [
+      "룸 / 화장실",
+      `${property.room_count ?? 0} / ${property.restroom_count ?? 0}`,
+    ],
+    ["냉난방", property.air_conditioner_type || "-"],
+    ["위반건축물 여부", property.is_violating_building ? "위반" : "적법"],
+  ];
 
   if (property.category === "etc") {
     return <EtcArticleDetail article={property} />;
@@ -206,9 +228,8 @@ export default async function PropertyDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <div className="grid gap-12 pb-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <div className="min-w-0 lg:max-w-[800px]">
-          <PropertyGallery images={property.image_urls} title={property.title} />
+      <div className="grid gap-8 pb-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="min-w-0">
           {isAdmin && (
             <div className="mt-4 flex w-full justify-end gap-2 rounded-xl border border-brand-line bg-brand-soft p-3">
               <Link
@@ -229,11 +250,11 @@ export default async function PropertyDetailPage({
             </div>
           )}
 
-          <article className="pt-10">
+          <article>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-lg font-black tracking-wide text-brand-accent">
+                <p className="text-lg font-black tracking-wide text-red-600">
                   {property.property_number}
                 </p>
                 {property.is_recommended && (
@@ -252,21 +273,20 @@ export default async function PropertyDetailPage({
             <FavoriteButton propertyId={property.id} compact />
           </div>
 
-          <p className="mt-8 whitespace-nowrap text-xl font-black sm:text-2xl md:text-3xl">
-            보증금 {formatWon(property.deposit)}
-            <span className="mx-2 text-brand-line sm:mx-3">/</span>
-            월세 {formatWon(property.monthly_rent)}
-          </p>
-          <p className="mt-2 text-xl font-semibold text-brand-slate">
-            관리비 {formatWon(property.maintenance_fee)}
-          </p>
+          <div className="mt-6">
+            <PropertyGallery
+              images={property.image_urls}
+              title={property.title}
+              carouselOnly
+            />
+          </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {([
               {
                 icon: MapPin,
                 label: "위치",
-                value: formatPublicLocation(publicAddress),
+                value: publicLocation,
               },
               {
                 icon: Building,
@@ -336,93 +356,93 @@ export default async function PropertyDetailPage({
           </section>
 
           <section className="mt-12 border-t border-brand-line pt-10">
-            <h2 className="text-2xl font-black">건축물 기본정보</h2>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-brand-line">
-              {[
-                ["건축물용도", property.building_use || "-"],
-                ["사용승인일", formatApprovalDate(property.approval_date)],
-                [
-                  "공급면적 / 전용면적",
-                  `${property.supply_area ?? "-"}㎡ / ${
-                    property.exclusive_area ?? "-"
-                  }㎡`,
-                ],
-                [
-                  "총주차 / 가능주차",
-                  `총 ${property.total_parking_count ?? 0}대 / 가능 ${
-                    property.available_parking_count ??
-                    (property.parking_available ? 1 : 0)
-                  }대`,
-                ],
-                ["건축물방향", property.building_direction || "-"],
-                [
-                  "룸 / 화장실",
-                  `${property.room_count ?? 0} / ${
-                    property.restroom_count ?? 0
-                  }`,
-                ],
-                ["냉난방", property.air_conditioner_type || "-"],
-                [
-                  "위반건축물 여부",
-                  property.is_violating_building ? "위반" : "적법",
-                ],
-              ].map(([label, value], index) => (
-                <div
-                  key={label as string}
-                  className={`grid grid-cols-[140px_1fr] sm:grid-cols-[190px_1fr] ${
-                    index > 0 ? "border-t border-brand-line" : ""
-                  }`}
-                >
-                  <div className="bg-brand-soft px-4 py-3.5 text-sm font-bold text-brand-slate sm:px-5">
-                    {label as string}
-                  </div>
+            <h2 className="text-2xl font-black">건축물 정보</h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {[buildingRows.slice(0, 4), buildingRows.slice(4)].map(
+                (rows, columnIndex) => (
                   <div
-                    className={`px-4 py-3.5 text-sm font-semibold sm:px-5 ${
-                      label === "위반건축물 여부" &&
-                      property.is_violating_building
-                        ? "text-red-600"
-                        : "text-brand-ink"
-                    }`}
+                    key={columnIndex}
+                    className="overflow-hidden rounded-2xl border border-brand-line"
                   >
-                    {value as string}
+                    {rows.map(([label, value], index) => (
+                      <div
+                        key={label}
+                        className={`grid grid-cols-[140px_1fr] ${
+                          index > 0 ? "border-t border-brand-line" : ""
+                        }`}
+                      >
+                        <div className="bg-brand-soft px-4 py-3.5 text-sm font-bold text-brand-slate">
+                          {label}
+                        </div>
+                        <div
+                          className={`px-4 py-3.5 text-sm font-semibold ${
+                            label === "위반건축물 여부" &&
+                            property.is_violating_building
+                              ? "text-red-600"
+                              : "text-brand-ink"
+                          }`}
+                        >
+                          {value}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </section>
 
           <section className="mt-12 border-t border-brand-line pt-10">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-3xl font-black text-brand-accent">위치</h2>
-              {exactLocationHeading && (
-                <p className="text-sm font-semibold text-brand-muted/70 sm:text-base">
-                  {exactLocationHeading}
+            <div className="grid items-start gap-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(320px,1fr)]">
+              <div>
+                <h2 className="text-3xl font-black text-brand-accent">위치</h2>
+                <p className="mt-4 text-lg font-bold text-brand-ink">
+                  {exactLocationHeading ?? publicLocation}
                 </p>
-              )}
-            </div>
-            <div className="mt-5">
+                <p className="mt-2 break-keep text-sm leading-6 text-brand-muted">
+                  {property.address_hidden
+                    ? "정확한 주소는 문의해 주세요. 지도에는 인근 위치만 표시됩니다."
+                    : "지도에서 매물의 정확한 위치를 확인하실 수 있습니다."}
+                </p>
+              </div>
               <KakaoMap
                 latitude={property.latitude}
                 longitude={property.longitude}
                 address={publicAddress}
-                displayAddress={publicAddress}
+                displayAddress={exactLocationHeading ?? publicLocation}
                 isAddressHidden={property.address_hidden ?? false}
+                fiveFour
               />
             </div>
           </section>
           </article>
         </div>
 
-        <aside className="h-fit rounded-3xl bg-brand-card p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:self-start">
-          <h2 className="text-xl font-black">이 매물이 궁금하신가요?</h2>
-          <p className="mt-2 text-xs leading-[1.9] text-brand-muted">
-            매물번호{" "}
-            <span className="inline-block rounded-[6px] bg-brand-accent px-[9px] py-[3px] align-middle text-sm leading-none font-medium text-white">
-              {property.property_number}
-            </span>
-            을 말씀해 주시면 빠르게 안내해 드립니다.
+        <aside className="h-fit rounded-3xl border border-brand-line bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:self-start">
+          <p className="text-2xl font-black tracking-wide text-red-600">
+            {property.property_number}
           </p>
-          <div className="mt-6">
+          <dl className="mt-6 divide-y divide-brand-line">
+            <div className="flex items-center justify-between py-4">
+              <dt className="text-sm font-semibold text-brand-muted">보증금</dt>
+              <dd className="text-base font-black text-brand-ink">
+                {formatWon(property.deposit)}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <dt className="font-bold text-brand-accent">월세</dt>
+              <dd className="text-3xl font-black text-brand-accent">
+                {formatWon(property.monthly_rent)}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <dt className="text-sm font-semibold text-brand-muted">관리비</dt>
+              <dd className="text-base font-black text-brand-ink">
+                {formatWon(property.maintenance_fee)}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-5">
             <ContactActions propertyNumber={property.property_number} />
           </div>
         </aside>

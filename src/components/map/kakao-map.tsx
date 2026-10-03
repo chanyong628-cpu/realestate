@@ -80,12 +80,14 @@ export function KakaoMap({
   address,
   displayAddress,
   isAddressHidden,
+  fiveFour = false,
 }: {
   latitude: number | null;
   longitude: number | null;
   address: string | null;
   displayAddress?: string | null;
   isAddressHidden: boolean;
+  fiveFour?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -247,7 +249,11 @@ export function KakaoMap({
 
   if (!appKey || (!hasStoredCoordinates && !locationAddress) || failed) {
     return (
-      <div className="grid h-[210px] w-full place-items-center rounded-3xl bg-brand-soft text-center md:h-[340px]">
+      <div
+        className={`grid w-full place-items-center rounded-3xl bg-brand-soft text-center ${
+          fiveFour ? "aspect-[5/4]" : "h-[210px] md:h-[340px]"
+        }`}
+      >
         <div>
           <MapPin className="mx-auto text-brand-sage" />
           <b className="mt-3 block">
@@ -269,7 +275,9 @@ export function KakaoMap({
           ? `${displayAddress ?? "매물"} 인근 400m 지도`
           : `${displayAddress ?? "매물"} 정확한 위치 지도`
       }
-      className="h-[210px] w-full overflow-hidden rounded-3xl bg-brand-soft md:h-[340px]"
+      className={`w-full overflow-hidden rounded-3xl bg-brand-soft ${
+        fiveFour ? "aspect-[5/4]" : "h-[210px] md:h-[340px]"
+      }`}
     />
   );
 }

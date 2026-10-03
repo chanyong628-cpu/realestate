@@ -30,7 +30,6 @@ function formatFloor(floor: string | null, totalFloor: string | null) {
 function formatLocation(property: Property) {
   const address = property.public_address?.trim();
   if (!address) return "송파구";
-  if (!property.address_hidden) return address;
 
   const parts = address
     .split(/\s+/)
@@ -82,14 +81,13 @@ function formatExactLocationHeading(property: Property) {
 
   const normalized = address
     .replace(/^서울(?:특별시)?\s*/g, "")
-    .replace(/^송파구\s*/g, "")
     .replace(/\s+/g, " ");
   const parcel = normalized.match(
-    /([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
+    /([가-힣0-9]+구)\s+([가-힣0-9]+동)\s*((?:산\s*)?\d+(?:-\d+)?)/,
   );
 
   if (!parcel) return normalized;
-  return `${parcel[1]} ${parcel[2].replace(/\s+/g, " ")}번지`;
+  return `${parcel[1]} ${parcel[2]} ${parcel[3].replace(/\s+/g, " ")}`;
 }
 
 export function PropertyQuickViewContent({
@@ -145,6 +143,206 @@ export function PropertyQuickViewContent({
       }대`,
     },
   ];
+  const buildingRows = [
+    ["건축물용도", property.building_use || "-"],
+    ["사용승인일", formatApprovalDate(property.approval_date)],
+    [
+      "공급면적 / 전용면적",
+      `${property.supply_area ?? "-"}㎡ / ${property.exclusive_area ?? "-"}㎡`,
+    ],
+    [
+      "총주차 / 가능주차",
+      `총 ${property.total_parking_count ?? 0}대 / 가능 ${
+        property.available_parking_count ??
+        (property.parking_available ? 1 : 0)
+      }대`,
+    ],
+    ["건축물방향", property.building_direction || "-"],
+    [
+      "룸 / 화장실",
+      `${property.room_count ?? 0} / ${property.restroom_count ?? 0}`,
+    ],
+    ["냉난방", property.air_conditioner_type || "-"],
+    ["위반건축물 여부", property.is_violating_building ? "위반" : "적법"],
+  ];
+
+  if (fullDetail) {
+    return (
+      <div className="flex h-full min-h-0 flex-col bg-brand-surface">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-brand-line bg-brand-surface/95 px-4 py-3 backdrop-blur sm:px-6">
+          <p className="text-sm font-bold text-brand-muted">매물 상세보기</p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="상세보기 닫기"
+            className="grid size-10 place-items-center rounded-full border border-brand-line bg-brand-surface text-brand-ink transition hover:border-brand-accent hover:text-brand-accent"
+          >
+            <X size={20} />
+          </button>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+            <main className="min-w-0">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {property.is_recommended ? (
+                      <span className="rounded-md bg-brand-accent px-3 py-1 text-xs font-bold text-white">
+                        추천매물
+                      </span>
+                    ) : null}
+                    <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-black text-brand-ink">
+                      {categoryLabels[property.category]}
+                    </span>
+                  </div>
+                  <h2 className="mt-3 break-keep text-2xl leading-tight font-black tracking-[-0.03em] text-brand-ink sm:text-4xl">
+                    {property.title}
+                  </h2>
+                </div>
+                <FavoriteButton propertyId={property.id} compact />
+              </div>
+
+              <div className="mt-6">
+                <PropertyGallery
+                  key={property.id}
+                  images={property.image_urls}
+                  title={property.title}
+                  carouselOnly
+                />
+              </div>
+
+              <section className="mt-8">
+                <h3 className="text-xl font-black text-brand-ink">주요 정보</h3>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {metrics.map(({ icon: Icon, label, value }) => (
+                    <div
+                      key={label}
+                      className="rounded-xl border border-brand-line bg-brand-surface p-4"
+                    >
+                      <Icon size={18} className="text-brand-accent" />
+                      <p className="mt-2 text-xs font-semibold text-brand-muted">
+                        {label}
+                      </p>
+                      <b className="mt-1 block break-keep text-sm leading-snug text-brand-ink sm:text-base">
+                        {value}
+                      </b>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="mt-8 border-t border-brand-line pt-7">
+                <h3 className="text-xl font-black text-brand-ink">매물 설명</h3>
+                <p className="mt-4 whitespace-pre-wrap break-keep text-base leading-8 text-brand-slate">
+                  {formatDescription(property.description)}
+                </p>
+              </section>
+
+              <section className="mt-8 border-t border-brand-line pt-7">
+                <h3 className="text-xl font-black text-brand-ink">건축물 정보</h3>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  {[buildingRows.slice(0, 4), buildingRows.slice(4)].map(
+                    (rows, columnIndex) => (
+                      <div
+                        key={columnIndex}
+                        className="overflow-hidden rounded-2xl border border-brand-line"
+                      >
+                        {rows.map(([label, value], index) => (
+                          <div
+                            key={label}
+                            className={`grid grid-cols-[130px_1fr] ${
+                              index > 0 ? "border-t border-brand-line" : ""
+                            }`}
+                          >
+                            <div className="bg-brand-soft px-3 py-3 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
+                              {label}
+                            </div>
+                            <div
+                              className={`px-3 py-3 text-xs font-semibold sm:px-4 sm:text-sm ${
+                                label === "위반건축물 여부" &&
+                                property.is_violating_building
+                                  ? "text-red-600"
+                                  : "text-brand-ink"
+                              }`}
+                            >
+                              {value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ),
+                  )}
+                </div>
+              </section>
+
+              <section className="mt-8 border-t border-brand-line pt-7">
+                <div className="grid items-start gap-6 md:grid-cols-[minmax(200px,0.75fr)_minmax(300px,1fr)]">
+                  <div>
+                    <h3 className="text-2xl font-black text-brand-accent">
+                      위치
+                    </h3>
+                    <p className="mt-4 text-lg font-bold text-brand-ink">
+                      {exactLocationHeading ?? location}
+                    </p>
+                    <p className="mt-2 break-keep text-sm leading-6 text-brand-muted">
+                      {property.address_hidden
+                        ? "정확한 주소는 문의해 주세요. 지도에는 인근 위치만 표시됩니다."
+                        : "지도에서 매물의 정확한 위치를 확인하실 수 있습니다."}
+                    </p>
+                  </div>
+                  <KakaoMap
+                    latitude={property.latitude}
+                    longitude={property.longitude}
+                    address={property.public_address}
+                    displayAddress={exactLocationHeading ?? location}
+                    isAddressHidden={property.address_hidden ?? false}
+                    fiveFour
+                  />
+                </div>
+              </section>
+            </main>
+
+            <aside className="h-fit rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:sticky lg:top-5">
+              <p className="text-2xl font-black tracking-wide text-red-600">
+                {property.property_number}
+              </p>
+              <dl className="mt-5 divide-y divide-brand-line">
+                <div className="flex items-center justify-between py-4">
+                  <dt className="text-sm font-semibold text-brand-muted">
+                    보증금
+                  </dt>
+                  <dd className="text-base font-black text-brand-ink">
+                    {formatWon(property.deposit)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between py-4">
+                  <dt className="font-bold text-brand-accent">월세</dt>
+                  <dd className="text-3xl font-black text-brand-accent">
+                    {formatWon(property.monthly_rent)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between py-4">
+                  <dt className="text-sm font-semibold text-brand-muted">
+                    관리비
+                  </dt>
+                  <dd className="text-base font-black text-brand-ink">
+                    {formatWon(property.maintenance_fee)}
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-5">
+                <ContactActions
+                  propertyNumber={property.property_number}
+                  sharePath={`/properties/${property.property_number}`}
+                />
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-brand-surface">
@@ -401,7 +599,7 @@ export function PropertyQuickViewModal({
         aria-label={`${property.property_number} ${property.title} 상세보기`}
         tabIndex={-1}
         className={`h-[calc(100dvh-1rem)] w-full overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-2xl outline-none sm:h-[min(90dvh,900px)] sm:rounded-3xl ${
-          fullDetail ? "max-w-6xl" : "max-w-5xl"
+          fullDetail ? "max-w-7xl" : "max-w-5xl"
         }`}
       >
         <PropertyQuickViewContent
