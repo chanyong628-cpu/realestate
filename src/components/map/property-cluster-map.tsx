@@ -442,7 +442,8 @@ export function PropertyClusterMap({
             }),
         );
 
-        const syncMapState = () => {
+        const syncMapState = (clearPropertySelection = false) => {
+          if (clearPropertySelection) onPropertySelect(null);
           const level = map.getLevel();
           const showExactPoints =
             exactPointOverlays.length > 0 && level <= 4;
@@ -482,16 +483,17 @@ export function PropertyClusterMap({
           onVisiblePropertiesChange(visiblePropertyIds);
         };
 
-        maps.event.addListener(map, "zoom_changed", syncMapState);
-        maps.event.addListener(map, "idle", syncMapState);
+        const handleViewportChange = () => syncMapState(true);
+        maps.event.addListener(map, "zoom_changed", handleViewportChange);
+        maps.event.addListener(map, "idle", handleViewportChange);
         const resizeObserver = new ResizeObserver(() => map.relayout());
         resizeObserver.observe(container);
         syncMapState();
 
         disposeMap = () => {
           resizeObserver.disconnect();
-          maps.event.removeListener(map, "zoom_changed", syncMapState);
-          maps.event.removeListener(map, "idle", syncMapState);
+          maps.event.removeListener(map, "zoom_changed", handleViewportChange);
+          maps.event.removeListener(map, "idle", handleViewportChange);
           [...groupOverlays, ...exactPointOverlays].forEach((overlay) =>
             overlay.setMap(null),
           );

@@ -13,6 +13,7 @@ export interface ImportedPropertyDraft {
   public_address: string;
   exclusive_area: number | null;
   floor: string;
+  total_floor: string;
   parking_available: boolean;
   elevator_available: boolean;
   available_parking_count: number | null;
@@ -65,6 +66,24 @@ function maintenanceFeeMatch(folderName: string, advertisement: string) {
 
 function textMatch(text: string, pattern: RegExp) {
   return text.match(pattern)?.[1]?.trim() ?? "";
+}
+
+export function inferTotalFloorFromAdvertisement(text: string | null) {
+  if (!text?.trim()) return "";
+
+  const patterns = [
+    /층수\s*:\s*\d+\s*층?\s*\(\s*총\s*(\d+)\s*층?\s*\)/i,
+    /(?:해당층\s*\/\s*총층(?:수)?|층수\s*\(\s*해당\s*\/\s*총\s*\))\s*:\s*\d+\s*층?\s*\/\s*(?:총\s*)?(\d+)\s*층?/i,
+    /(?:총\s*층수|전체\s*층수|건물\s*층수)\s*[:：]?\s*(\d+)\s*층?/i,
+    /\d+\s*층\s*\/\s*총\s*(\d+)\s*층/i,
+  ];
+
+  for (const pattern of patterns) {
+    const totalFloor = text.match(pattern)?.[1];
+    if (totalFloor) return `${totalFloor}층`;
+  }
+
+  return "";
 }
 
 function removeBuildingConfirmation(text: string) {
@@ -187,6 +206,7 @@ export function parsePropertyInputs(
       numberMatch(advertisement, /전용면적\s*:\s*[\d.]+㎡\s*\/\s*([\d.]+)㎡/) ??
       (areaPyeong ? Number((areaPyeong * 3.3058).toFixed(2)) : null),
     floor: floorNumber ? `${floorNumber}층` : "",
+    total_floor: inferTotalFloorFromAdvertisement(combined),
     parking_available: !/P0|주차\s*불가/.test(combined),
     elevator_available: /E유|엘리베이터\s*있/.test(combined),
     available_parking_count:

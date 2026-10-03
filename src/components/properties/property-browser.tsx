@@ -549,6 +549,7 @@ export function PropertyBrowser({
             {selectedMapProperty ? (
               <aside className="hidden h-[720px] overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
                 <PropertyQuickViewContent
+                  key={selectedMapProperty.id}
                   property={selectedMapProperty}
                   onClose={() => setSelectedMapPropertyId(null)}
                   compact

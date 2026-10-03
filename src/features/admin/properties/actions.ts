@@ -148,7 +148,7 @@ export async function bulkCreatePropertiesAction(
       exclusive_area: draft.exclusive_area,
       supply_area: draft.supply_area,
       floor: draft.floor,
-      total_floor: "",
+      total_floor: draft.total_floor,
       parking_available: draft.parking_available,
       elevator_available: draft.elevator_available,
       total_parking_count: draft.total_parking_count,

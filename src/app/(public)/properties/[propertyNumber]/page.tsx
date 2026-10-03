@@ -28,6 +28,7 @@ import {
   formatPyeong,
 } from "@/lib/properties/format";
 import { getPublishedProperty } from "@/lib/properties/queries";
+import { inferTotalFloorFromAdvertisement } from "@/lib/properties/smart-import";
 import {
   absoluteUrl,
   buildBreadcrumbJsonLd,
@@ -80,22 +81,15 @@ function formatTotalFloor(totalFloor: string | null) {
   return match ? `${match[1]}층` : totalFloor.trim();
 }
 
-function formatFloorSummary(floor: string | null, totalFloor: string | null) {
-  const currentFloor = formatFloor(floor);
-  const formattedTotalFloor = formatTotalFloor(totalFloor);
-
-  if (currentFloor === "-") return "-";
-  return `${currentFloor} (총 ${formattedTotalFloor ?? "-층"})`;
-}
-
 function formatPriceNumber(value: number | null) {
   return value === null ? "-" : value.toLocaleString("ko-KR");
 }
 
-function splitDescription(description: string) {
-  const items = description.split(/\n{2,}/).filter(Boolean);
-  const midpoint = Math.ceil(items.length / 2);
-  return [items.slice(0, midpoint), items.slice(midpoint)];
+function descriptionItems(description: string) {
+  return description
+    .split(/\r?\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function formatDetailArea(area: number | null) {
@@ -177,6 +171,10 @@ export default async function PropertyDetailPage({
   const publicAddress =
     property.public_address || derivePublicAddress(property.title);
   const publicLocation = formatPublicLocation(publicAddress);
+  const totalFloor =
+    property.total_floor ||
+    inferTotalFloorFromAdvertisement(property.description) ||
+    null;
   const exactLocationHeading = property.address_hidden
     ? null
     : formatExactLocationHeading(publicAddress);
@@ -202,7 +200,7 @@ export default async function PropertyDetailPage({
     ["냉난방", property.air_conditioner_type || "-"],
     ["위반건축물 여부", property.is_violating_building ? "위반" : "적법"],
   ];
-  const descriptionColumns = splitDescription(
+  const publicDescriptionItems = descriptionItems(
     formatPublicDescription(property.description),
   );
 
@@ -233,26 +231,6 @@ export default async function PropertyDetailPage({
       />
       <div className="grid gap-8 pb-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="min-w-0">
-          {isAdmin && (
-            <div className="mt-4 flex w-full justify-end gap-2 rounded-xl border border-brand-line bg-brand-soft p-3">
-              <Link
-                href={`/admin/properties/${property.id}/edit`}
-                className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-white"
-              >
-                매물수정
-              </Link>
-              <PublishToggleButton
-                id={property.id}
-                isPublished={property.is_published}
-              />
-              <DeletePropertyButton
-                id={property.id}
-                propertyNumber={property.property_number}
-                redirectTo="/"
-              />
-            </div>
-          )}
-
           <article>
           <div>
             <p className="text-base font-black tracking-wide text-brand-accent">
@@ -289,29 +267,47 @@ export default async function PropertyDetailPage({
             />
           </div>
 
+          {isAdmin && (
+            <div className="mt-4 flex w-full justify-end gap-2 rounded-xl border border-brand-line bg-brand-soft p-3">
+              <Link
+                href={`/admin/properties/${property.id}/edit`}
+                className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-bold text-white"
+              >
+                매물수정
+              </Link>
+              <PublishToggleButton
+                id={property.id}
+                isPublished={property.is_published}
+              />
+              <DeletePropertyButton
+                id={property.id}
+                propertyNumber={property.property_number}
+                redirectTo="/"
+              />
+            </div>
+          )}
+
           <section className="mt-6 rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:hidden">
             <p className="text-2xl font-black tracking-wide text-brand-accent">
               {property.property_number}
             </p>
             <dl className="mt-4 divide-y divide-brand-line">
               <div className="flex items-center justify-between py-3">
-                <dt className="text-sm font-semibold text-brand-muted">층수</dt>
-                <dd className="text-base font-black text-brand-ink">
-                  {formatFloorSummary(property.floor, property.total_floor)}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <dt className="text-sm font-semibold text-brand-muted">금액</dt>
+                <dt className="text-sm font-semibold text-brand-muted">보증금</dt>
                 <dd className="text-lg font-black text-brand-ink">
-                  {formatPriceNumber(property.deposit)} / {formatPriceNumber(property.monthly_rent)} / {formatPriceNumber(property.maintenance_fee)}
+                  {formatPriceNumber(property.deposit)}만원
                 </dd>
               </div>
               <div className="flex items-center justify-between py-3">
-                <dt className="text-sm font-semibold text-brand-muted">평수</dt>
+                <dt className="text-sm font-semibold text-brand-muted">월세</dt>
+                <dd className="text-lg font-black text-brand-ink">
+                  {formatPriceNumber(property.monthly_rent)}만원
+                </dd>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <dt className="text-sm font-semibold text-brand-muted">관리비</dt>
                 <dd className="text-base font-black text-brand-ink">
-                  {property.exclusive_area === null
-                    ? "-"
-                    : `실 ${formatPyeong(property.exclusive_area)}평`}
+                  {formatPriceNumber(property.maintenance_fee)}만원
                 </dd>
               </div>
             </dl>
@@ -329,8 +325,8 @@ export default async function PropertyDetailPage({
               },
               {
                 icon: Building,
-                label: "층수",
-                value: formatFloor(property.floor),
+                label: "층수(해당/총)",
+                value: `${formatFloor(property.floor)} / 총${formatTotalFloor(totalFloor) ?? "-층"}`,
               },
               {
                 icon: Ruler,
@@ -382,55 +378,47 @@ export default async function PropertyDetailPage({
             })}
           </div>
 
-          <section className="mt-12 border-t border-brand-line pt-10">
-            <h2 className="text-2xl font-black">매물 설명</h2>
-            <div className="mt-5 grid gap-x-12 gap-y-3 md:grid-cols-2">
-              {descriptionColumns.map((column, columnIndex) => (
-                <div key={columnIndex} className="space-y-3">
-                  {column.map((item, itemIndex) => (
-                    <p
-                      key={`${columnIndex}-${itemIndex}`}
-                      className="break-keep text-lg leading-8 text-brand-slate"
-                    >
-                      {item}
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
+          <div className="mt-12 grid items-stretch gap-6 border-t border-brand-line pt-10 md:grid-cols-2">
+            <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-6">
+              <h2 className="text-2xl font-black">매물 설명</h2>
+              <div className="mt-5 space-y-3">
+                {publicDescriptionItems.map((item, itemIndex) => (
+                  <p
+                    key={itemIndex}
+                    className="break-keep text-base leading-7 text-brand-slate"
+                  >
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </section>
 
-          <section className="mt-12 border-t border-brand-line pt-10">
-            <h2 className="text-2xl font-black">건축물 정보</h2>
-            <div className="mt-5 grid gap-x-10 md:grid-cols-2">
-              {[buildingRows.slice(0, 4), buildingRows.slice(4)].map(
-                (rows, columnIndex) => (
-                  <div key={columnIndex}>
-                    {rows.map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="grid grid-cols-[140px_1fr] border-b border-brand-line"
-                      >
-                        <div className="bg-brand-soft/60 px-4 py-3.5 text-sm font-bold text-brand-slate">
-                          {label}
-                        </div>
-                        <div
-                          className={`px-4 py-3.5 text-sm font-semibold ${
-                            label === "위반건축물 여부" &&
-                            property.is_violating_building
-                              ? "text-red-600"
-                              : "text-brand-ink"
-                          }`}
-                        >
-                          {value}
-                        </div>
-                      </div>
-                    ))}
+            <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-6">
+              <h2 className="text-2xl font-black">건축물 정보</h2>
+              <div className="mt-5 overflow-hidden rounded-xl border border-brand-line">
+                {buildingRows.map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="grid grid-cols-[132px_1fr] border-b border-brand-line last:border-b-0"
+                  >
+                    <div className="bg-brand-soft/60 px-3 py-2.5 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
+                      {label}
+                    </div>
+                    <div
+                      className={`px-3 py-2.5 text-xs font-semibold sm:px-4 sm:text-sm ${
+                        label === "위반건축물 여부" &&
+                        property.is_violating_building
+                          ? "text-red-600"
+                          : "text-brand-ink"
+                      }`}
+                    >
+                      {value}
+                    </div>
                   </div>
-                ),
-              )}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          </div>
 
           <section className="mt-12 border-t border-brand-line pt-10">
             <div className="grid items-start gap-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(320px,1fr)]">
@@ -458,29 +446,27 @@ export default async function PropertyDetailPage({
           </article>
         </div>
 
-        <aside className="hidden h-fit rounded-3xl border border-brand-line bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:block lg:self-start">
+        <aside className="hidden h-fit rounded-3xl border border-brand-line bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:block lg:self-start">
           <p className="text-2xl font-black tracking-wide text-brand-accent">
             {property.property_number}
           </p>
           <dl className="mt-6 divide-y divide-brand-line">
             <div className="flex items-center justify-between py-4">
-              <dt className="text-sm font-semibold text-brand-muted">층수</dt>
-              <dd className="text-base font-black text-brand-ink">
-                {formatFloorSummary(property.floor, property.total_floor)}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between py-4">
-              <dt className="text-sm font-semibold text-brand-muted">금액</dt>
+              <dt className="text-sm font-semibold text-brand-muted">보증금</dt>
               <dd className="text-lg font-black text-brand-ink">
-                {formatPriceNumber(property.deposit)} / {formatPriceNumber(property.monthly_rent)} / {formatPriceNumber(property.maintenance_fee)}
+                {formatPriceNumber(property.deposit)}만원
               </dd>
             </div>
             <div className="flex items-center justify-between py-4">
-              <dt className="text-sm font-semibold text-brand-muted">평수</dt>
+              <dt className="text-sm font-semibold text-brand-muted">월세</dt>
+              <dd className="text-lg font-black text-brand-ink">
+                {formatPriceNumber(property.monthly_rent)}만원
+              </dd>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <dt className="text-sm font-semibold text-brand-muted">관리비</dt>
               <dd className="text-base font-black text-brand-ink">
-                {property.exclusive_area === null
-                  ? "-"
-                  : `실 ${formatPyeong(property.exclusive_area)}평`}
+                {formatPriceNumber(property.maintenance_fee)}만원
               </dd>
             </div>
           </dl>

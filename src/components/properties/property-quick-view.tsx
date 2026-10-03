@@ -7,14 +7,17 @@ import {
   Car,
   ExternalLink,
   MapPin,
+  Phone,
   Ruler,
   Toilet,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Property } from "@/types/database";
+import { trackConversion } from "@/components/analytics/google-analytics";
 import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
 import { KakaoMap } from "@/components/map/kakao-map";
+import { inferTotalFloorFromAdvertisement } from "@/lib/properties/smart-import";
 import { ContactActions, ShareLinkButton } from "./contact-actions";
 import { FavoriteButton } from "./favorite-button";
 import { PropertyGallery } from "./property-gallery";
@@ -26,21 +29,21 @@ function formatFloor(floor: string | null) {
   return `${current}층`;
 }
 
-function formatFloorSummary(floor: string | null, totalFloor: string | null) {
-  const current = formatFloor(floor);
-  if (current === "-") return "-";
-  const total = totalFloor?.match(/(\d+)\s*층?/)?.[1];
-  return `${current} (총 ${total ?? "-"}층)`;
+function formatTotalFloor(totalFloor: string | null) {
+  if (!totalFloor?.trim()) return "-층";
+  const total = totalFloor.match(/(\d+)\s*층?/)?.[1];
+  return total ? `${total}층` : totalFloor.trim();
 }
 
 function formatPriceNumber(value: number | null) {
   return value === null ? "-" : value.toLocaleString("ko-KR");
 }
 
-function splitDescription(description: string) {
-  const items = description.split(/\n{2,}/).filter(Boolean);
-  const midpoint = Math.ceil(items.length / 2);
-  return [items.slice(0, midpoint), items.slice(midpoint)];
+function descriptionItems(description: string) {
+  return description
+    .split(/\r?\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function formatLocation(property: Property) {
@@ -122,6 +125,10 @@ export function PropertyQuickViewContent({
 }) {
   const location = formatLocation(property);
   const exactLocationHeading = formatExactLocationHeading(property);
+  const totalFloor =
+    property.total_floor ||
+    inferTotalFloorFromAdvertisement(property.description) ||
+    null;
   const metrics = [
     {
       icon: MapPin,
@@ -130,8 +137,8 @@ export function PropertyQuickViewContent({
     },
     {
       icon: Building,
-      label: "층수",
-      value: formatFloor(property.floor),
+      label: "층수(해당/총)",
+      value: `${formatFloor(property.floor)} / 총${formatTotalFloor(totalFloor)}`,
     },
     {
       icon: Ruler,
@@ -184,7 +191,7 @@ export function PropertyQuickViewContent({
     ["냉난방", property.air_conditioner_type || "-"],
     ["위반건축물 여부", property.is_violating_building ? "위반" : "적법"],
   ];
-  const descriptionColumns = splitDescription(
+  const publicDescriptionItems = descriptionItems(
     formatDescription(property.description),
   );
 
@@ -249,28 +256,26 @@ export function PropertyQuickViewContent({
                 <dl className="mt-4 divide-y divide-brand-line">
                   <div className="flex items-center justify-between py-3">
                     <dt className="text-sm font-semibold text-brand-muted">
-                      층수
+                      보증금
                     </dt>
                     <dd className="text-base font-black text-brand-ink">
-                      {formatFloorSummary(property.floor, property.total_floor)}
+                      {formatPriceNumber(property.deposit)}만원
                     </dd>
                   </div>
                   <div className="flex items-center justify-between py-3">
                     <dt className="text-sm font-semibold text-brand-muted">
-                      금액
+                      월세
                     </dt>
                     <dd className="text-lg font-black text-brand-ink">
-                      {formatPriceNumber(property.deposit)} / {formatPriceNumber(property.monthly_rent)} / {formatPriceNumber(property.maintenance_fee)}
+                      {formatPriceNumber(property.monthly_rent)}만원
                     </dd>
                   </div>
                   <div className="flex items-center justify-between py-3">
                     <dt className="text-sm font-semibold text-brand-muted">
-                      평수
+                      관리비
                     </dt>
                     <dd className="text-base font-black text-brand-ink">
-                      {property.exclusive_area === null
-                        ? "-"
-                        : `실 ${formatPyeong(property.exclusive_area)}평`}
+                      {formatPriceNumber(property.maintenance_fee)}만원
                     </dd>
                   </div>
                 </dl>
@@ -302,55 +307,47 @@ export function PropertyQuickViewContent({
                 </div>
               </section>
 
-              <section className="mt-8 border-t border-brand-line pt-7">
-                <h3 className="text-xl font-black text-brand-ink">매물 설명</h3>
-                <div className="mt-4 grid gap-x-10 gap-y-3 md:grid-cols-2">
-                  {descriptionColumns.map((column, columnIndex) => (
-                    <div key={columnIndex} className="space-y-3">
-                      {column.map((item, itemIndex) => (
-                        <p
-                          key={`${columnIndex}-${itemIndex}`}
-                          className="break-keep text-base leading-8 text-brand-slate"
-                        >
-                          {item}
-                        </p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </section>
+              <div className="mt-8 grid items-stretch gap-5 border-t border-brand-line pt-7 md:grid-cols-2">
+                <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-5">
+                  <h3 className="text-xl font-black text-brand-ink">매물 설명</h3>
+                  <div className="mt-4 space-y-3">
+                    {publicDescriptionItems.map((item, itemIndex) => (
+                      <p
+                        key={itemIndex}
+                        className="break-keep text-base leading-7 text-brand-slate"
+                      >
+                        {item}
+                      </p>
+                    ))}
+                  </div>
+                </section>
 
-              <section className="mt-8 border-t border-brand-line pt-7">
-                <h3 className="text-xl font-black text-brand-ink">건축물 정보</h3>
-                <div className="mt-4 grid gap-x-8 md:grid-cols-2">
-                  {[buildingRows.slice(0, 4), buildingRows.slice(4)].map(
-                    (rows, columnIndex) => (
-                      <div key={columnIndex}>
-                        {rows.map(([label, value]) => (
-                          <div
-                            key={label}
-                            className="grid grid-cols-[130px_1fr] border-b border-brand-line"
-                          >
-                            <div className="bg-brand-soft/60 px-3 py-3 text-xs font-bold text-brand-slate sm:px-4 sm:text-sm">
-                              {label}
-                            </div>
-                            <div
-                              className={`px-3 py-3 text-xs font-semibold sm:px-4 sm:text-sm ${
-                                label === "위반건축물 여부" &&
-                                property.is_violating_building
-                                  ? "text-red-600"
-                                  : "text-brand-ink"
-                              }`}
-                            >
-                              {value}
-                            </div>
-                          </div>
-                        ))}
+                <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-5">
+                  <h3 className="text-xl font-black text-brand-ink">건축물 정보</h3>
+                  <div className="mt-4 overflow-hidden rounded-xl border border-brand-line">
+                    {buildingRows.map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="grid grid-cols-[124px_1fr] border-b border-brand-line last:border-b-0"
+                      >
+                        <div className="bg-brand-soft/60 px-3 py-2.5 text-xs font-bold text-brand-slate sm:text-sm">
+                          {label}
+                        </div>
+                        <div
+                          className={`px-3 py-2.5 text-xs font-semibold sm:text-sm ${
+                            label === "위반건축물 여부" &&
+                            property.is_violating_building
+                              ? "text-red-600"
+                              : "text-brand-ink"
+                          }`}
+                        >
+                          {value}
+                        </div>
                       </div>
-                    ),
-                  )}
-                </div>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              </div>
 
               <section className="mt-8 border-t border-brand-line pt-7">
                 <div className="grid items-start gap-6 md:grid-cols-[minmax(200px,0.75fr)_minmax(300px,1fr)]">
@@ -379,35 +376,33 @@ export function PropertyQuickViewContent({
               </section>
             </main>
 
-            <aside className="hidden h-fit rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:sticky lg:top-5 lg:block">
+            <aside className="hidden h-fit rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:block">
               <p className="text-2xl font-black tracking-wide text-brand-accent">
                 {property.property_number}
               </p>
               <dl className="mt-5 divide-y divide-brand-line">
                 <div className="flex items-center justify-between py-4">
                   <dt className="text-sm font-semibold text-brand-muted">
-                    층수
+                    보증금
                   </dt>
                   <dd className="text-base font-black text-brand-ink">
-                    {formatFloorSummary(property.floor, property.total_floor)}
+                    {formatPriceNumber(property.deposit)}만원
                   </dd>
                 </div>
                 <div className="flex items-center justify-between py-4">
                   <dt className="text-sm font-semibold text-brand-muted">
-                    금액
+                    월세
                   </dt>
                   <dd className="text-lg font-black text-brand-ink">
-                    {formatPriceNumber(property.deposit)} / {formatPriceNumber(property.monthly_rent)} / {formatPriceNumber(property.maintenance_fee)}
+                    {formatPriceNumber(property.monthly_rent)}만원
                   </dd>
                 </div>
                 <div className="flex items-center justify-between py-4">
                   <dt className="text-sm font-semibold text-brand-muted">
-                    평수
+                    관리비
                   </dt>
                   <dd className="text-base font-black text-brand-ink">
-                    {property.exclusive_area === null
-                      ? "-"
-                      : `실 ${formatPyeong(property.exclusive_area)}평`}
+                    {formatPriceNumber(property.maintenance_fee)}만원
                   </dd>
                 </div>
               </dl>
@@ -607,16 +602,30 @@ export function PropertyQuickViewContent({
             </div>
           </section>
 
-          {!fullDetail ? (
-            <Link
-              href={`/properties/${property.property_number}`}
-              className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl border border-brand-line bg-brand-surface text-sm font-bold text-brand-ink transition hover:border-brand-accent hover:text-brand-accent"
-            >
-              전체 상세페이지 열기 <ExternalLink size={16} />
-            </Link>
-          ) : null}
         </article>
       </div>
+
+      {!fullDetail ? (
+        <div className="sticky bottom-0 z-20 grid grid-cols-2 gap-2 border-t border-brand-line bg-brand-surface/95 p-3 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:p-4">
+          <Link
+            href={`/properties/${property.property_number}`}
+            className="flex h-12 items-center justify-center gap-2 rounded-xl border border-brand-accent bg-brand-surface text-sm font-bold text-brand-accent transition hover:bg-brand-soft"
+          >
+            상세페이지 <ExternalLink size={16} />
+          </Link>
+          <a
+            href={`tel:${process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "01065465997"}`}
+            onClick={() =>
+              trackConversion("phone_clicked", {
+                property_number: property.property_number,
+              })
+            }
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-brand-accent text-sm font-bold text-white transition hover:bg-brand-accent-dark"
+          >
+            문의하기 <Phone size={17} />
+          </a>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -683,6 +692,7 @@ export function PropertyQuickViewModal({
         }`}
       >
         <PropertyQuickViewContent
+          key={property.id}
           property={property}
           onClose={onClose}
           fullDetail={fullDetail}
