@@ -284,6 +284,35 @@ export default async function PropertyDetailPage({
             />
           </div>
 
+          <section className="mt-6 rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:hidden">
+            <p className="text-2xl font-black tracking-wide text-red-600">
+              {property.property_number}
+            </p>
+            <dl className="mt-4 divide-y divide-brand-line">
+              <div className="flex items-center justify-between py-3">
+                <dt className="text-sm font-semibold text-brand-muted">보증금</dt>
+                <dd className="text-base font-black text-brand-ink">
+                  {formatWon(property.deposit)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <dt className="font-bold text-brand-accent">월세</dt>
+                <dd className="text-2xl font-black text-brand-accent">
+                  {formatWon(property.monthly_rent)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <dt className="text-sm font-semibold text-brand-muted">관리비</dt>
+                <dd className="text-base font-black text-brand-ink">
+                  {formatWon(property.maintenance_fee)}
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-4">
+              <ContactActions propertyNumber={property.property_number} />
+            </div>
+          </section>
+
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {([
               {
@@ -421,7 +450,7 @@ export default async function PropertyDetailPage({
           </article>
         </div>
 
-        <aside className="h-fit rounded-3xl border border-brand-line bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:self-start">
+        <aside className="hidden h-fit rounded-3xl border border-brand-line bg-brand-surface p-6 shadow-xl shadow-brand-dark/5 lg:sticky lg:top-24 lg:block lg:self-start">
           <p className="text-2xl font-black tracking-wide text-red-600">
             {property.property_number}
           </p>

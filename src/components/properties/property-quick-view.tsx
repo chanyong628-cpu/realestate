@@ -215,6 +215,42 @@ export function PropertyQuickViewContent({
                 />
               </div>
 
+              <section className="mt-6 rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:hidden">
+                <p className="text-2xl font-black tracking-wide text-red-600">
+                  {property.property_number}
+                </p>
+                <dl className="mt-4 divide-y divide-brand-line">
+                  <div className="flex items-center justify-between py-3">
+                    <dt className="text-sm font-semibold text-brand-muted">
+                      보증금
+                    </dt>
+                    <dd className="text-base font-black text-brand-ink">
+                      {formatWon(property.deposit)}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <dt className="font-bold text-brand-accent">월세</dt>
+                    <dd className="text-2xl font-black text-brand-accent">
+                      {formatWon(property.monthly_rent)}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <dt className="text-sm font-semibold text-brand-muted">
+                      관리비
+                    </dt>
+                    <dd className="text-base font-black text-brand-ink">
+                      {formatWon(property.maintenance_fee)}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="mt-4">
+                  <ContactActions
+                    propertyNumber={property.property_number}
+                    sharePath={`/properties/${property.property_number}`}
+                  />
+                </div>
+              </section>
+
               <section className="mt-8">
                 <h3 className="text-xl font-black text-brand-ink">주요 정보</h3>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -306,7 +342,7 @@ export function PropertyQuickViewContent({
               </section>
             </main>
 
-            <aside className="h-fit rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:sticky lg:top-5">
+            <aside className="hidden h-fit rounded-2xl border border-brand-line bg-brand-surface p-5 shadow-card lg:sticky lg:top-5 lg:block">
               <p className="text-2xl font-black tracking-wide text-red-600">
                 {property.property_number}
               </p>
