@@ -329,6 +329,14 @@ export function PropertyBrowser({
     });
   }, [filtered, mapVisiblePropertyIds, selectedMapPropertyId]);
 
+  const mobileRecommendedProperties = useMemo(
+    () =>
+      mapVisibleProperties
+        .filter((property) => property.is_recommended)
+        .slice(0, 5),
+    [mapVisibleProperties],
+  );
+
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
     const nextSearch: SearchState = {
@@ -538,25 +546,52 @@ export function PropertyBrowser({
           >
             <div
               ref={mapListRef}
-              className="min-w-0 space-y-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
+              className="order-2 min-w-0 lg:order-1 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
             >
-              {mapVisibleProperties.map((property) => (
-                <MapPropertyCard
-                  key={property.id}
-                  property={property}
-                  selected={property.id === selectedMapPropertyId}
-                  narrowList={Boolean(selectedMapProperty)}
-                  onSelect={() => selectPropertyFromList(property)}
-                />
-              ))}
-              {!mapVisibleProperties.length ? (
-                <div className="rounded-2xl border border-dashed border-brand-line bg-brand-surface p-10 text-center text-sm text-brand-muted">
-                  현재 지도 범위에 표시할 매물이 없습니다.
+              <div className="hidden space-y-3 lg:block">
+                {mapVisibleProperties.map((property) => (
+                  <MapPropertyCard
+                    key={property.id}
+                    property={property}
+                    selected={property.id === selectedMapPropertyId}
+                    narrowList={Boolean(selectedMapProperty)}
+                    onSelect={() => selectPropertyFromList(property)}
+                  />
+                ))}
+                {!mapVisibleProperties.length ? (
+                  <div className="rounded-2xl border border-dashed border-brand-line bg-brand-surface p-10 text-center text-sm text-brand-muted">
+                    현재 지도 범위에 표시할 매물이 없습니다.
+                  </div>
+                ) : null}
+              </div>
+              {mobileRecommendedProperties.length ? (
+                <div className="space-y-3 lg:hidden">
+                  <div className="flex items-end justify-between pt-2">
+                    <div>
+                      <p className="text-xs font-bold text-brand-accent">
+                        지도에서 함께 보기
+                      </p>
+                      <h2 className="mt-1 text-xl font-black text-brand-ink">
+                        추천매물
+                      </h2>
+                    </div>
+                    <span className="text-sm font-bold text-brand-muted">
+                      최대 5개
+                    </span>
+                  </div>
+                  {mobileRecommendedProperties.map((property) => (
+                    <MapPropertyCard
+                      key={property.id}
+                      property={property}
+                      selected={property.id === selectedMapPropertyId}
+                      onSelect={() => selectPropertyFromList(property)}
+                    />
+                  ))}
                 </div>
               ) : null}
             </div>
             {selectedMapProperty ? (
-              <aside className="hidden h-[720px] min-w-0 overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
+              <aside className="order-2 hidden h-[720px] min-w-0 overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
                 <PropertyQuickViewContent
                   key={selectedMapProperty.id}
                   property={selectedMapProperty}
@@ -565,7 +600,7 @@ export function PropertyBrowser({
                 />
               </aside>
             ) : null}
-            <div className="min-h-[520px] min-w-0 lg:sticky lg:top-[92px] lg:h-[720px]">
+            <div className="order-1 min-h-[520px] min-w-0 lg:order-2 lg:sticky lg:top-[92px] lg:h-[720px] xl:order-3">
               <PropertyClusterMap
                 properties={filtered}
                 onVisiblePropertiesChange={updateMapVisibleProperties}
