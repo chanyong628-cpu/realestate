@@ -20,6 +20,17 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     type: "website",
     locale: "ko_KR",
@@ -30,10 +41,10 @@ export const metadata: Metadata = {
     url: absoluteUrl("/"),
     images: [
       {
-        url: "/icons/cy-app-icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "C.Y 부동산",
+        url: "/images/office-hero.png",
+        width: 1536,
+        height: 1024,
+        alt: "송파구 사무실·상가 임대 전문 C.Y 부동산",
       },
     ],
   },
@@ -42,7 +53,7 @@ export const metadata: Metadata = {
     title: "C.Y 부동산 | 송파구 사무실·상가 임대 전문",
     description:
       "송파구 사무실과 상가 임대 매물을 전문으로 중개하는 C.Y 부동산입니다.",
-    images: ["/icons/cy-app-icon-512.png"],
+    images: ["/images/office-hero.png"],
   },
   applicationName: "C.Y 부동산",
   ...(googleVerification || naverVerification

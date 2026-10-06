@@ -122,6 +122,40 @@ export function buildRealEstateAgentJsonLd() {
   };
 }
 
+export function buildWebsiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    name: siteName,
+    alternateName: "C.Y REAL ESTATE",
+    url: siteUrl,
+    inLanguage: "ko-KR",
+    publisher: {
+      "@id": `${siteUrl}/#realestate-agent`,
+    },
+  };
+}
+
+export function buildPropertyItemListJsonLd(
+  properties: Property[],
+  name: string,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    numberOfItems: properties.length,
+    itemListElement: properties.map((property, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: absoluteUrl(`/properties/${property.property_number}`),
+      name: property.title,
+      image: property.image_urls[0] || undefined,
+    })),
+  };
+}
+
 export function buildBreadcrumbJsonLd(
   items: Array<{ name: string; url: string }>,
 ) {

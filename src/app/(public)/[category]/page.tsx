@@ -4,7 +4,12 @@ import { PropertyBrowser } from "@/components/properties/property-browser";
 import { EtcArticleList } from "@/components/properties/etc-article-list";
 import { categoryLabels } from "@/lib/properties/format";
 import { getPublishedProperties } from "@/lib/properties/queries";
-import { absoluteUrl, baseKeywords } from "@/lib/seo";
+import {
+  absoluteUrl,
+  baseKeywords,
+  buildBreadcrumbJsonLd,
+  buildPropertyItemListJsonLd,
+} from "@/lib/seo";
 import type { PropertyCategory } from "@/types/database";
 
 export function generateStaticParams() {
@@ -58,6 +63,20 @@ export async function generateMetadata({
       description: seo.description,
       url: absoluteUrl(`/${typedCategory}`),
       type: "website",
+      images: [
+        {
+          url: "/images/office-hero.png",
+          width: 1536,
+          height: 1024,
+          alt: seo.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${seo.title} | C.Y 부동산`,
+      description: seo.description,
+      images: ["/images/office-hero.png"],
     },
   };
 }
@@ -71,10 +90,30 @@ export default async function CategoryPage({
   if (!["office", "store", "etc"].includes(category)) notFound();
   const typedCategory = category as PropertyCategory;
   const properties = await getPublishedProperties(typedCategory);
+  const pageTitle = categorySeo[typedCategory].title;
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "홈", url: "/" },
+    { name: pageTitle, url: `/${typedCategory}` },
+  ]);
+  const itemListJsonLd = buildPropertyItemListJsonLd(properties, pageTitle);
+
+  const structuredData = (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
+    </>
+  );
 
   if (typedCategory === "etc") {
     return (
       <main>
+        {structuredData}
         <EtcArticleList properties={properties} />
       </main>
     );
@@ -82,6 +121,7 @@ export default async function CategoryPage({
 
   return (
     <main className="min-h-[70vh]">
+      {structuredData}
       <PropertyBrowser
         properties={properties}
         title={`${categoryLabels[typedCategory]} 매물`}

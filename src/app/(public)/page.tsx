@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminLocationAutoRepair } from "@/features/admin/properties/admin-location-auto-repair";
 import { getPublishedProperties } from "@/lib/properties/queries";
 import { derivePublicAddress } from "@/lib/properties/address";
-import { buildRealEstateAgentJsonLd } from "@/lib/seo";
+import { buildRealEstateAgentJsonLd, buildWebsiteJsonLd } from "@/lib/seo";
 
 export default async function HomePage() {
   const [properties, adminSession] = await Promise.all([
@@ -39,12 +39,17 @@ export default async function HomePage() {
       })
     : [];
   const businessJsonLd = buildRealEstateAgentJsonLd();
+  const websiteJsonLd = buildWebsiteJsonLd();
 
   return (
     <main className="bg-brand-base">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(businessJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
       {isAdmin && (
         <AdminLocationAutoRepair properties={locationProperties} />
