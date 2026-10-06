@@ -329,14 +329,6 @@ export function PropertyBrowser({
     });
   }, [filtered, mapVisiblePropertyIds, selectedMapPropertyId]);
 
-  const mobileRecommendedProperties = useMemo(
-    () =>
-      mapVisibleProperties
-        .filter((property) => property.is_recommended)
-        .slice(0, 5),
-    [mapVisibleProperties],
-  );
-
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
     const nextSearch: SearchState = {
@@ -473,10 +465,15 @@ export function PropertyBrowser({
         </div>
       </div>
 
-      <form
-        onSubmit={submitSearch}
-        className="mb-8 grid gap-3 rounded-2xl border border-brand-line bg-brand-soft p-4 shadow-card md:grid-cols-2 lg:grid-cols-[1.25fr_1fr_1fr_1fr_auto]"
-      >
+      <div className={viewMode === "map" ? "flex flex-col" : undefined}>
+        <form
+          onSubmit={submitSearch}
+          className={`grid gap-3 rounded-2xl border border-brand-line bg-brand-soft p-4 shadow-card md:grid-cols-2 lg:grid-cols-[1.25fr_1fr_1fr_1fr_auto] ${
+            viewMode === "map"
+              ? "order-2 mt-6 mb-4 lg:order-1 lg:mt-0 lg:mb-8"
+              : "mb-8"
+          }`}
+        >
         <label className="relative">
           <Search
             size={18}
@@ -533,12 +530,12 @@ export function PropertyBrowser({
         >
           검색하기
         </button>
-      </form>
+        </form>
 
-      {filtered.length ? (
-        viewMode === "map" ? (
+        {filtered.length ? (
+          viewMode === "map" ? (
           <div
-            className={`grid gap-5 lg:items-start ${
+            className={`order-1 grid gap-5 lg:order-2 lg:items-start ${
               selectedMapProperty
                 ? "lg:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.95fr)_minmax(0,1.15fr)]"
                 : "lg:grid-cols-2"
@@ -546,9 +543,9 @@ export function PropertyBrowser({
           >
             <div
               ref={mapListRef}
-              className="order-2 min-w-0 lg:order-1 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
+              className="hidden min-w-0 lg:order-1 lg:block lg:max-h-[720px] lg:overflow-y-auto lg:pr-2"
             >
-              <div className="hidden space-y-3 lg:block">
+              <div className="space-y-3">
                 {mapVisibleProperties.map((property) => (
                   <MapPropertyCard
                     key={property.id}
@@ -564,31 +561,6 @@ export function PropertyBrowser({
                   </div>
                 ) : null}
               </div>
-              {mobileRecommendedProperties.length ? (
-                <div className="space-y-3 lg:hidden">
-                  <div className="flex items-end justify-between pt-2">
-                    <div>
-                      <p className="text-xs font-bold text-brand-accent">
-                        지도에서 함께 보기
-                      </p>
-                      <h2 className="mt-1 text-xl font-black text-brand-ink">
-                        추천매물
-                      </h2>
-                    </div>
-                    <span className="text-sm font-bold text-brand-muted">
-                      최대 5개
-                    </span>
-                  </div>
-                  {mobileRecommendedProperties.map((property) => (
-                    <MapPropertyCard
-                      key={property.id}
-                      property={property}
-                      selected={property.id === selectedMapPropertyId}
-                      onSelect={() => selectPropertyFromList(property)}
-                    />
-                  ))}
-                </div>
-              ) : null}
             </div>
             {selectedMapProperty ? (
               <aside className="order-2 hidden h-[720px] min-w-0 overflow-hidden rounded-2xl border border-brand-line bg-brand-surface shadow-card xl:sticky xl:top-[92px] xl:block">
@@ -608,7 +580,7 @@ export function PropertyBrowser({
               />
             </div>
           </div>
-        ) : (
+          ) : (
           <div
             onClickCapture={openPreviewFromCard}
             className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -617,13 +589,23 @@ export function PropertyBrowser({
               <PropertyCard key={property.id} property={property} />
             ))}
           </div>
-        )
-      ) : (
-        <div className="rounded-2xl border border-dashed border-brand-line bg-brand-surface p-16 text-center">
-          <h2 className="text-xl font-bold">조건에 맞는 매물이 없습니다.</h2>
-          <p className="mt-2 text-brand-muted">검색 조건을 바꿔 확인해 주세요.</p>
-        </div>
-      )}
+          )
+        ) : (
+          <div className="order-1 rounded-2xl border border-dashed border-brand-line bg-brand-surface p-16 text-center lg:order-2">
+            <h2 className="text-xl font-bold">조건에 맞는 매물이 없습니다.</h2>
+            <p className="mt-2 text-brand-muted">검색 조건을 바꿔 확인해 주세요.</p>
+          </div>
+        )}
+        {viewMode === "map" ? (
+          <button
+            type="button"
+            onClick={() => changeViewMode("list")}
+            className="order-3 h-14 w-full rounded-xl bg-brand-accent text-base font-black text-white shadow-card transition hover:bg-brand-accent-dark lg:hidden"
+          >
+            사무실 매물 전체보기
+          </button>
+        ) : null}
+      </div>
       {selectedMapProperty ? (
         <>
           <PropertyViewTracker
