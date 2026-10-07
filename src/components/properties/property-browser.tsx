@@ -237,6 +237,7 @@ export function PropertyBrowser({
   const [selectedListPropertyId, setSelectedListPropertyId] = useState<
     string | null
   >(null);
+  const [mobileMapDong, setMobileMapDong] = useState("");
   const mapListRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState<SearchState>({
     number: "",
@@ -259,13 +260,19 @@ export function PropertyBrowser({
     const restoredSearch =
       readSearchFromUrl(window.location.search) ??
       readSearchFromStorage(storageKey);
+    const initialParams = new URLSearchParams(window.location.search);
     const nextViewMode =
-      new URLSearchParams(window.location.search).get("view") === "map"
+      initialParams.get("view") === "map"
         ? "map"
         : "list";
 
     queueMicrotask(() => {
       setViewMode(nextViewMode);
+      setMobileMapDong(
+        window.matchMedia("(max-width: 1023px)").matches
+          ? (initialParams.get("mapDong") ?? "")
+          : "",
+      );
       if (!restoredSearch) return;
       setPropertyNumber(restoredSearch.number);
       setDong(restoredSearch.dong);
@@ -329,6 +336,16 @@ export function PropertyBrowser({
     });
   }, [filtered, mapVisiblePropertyIds, selectedMapPropertyId]);
 
+  const mobileMapProperties = useMemo(
+    () =>
+      mobileMapDong
+        ? filtered.filter(
+            (property) => getDong(property.public_address) === mobileMapDong,
+          )
+        : [],
+    [filtered, mobileMapDong],
+  );
+
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
     const nextSearch: SearchState = {
@@ -344,6 +361,7 @@ export function PropertyBrowser({
     setSearch(nextSearch);
     setMapVisiblePropertyIds(null);
     setSelectedMapPropertyId(null);
+    setMobileMapDong("");
     writeStateToUrl(pathname, nextSearch, viewMode);
 
     if (isDefaultSearch(nextSearch)) {
@@ -359,6 +377,7 @@ export function PropertyBrowser({
     setMapVisiblePropertyIds(null);
     setSelectedMapPropertyId(null);
     setSelectedListPropertyId(null);
+    setMobileMapDong("");
     writeStateToUrl(window.location.pathname, search, nextViewMode);
   }
 
@@ -378,6 +397,42 @@ export function PropertyBrowser({
     });
   }, []);
 
+  const selectDongFromMap = useCallback((selectedDong: string) => {
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+
+    setMobileMapDong(selectedDong);
+    setSelectedMapPropertyId(null);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", "map");
+    url.searchParams.set("mapDong", selectedDong);
+    window.history.pushState(
+      null,
+      "",
+      `${url.pathname}?${url.searchParams.toString()}`,
+    );
+
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById("properties")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
+
+  useEffect(() => {
+    const restoreMobileMapState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setMobileMapDong(
+        window.matchMedia("(max-width: 1023px)").matches
+          ? (params.get("mapDong") ?? "")
+          : "",
+      );
+    };
+
+    window.addEventListener("popstate", restoreMobileMapState);
+    return () => window.removeEventListener("popstate", restoreMobileMapState);
+  }, []);
+
   const selectPropertyFromList = useCallback((property: Property) => {
     trackConversion("property_card_click", {
       property_number: property.property_number,
@@ -391,7 +446,11 @@ export function PropertyBrowser({
   }, []);
 
   const visiblePropertyCount =
-    viewMode === "map" ? mapVisibleProperties.length : filtered.length;
+    viewMode === "map"
+      ? mobileMapDong
+        ? mobileMapProperties.length
+        : mapVisibleProperties.length
+      : filtered.length;
   const selectedMapProperty = selectedMapPropertyId
     ? properties.find((property) => property.id === selectedMapPropertyId) ?? null
     : null;
@@ -572,11 +631,41 @@ export function PropertyBrowser({
                 />
               </aside>
             ) : null}
-            <div className="order-1 min-h-[520px] min-w-0 lg:order-2 lg:sticky lg:top-[92px] lg:h-[720px] xl:order-3">
+            {mobileMapDong ? (
+              <section className="order-1 min-w-0 lg:hidden">
+                <div className="mb-4 rounded-2xl border border-brand-line bg-brand-soft px-5 py-4 shadow-card">
+                  <p className="text-sm font-bold text-brand-accent">
+                    지도에서 선택한 지역
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black text-brand-ink">
+                    {mobileMapDong} 매물 {mobileMapProperties.length}개
+                  </h2>
+                  <p className="mt-1 text-sm text-brand-muted">
+                    뒤로가기를 누르면 지도로 돌아갑니다.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {mobileMapProperties.map((property) => (
+                    <MapPropertyCard
+                      key={property.id}
+                      property={property}
+                      selected={property.id === selectedMapPropertyId}
+                      onSelect={() => selectPropertyFromList(property)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+            <div
+              className={`order-1 min-h-[520px] min-w-0 lg:order-2 lg:sticky lg:top-[92px] lg:block lg:h-[720px] xl:order-3 ${
+                mobileMapDong ? "hidden" : ""
+              }`}
+            >
               <PropertyClusterMap
                 properties={filtered}
                 onVisiblePropertiesChange={updateMapVisibleProperties}
                 onPropertySelect={selectPropertyFromMap}
+                onGroupSelect={selectDongFromMap}
               />
             </div>
           </div>

@@ -190,7 +190,7 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
   }
 
   return (
-    <div className="mt-8 overflow-hidden rounded-2xl bg-white shadow-sm">
+    <div className="relative mt-8 overflow-visible rounded-2xl bg-white shadow-sm">
       <div className="flex flex-wrap items-center gap-2 border-b border-stone-200 bg-gradient-to-r from-amber-50 via-white to-emerald-50 p-4">
         <div className="mr-auto flex min-w-[150px] items-center gap-3">
           <input

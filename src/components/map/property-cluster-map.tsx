@@ -352,10 +352,12 @@ export function PropertyClusterMap({
   properties,
   onVisiblePropertiesChange,
   onPropertySelect,
+  onGroupSelect,
 }: {
   properties: Property[];
   onVisiblePropertiesChange: (propertyIds: string[] | null) => void;
   onPropertySelect: (propertyId: string | null) => void;
+  onGroupSelect: (dong: string, propertyIds: string[]) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -418,6 +420,7 @@ export function PropertyClusterMap({
           if (group.latitude === null || group.longitude === null) return;
           onPropertySelect(null);
           onVisiblePropertiesChange(group.propertyIds);
+          onGroupSelect(group.dong, group.propertyIds);
           map.setCenter(new maps.LatLng(group.latitude, group.longitude));
           map.setLevel(5);
         };
@@ -515,6 +518,7 @@ export function PropertyClusterMap({
   }, [
     appKey,
     groups,
+    onGroupSelect,
     onPropertySelect,
     onVisiblePropertiesChange,
     properties,
@@ -548,6 +552,7 @@ export function PropertyClusterMap({
               onClick={() => {
                 onPropertySelect(null);
                 onVisiblePropertiesChange(group.propertyIds);
+                onGroupSelect(group.dong, group.propertyIds);
               }}
               className="rounded-xl border border-brand-line bg-brand-surface p-4 text-center shadow-card"
             >
