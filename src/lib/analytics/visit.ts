@@ -5,6 +5,7 @@ export { classifyVisitSource, isLikelyBot } from "./source";
 
 export const VISITOR_COOKIE_NAME = "cy_visitor";
 export const VISITOR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+export const INTERNAL_VISITOR_COOKIE_NAME = "cy_internal_analytics";
 
 export function createVisitorId() {
   return randomUUID();
@@ -18,4 +19,12 @@ export function hashVisitorId(visitorId: string) {
     throw new Error("방문 통계 해시 환경변수가 설정되지 않았습니다.");
   }
   return createHmac("sha256", secret).update(visitorId).digest("hex");
+}
+
+export function hashNetworkAddress(headers: Headers) {
+  const forwarded =
+    headers.get("x-vercel-forwarded-for") || headers.get("x-forwarded-for") || "";
+  const address = forwarded.split(",")[0]?.trim();
+  if (!address) return null;
+  return hashVisitorId(`network:${address}`);
 }

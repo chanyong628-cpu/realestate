@@ -3,13 +3,14 @@ import { z } from "zod";
 import {
   classifyVisitSource,
   createVisitorId,
+  hashNetworkAddress,
   hashVisitorId,
   isLikelyBot,
   VISITOR_COOKIE_MAX_AGE,
   VISITOR_COOKIE_NAME,
 } from "@/lib/analytics/visit";
-import { getAdminSession } from "@/lib/auth/session";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminSession, isInternalAnalyticsVisitor } from "@/lib/auth/session";
+import { createAnalyticsClient, getAnalyticsSharedSecret } from "@/lib/supabase/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,7 +48,9 @@ function emptyResponse(visitorId?: string) {
 }
 
 export async function POST(request: NextRequest) {
-  if (await getAdminSession()) return emptyResponse();
+  if ((await getAdminSession()) || (await isInternalAnalyticsVisitor())) {
+    return emptyResponse();
+  }
   if (isLikelyBot(request.headers.get("user-agent") ?? "")) {
     return emptyResponse();
   }
@@ -70,28 +73,17 @@ export async function POST(request: NextRequest) {
       parsed.data.search,
       request.nextUrl.hostname.toLowerCase(),
     );
-    const supabase = createAdminClient();
-    let propertyId: string | null = null;
-
-    if (parsed.data.property_number) {
-      const { data } = await supabase
-        .from("properties")
-        .select("id")
-        .eq("property_number", parsed.data.property_number)
-        .maybeSingle();
-      propertyId = typeof data?.id === "string" ? data.id : null;
-    }
-
-    const { error } = await supabase.from("site_visits").insert({
-      visitor_hash: hashVisitorId(visitorId),
-      pathname: parsed.data.pathname,
-      property_id: propertyId,
-      property_number: parsed.data.property_number ?? null,
-      is_entry: parsed.data.is_entry,
-      source_type: attribution.sourceType,
-      source_name: attribution.sourceName,
-      referrer_host: attribution.referrerHost,
-      search_query: attribution.searchQuery,
+    const { error } = await createAnalyticsClient().rpc("record_site_visit", {
+      p_secret: getAnalyticsSharedSecret(),
+      p_visitor_hash: hashVisitorId(visitorId),
+      p_network_hash: hashNetworkAddress(request.headers),
+      p_pathname: parsed.data.pathname,
+      p_property_number: parsed.data.property_number ?? null,
+      p_is_entry: parsed.data.is_entry,
+      p_source_type: attribution.sourceType,
+      p_source_name: attribution.sourceName,
+      p_referrer_host: attribution.referrerHost,
+      p_search_query: attribution.searchQuery,
     });
     if (error) {
       console.error("First-party analytics insert failed:", {

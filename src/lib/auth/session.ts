@@ -2,9 +2,11 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { INTERNAL_VISITOR_COOKIE_NAME } from "@/lib/analytics/visit";
 
 const COOKIE_NAME = "cy_admin_session";
 const SESSION_DURATION_SECONDS = 60 * 60 * 8;
+const INTERNAL_MARKER_SECONDS = 60 * 60 * 24 * 365;
 
 interface SessionPayload {
   sub: string;
@@ -43,6 +45,22 @@ export async function createAdminSession(adminId: string) {
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,
   });
+  cookieStore.set(INTERNAL_VISITOR_COOKIE_NAME, sign("internal-analytics"), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: INTERNAL_MARKER_SECONDS,
+  });
+}
+
+export async function isInternalAnalyticsVisitor() {
+  const cookieStore = await cookies();
+  const marker = cookieStore.get(INTERNAL_VISITOR_COOKIE_NAME)?.value;
+  if (!marker) return false;
+  const supplied = Buffer.from(marker);
+  const expected = Buffer.from(sign("internal-analytics"));
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
 export async function deleteAdminSession() {
