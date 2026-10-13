@@ -18,6 +18,7 @@ export interface AnalyticsClickItem extends AnalyticsCountItem {
 
 export interface RepeatVisitorItem extends AnalyticsCountItem {
   lastSeen: string;
+  visitDays: number;
 }
 
 export interface AdminAnalyticsData {
@@ -28,7 +29,8 @@ export interface AdminAnalyticsData {
   topProperties: AnalyticsClickItem[];
   sources: AnalyticsCountItem[];
   searches: AnalyticsCountItem[];
-  repeatVisitors: RepeatVisitorItem[];
+  repeatVisitors14: RepeatVisitorItem[];
+  repeatVisitors28: RepeatVisitorItem[];
   repeatLoginAttempts: RepeatVisitorItem[];
 }
 
@@ -38,16 +40,18 @@ interface DashboardRpcResult {
   top_properties?: Array<{ label: string; count: number; rate: number }>;
   sources?: Array<{ label: string; count: number }>;
   searches?: Array<{ label: string; count: number }>;
-  repeat_visitors?: Array<{ visitor_hash: string; count: number; last_seen: string }>;
-  repeat_logins?: Array<{ visitor_hash: string; count: number; last_seen: string }>;
+  repeat_visitors_14?: Array<{ visitor_hash: string; count: number; visit_days: number; last_seen: string }>;
+  repeat_visitors_28?: Array<{ visitor_hash: string; count: number; visit_days: number; last_seen: string }>;
+  repeat_logins?: Array<{ visitor_hash: string; count: number; visit_days: number; last_seen: string }>;
 }
 
 function repeatItems(
-  items: DashboardRpcResult["repeat_visitors"] = [],
+  items: DashboardRpcResult["repeat_visitors_14"] = [],
 ): RepeatVisitorItem[] {
   return (items ?? []).map((item) => ({
     label: `익명 방문자 ${item.visitor_hash.slice(0, 6).toUpperCase()}`,
     count: item.count,
+    visitDays: item.visit_days,
     lastSeen: item.last_seen,
   }));
 }
@@ -61,7 +65,8 @@ function emptyData(rangeDays: AnalyticsRangeDays): AdminAnalyticsData {
     topProperties: [],
     sources: [],
     searches: [],
-    repeatVisitors: [],
+    repeatVisitors14: [],
+    repeatVisitors28: [],
     repeatLoginAttempts: [],
   };
 }
@@ -91,7 +96,8 @@ export async function getAdminAnalytics(
       topProperties: result.top_properties ?? [],
       sources: result.sources ?? [],
       searches: result.searches ?? [],
-      repeatVisitors: repeatItems(result.repeat_visitors),
+      repeatVisitors14: repeatItems(result.repeat_visitors_14),
+      repeatVisitors28: repeatItems(result.repeat_visitors_28),
       repeatLoginAttempts: repeatItems(result.repeat_logins),
     };
   } catch (error) {

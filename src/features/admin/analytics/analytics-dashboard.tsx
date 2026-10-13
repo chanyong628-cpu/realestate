@@ -21,7 +21,7 @@ function RepeatList({ items, emptyText }: { items: RepeatVisitorItem[]; emptyTex
   return <ol className="mt-4 space-y-3">{items.map((item, index) => (
     <li key={item.label} className="grid grid-cols-[1.5rem_1fr_auto] gap-2 text-sm">
       <b className="text-stone-400">{index + 1}</b>
-      <div><b>{item.label}</b><p className="mt-0.5 text-xs text-stone-400">최근 {new Date(item.lastSeen).toLocaleString("ko-KR")}</p></div>
+      <div><b>{item.label}</b><p className="mt-0.5 text-xs text-stone-400">{item.visitDays}일 방문 · 최근 {new Date(item.lastSeen).toLocaleString("ko-KR")}</p></div>
       <b>{item.count}회</b>
     </li>
   ))}</ol>;
@@ -48,11 +48,12 @@ export function AnalyticsDashboard({ data }: { data: AdminAnalyticsData }) {
     </div>
 
     <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-      <h3 className="font-black">반복 방문·로그인 TOP 3</h3>
-      <p className="mt-1 text-xs leading-5 text-stone-500">실제 IP는 저장하거나 표시하지 않고, 익명 해시로 같은 접속만 구분합니다. 회사·공용망은 여러 사람이 한 방문자로 보일 수 있습니다.</p>
-      <div className="mt-4 grid gap-5 lg:grid-cols-2"><div><h4 className="text-sm font-black">반복 방문</h4><RepeatList items={data.repeatVisitors} emptyText="반복 방문 기록이 아직 없습니다." /></div><div><h4 className="text-sm font-black">실패한 반복 로그인</h4><RepeatList items={data.repeatLoginAttempts} emptyText="반복 로그인 실패가 없습니다." /></div></div>
+      <h3 className="font-black">장기 반복 방문자 TOP 5</h3>
+      <p className="mt-1 text-xs leading-5 text-stone-500">서로 다른 날짜에 2일 이상 방문한 접속만 표시합니다. 실제 IP는 저장하지 않고 익명 해시로 같은 접속을 구분하며, 회사·공용망은 여러 사람이 한 방문자로 보일 수 있습니다.</p>
+      <div className="mt-4 grid gap-5 lg:grid-cols-2"><div><h4 className="text-sm font-black">최근 2주</h4><RepeatList items={data.repeatVisitors14} emptyText="2주간 반복 방문 기록이 아직 없습니다." /></div><div><h4 className="text-sm font-black">최근 4주</h4><RepeatList items={data.repeatVisitors28} emptyText="4주간 반복 방문 기록이 아직 없습니다." /></div></div>
+      <div className="mt-5 border-t border-amber-200 pt-4"><h4 className="text-sm font-black">최근 4주 실패한 반복 로그인 TOP 5</h4><RepeatList items={data.repeatLoginAttempts} emptyText="반복 로그인 실패가 없습니다." /></div>
     </div>
 
-    <p className="mt-5 text-xs leading-5 text-stone-400">검색 서비스가 검색어를 숨긴 경우 검색엔진 이름만 표시됩니다. 클릭률은 선택 기간의 전체 매물 상세 클릭 중 해당 매물 비율입니다.</p>
+    <p className="mt-5 text-xs leading-5 text-stone-400">검색 서비스가 검색어를 전달한 경우에만 문구가 표시됩니다. 숨겨진 Google 검색어는 Google Search Console의 실적 보고서에서 확인해야 합니다. 클릭률은 선택 기간의 전체 매물 상세 클릭 중 해당 매물 비율입니다.</p>
   </section>;
 }
