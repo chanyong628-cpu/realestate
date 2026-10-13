@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import type { AdminAnalyticsData, AnalyticsClickItem, AnalyticsCountItem, AnalyticsRangeDays, RepeatVisitorItem } from "@/lib/analytics/dashboard";
 
 const ranges: Array<{ days: AnalyticsRangeDays; label: string }> = [
@@ -54,6 +55,19 @@ export function AnalyticsDashboard({ data }: { data: AdminAnalyticsData }) {
       <div className="mt-5 border-t border-amber-200 pt-4"><h4 className="text-sm font-black">최근 4주 실패한 반복 로그인 TOP 5</h4><RepeatList items={data.repeatLoginAttempts} emptyText="반복 로그인 실패가 없습니다." /></div>
     </div>
 
-    <p className="mt-5 text-xs leading-5 text-stone-400">검색 서비스가 검색어를 전달한 경우에만 문구가 표시됩니다. 숨겨진 Google 검색어는 Google Search Console의 실적 보고서에서 확인해야 합니다. 클릭률은 선택 기간의 전체 매물 상세 클릭 중 해당 매물 비율입니다.</p>
+    <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
+      <h3 className="font-black">외부 검색 유입 자세히 보기</h3>
+      <p className="mt-1 text-xs leading-5 text-stone-500">검색 노출·클릭·유입 검색어는 각 검색 서비스의 공식 도구에서 확인할 수 있습니다. 로그인 후 cy-office.com 사이트를 선택해 주세요.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <a href="https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Acy-office.com" target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-between rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-black text-blue-700 transition hover:border-blue-400 hover:bg-blue-50">
+          <span>Google 검색 실적 보기</span><ExternalLink aria-hidden="true" className="size-4" />
+        </a>
+        <a href="https://searchadvisor.naver.com/console/board" target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-between rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-black text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-50">
+          <span>Naver 검색 실적 보기</span><ExternalLink aria-hidden="true" className="size-4" />
+        </a>
+      </div>
+    </div>
+
+    <p className="mt-5 text-xs leading-5 text-stone-400">이 화면의 ‘네이버 검색’은 네이버 검색 결과에서 들어왔다는 뜻이며, 방문자가 실제로 입력한 검색어까지는 알 수 없습니다. 검색 서비스가 검색어를 전달한 경우에만 검색어 문구가 표시됩니다. 클릭률은 선택 기간의 전체 매물 상세 클릭 중 해당 매물 비율입니다.</p>
   </section>;
 }
