@@ -7,29 +7,14 @@ import {
   parseBulkPropertyRows,
   parsePropertyInputs,
 } from "@/lib/properties/smart-import";
+import {
+  HOMEPAGE_EXCEL_SHEET_NAME,
+  parseHomepageExcelSheet,
+} from "@/lib/properties/homepage-excel-import";
 
 const excelFolderColumns = ["A", "C", "E", "G", "I", "K"] as const;
 const excelListingsPerRow = excelFolderColumns.length;
-const excelListingCount = 30;
 const excelFirstDataRow = 3;
-
-const fixedExcelRanges = Array.from(
-  { length: excelListingCount },
-  (_, index) => {
-    const pairIndex = index % excelListingsPerRow;
-    const row = excelFirstDataRow + Math.floor(index / excelListingsPerRow);
-    const folderColumn = excelFolderColumns[pairIndex];
-    const advertisementColumn = String.fromCharCode(
-      folderColumn.charCodeAt(0) + 1,
-    );
-
-    return {
-      listingNumber: index + 1,
-      folderCell: `${folderColumn}${row}`,
-      advertisementCell: `${advertisementColumn}${row}`,
-    };
-  },
-);
 
 const excelRangeRows = Array.from({ length: 5 }, (_, index) => {
   const row = excelFirstDataRow + index;
@@ -50,13 +35,6 @@ function formatPrice(deposit: number | null, rent: number | null) {
   return `보증금 ${deposit?.toLocaleString() ?? "-"}만원 / 월세 ${
     rent?.toLocaleString() ?? "-"
   }만원`;
-}
-
-function cellText(value: unknown) {
-  const text = String(value ?? "").trim();
-  return text.startsWith('"') && text.endsWith('"') && text.length >= 2
-    ? text.slice(1, -1).replace(/""/g, '"').trim()
-    : text;
 }
 
 function tsvCell(value: string) {
@@ -80,6 +58,11 @@ export function BulkPropertyImporter() {
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
   const [fileError, setFileError] = useState("");
+  const [fileSummary, setFileSummary] = useState<{
+    recognizedCount: number;
+    skippedCount: number;
+    incompleteMessages: string[];
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, action, pending] = useActionState(
     bulkCreatePropertiesAction,
@@ -97,54 +80,46 @@ export function BulkPropertyImporter() {
     if (!file) return;
     setFileName(file.name);
     setFileError("");
+    setFileSummary(null);
     setText("");
 
     try {
       const XLSX = await import("xlsx");
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-      const sheetName = workbook.SheetNames.includes("네이버")
-        ? "네이버"
-        : workbook.SheetNames[0];
-      const sheet = sheetName ? workbook.Sheets[sheetName] : null;
+      const sheet = workbook.Sheets[HOMEPAGE_EXCEL_SHEET_NAME];
 
       if (!sheet) {
-        setFileError("엑셀 첫 번째 시트를 읽지 못했습니다.");
-        return;
-      }
-
-      const fixedRows = fixedExcelRanges.map(
-        ({ listingNumber, folderCell, advertisementCell }) => ({
-          listingNumber,
-          folderCell,
-          advertisementCell,
-          folderName: cellText(sheet[folderCell]?.w ?? sheet[folderCell]?.v),
-          advertisement: cellText(
-            sheet[advertisementCell]?.w ?? sheet[advertisementCell]?.v,
-          ),
-        }),
-      );
-      const incompleteRows = fixedRows.filter(
-        ({ folderName, advertisement }) =>
-          Boolean(folderName) !== Boolean(advertisement),
-      );
-
-      if (incompleteRows.length) {
-        const cells = incompleteRows
-          .map(
-            ({ listingNumber, folderCell, advertisementCell }) =>
-              `${listingNumber}번(${folderCell}/${advertisementCell})`,
-          )
-          .join(", ");
         setFileError(
-          `폴더명과 광고문을 모두 입력해 주세요: ${cells}`,
+          `'${HOMEPAGE_EXCEL_SHEET_NAME}' 시트가 없습니다. 네이버 시트는 구조가 달라 자동으로 대신 읽지 않습니다. 광고프로그램에서 새 전체 엑셀 파일로 다시 저장해 주세요.`,
         );
         return;
       }
 
-      const completedRows = fixedRows.filter(
-        ({ folderName, advertisement }) => folderName && advertisement,
+      const decodedRange = sheet["!ref"]
+        ? XLSX.utils.decode_range(sheet["!ref"])
+        : { e: { r: 6, c: 11 } };
+      const parsedSheet = parseHomepageExcelSheet(sheet, {
+        maxRow: decodedRange.e.r + 1,
+        maxColumn: decodedRange.e.c + 1,
+      });
+      const incompleteMessages = parsedSheet.incompleteItems.map(
+        ({ listingNumber, folderCell, advertisementCell, missing }) =>
+          `${listingNumber}번 ${folderCell}/${advertisementCell}: ${missing} 없음`,
       );
-      const parsedText = valuesToImportText(completedRows);
+      setFileSummary({
+        recognizedCount: parsedSheet.recognizedCount,
+        skippedCount: parsedSheet.skippedCount,
+        incompleteMessages,
+      });
+
+      if (parsedSheet.overflowCells.length) {
+        setFileError(
+          `최대 30개를 초과하거나 지정 범위를 벗어난 값이 있습니다: ${parsedSheet.overflowCells.slice(0, 10).join(", ")}${parsedSheet.overflowCells.length > 10 ? " 외" : ""}`,
+        );
+        return;
+      }
+
+      const parsedText = valuesToImportText(parsedSheet.items);
       const parsedRows = parseBulkPropertyRows(parsedText);
 
       if (!parsedRows.length) {
@@ -188,9 +163,9 @@ export function BulkPropertyImporter() {
           </div>
         </div>
         <p className="mt-2 text-sm leading-6 text-stone-600">
-          엑셀 파일을 업로드하면 네이버 시트의 정해진 셀에서 최대 30개
-          매물을 읽습니다. 등록 시 사진은 비워두고, 입주가능일은 자동으로
-          <b> 즉시입주</b>로 저장됩니다.
+          엑셀 파일을 업로드하면 <b>C.Y홈페이지</b> 시트의 3~7행에서 최대
+          30개 매물을 읽습니다. 등록 시 사진은 비워두고, 입주가능일은
+          자동으로 <b>즉시입주</b>로 저장됩니다.
         </p>
         {fileName && (
           <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm font-bold text-brand-accent">
@@ -201,6 +176,25 @@ export function BulkPropertyImporter() {
           <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
             {fileError}
           </p>
+        )}
+        {fileSummary && (
+          <div className="mt-3 rounded-xl border border-brand-line bg-white px-4 py-3 text-sm">
+            <p className="font-black text-brand-accent">
+              {fileSummary.recognizedCount}개 인식됨 / {fileSummary.skippedCount}개 건너뜀
+            </p>
+            {fileSummary.incompleteMessages.length > 0 && (
+              <div className="mt-2 text-amber-700">
+                <p className="font-bold">
+                  형식 오류 {fileSummary.incompleteMessages.length}개는 등록에서 제외했습니다.
+                </p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-xs">
+                  {fileSummary.incompleteMessages.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
         <div className="mt-5 overflow-x-auto rounded-xl border border-brand-line bg-white">
           <table className="w-full min-w-[680px] text-left text-sm">
@@ -247,7 +241,11 @@ export function BulkPropertyImporter() {
           <textarea
             name="excel_rows"
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => {
+              setText(event.target.value);
+              setFileSummary(null);
+              setFileError("");
+            }}
             rows={14}
             placeholder={`사진폴더명\t광고문\n가락동158 2층전체 1000-80-5 15평 ...\t광고문 전체`}
             className="mt-3 w-full rounded-xl border border-stone-300 bg-white p-4 text-sm outline-none focus:border-forest-600 focus:ring-3 focus:ring-forest-100"
