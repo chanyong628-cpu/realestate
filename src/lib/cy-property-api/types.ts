@@ -3,7 +3,7 @@ import type { CreatePropertyInput, UpdatePropertyInput } from "./schema";
 
 export interface PropertyRepository {
   findByIdentifier(identifier: string): Promise<Property | null>;
-  search(query: string, limit: number): Promise<Property[]>;
+  search(query: string, limit: number, offset: number): Promise<Property[]>;
   existsByPropertyNumber(propertyNumber: string): Promise<boolean>;
   create(input: CreatePropertyInput): Promise<Property>;
   update(

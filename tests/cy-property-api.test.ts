@@ -9,6 +9,7 @@ import type { PropertyRepository } from "../src/lib/cy-property-api/types";
 import type { Property } from "../src/types/database";
 
 const SECRET = "test-secret-with-at-least-32-characters";
+const CRM_SECRET = "crm-secret-with-at-least-32-characters";
 
 function propertyFixture(overrides: Partial<Property> = {}): Property {
   return {
@@ -68,7 +69,7 @@ class MemoryPropertyRepository implements PropertyRepository {
     );
   }
 
-  async search(query: string, limit: number) {
+  async search(query: string, limit: number, offset: number) {
     const normalized = query.toLowerCase();
     return this.properties
       .filter((property) =>
@@ -81,7 +82,7 @@ class MemoryPropertyRepository implements PropertyRepository {
           .filter(Boolean)
           .some((value) => value!.toLowerCase().includes(normalized)),
       )
-      .slice(0, limit);
+      .slice(offset, offset + limit);
   }
 
   async existsByPropertyNumber(propertyNumber: string) {
@@ -121,11 +122,12 @@ class MemoryPropertyRepository implements PropertyRepository {
   }
 }
 
-function setup(repository = new MemoryPropertyRepository()) {
+function setup(repository = new MemoryPropertyRepository(), additionalSecret?: string) {
   const logs: string[] = [];
   const handlers = createPropertyApiHandlers({
     repository,
     getSecret: () => SECRET,
+    getAdditionalSecret: () => additionalSecret,
     getSupabaseUrl: () => "https://project.supabase.co",
     revalidate: () => undefined,
     logger: {
@@ -158,6 +160,9 @@ interface ApiTestResponse {
   error?: { code?: string };
   property?: Property;
   properties?: Property[];
+  count?: number;
+  offset?: number;
+  next_offset?: number | null;
 }
 
 async function json(response: Response) {
@@ -184,6 +189,15 @@ describe("C.Y Property API", () => {
     assert.equal(response.status, 401);
   });
 
+  test("CRM 전용 Secret으로도 인증할 수 있다", async () => {
+    const { handlers } = setup(new MemoryPropertyRepository(), CRM_SECRET);
+    const response = await handlers.get(
+      request("GET", "/api/cy/properties/CY-0001", undefined, CRM_SECRET),
+      "CY-0001",
+    );
+    assert.equal(response.status, 200);
+  });
+
   test("존재하는 매물을 조회한다", async () => {
     const { handlers } = setup();
     const response = await handlers.get(
@@ -203,6 +217,29 @@ describe("C.Y Property API", () => {
     );
     assert.equal(response.status, 404);
     assert.equal((await json(response)).error?.code, "PROPERTY_NOT_FOUND");
+  });
+
+  test("CRM 목록 조회를 페이지 단위로 제공한다", async () => {
+    const repository = new MemoryPropertyRepository([
+      propertyFixture({ id: "11111111-1111-4111-8111-111111111111", property_number: "CY-0001" }),
+      propertyFixture({ id: "22222222-2222-4222-8222-222222222222", property_number: "CY-0002" }),
+      propertyFixture({ id: "33333333-3333-4333-8333-333333333333", property_number: "CY-0003" }),
+    ]);
+    const { handlers } = setup(repository);
+    const first = await handlers.search(
+      request("GET", "/api/cy/properties?limit=2&offset=0"),
+    );
+    const firstBody = await json(first);
+    assert.equal(first.status, 200);
+    assert.equal(firstBody.properties?.length, 2);
+    assert.equal(firstBody.next_offset, 2);
+
+    const second = await handlers.search(
+      request("GET", "/api/cy/properties?limit=2&offset=2"),
+    );
+    const secondBody = await json(second);
+    assert.equal(secondBody.properties?.length, 1);
+    assert.equal(secondBody.next_offset, null);
   });
 
   test("신규 매물은 비공개로 등록한다", async () => {

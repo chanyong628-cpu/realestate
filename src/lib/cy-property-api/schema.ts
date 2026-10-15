@@ -142,10 +142,14 @@ export const searchPropertiesSchema = z
     q: z
       .string()
       .trim()
-      .min(1, "검색어를 입력해 주세요.")
       .max(100)
-      .regex(SAFE_SEARCH_PATTERN, "검색어에 허용되지 않은 문자가 있습니다."),
-    limit: z.coerce.number().int().min(1).max(50).default(20),
+      .refine(
+        (value) => value.length === 0 || SAFE_SEARCH_PATTERN.test(value),
+        "검색어에 허용되지 않은 문자가 있습니다.",
+      )
+      .default(""),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    offset: z.coerce.number().int().min(0).max(10_000).default(0),
   })
   .strict();
 

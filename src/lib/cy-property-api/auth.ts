@@ -11,15 +11,21 @@ function digest(value: string) {
 
 export function authorizePropertyApiRequest(
   request: Request,
-  configuredSecret: string | undefined,
+  configuredSecret: string | undefined | Array<string | undefined>,
 ): PropertyApiAuthResult {
-  if (!configuredSecret || configuredSecret.length < 32) return "misconfigured";
+  const configuredSecrets = (Array.isArray(configuredSecret)
+    ? configuredSecret
+    : [configuredSecret]
+  ).filter((secret): secret is string => Boolean(secret && secret.length >= 32));
+  if (!configuredSecrets.length) return "misconfigured";
 
   const header = request.headers.get("authorization") ?? "";
   const match = header.match(/^Bearer ([^\s]+)$/);
   if (!match) return "unauthorized";
 
-  return timingSafeEqual(digest(match[1]), digest(configuredSecret))
+  return configuredSecrets.some((secret) =>
+    timingSafeEqual(digest(match[1]), digest(secret)),
+  )
     ? "authorized"
     : "unauthorized";
 }

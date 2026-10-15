@@ -30,6 +30,7 @@ interface PropertyApiLogger {
 interface PropertyApiDependencies {
   repository: PropertyRepository;
   getSecret: () => string | undefined;
+  getAdditionalSecret?: () => string | undefined;
   getSupabaseUrl: () => string | undefined;
   revalidate: (property: Property) => void;
   logger?: PropertyApiLogger;
@@ -50,7 +51,7 @@ export function createPropertyApiHandlers(dependencies: PropertyApiDependencies)
   function authenticate(request: Request) {
     const result = authorizePropertyApiRequest(
       request,
-      dependencies.getSecret(),
+      [dependencies.getSecret(), dependencies.getAdditionalSecret?.()],
     );
     if (result === "misconfigured") {
       return errorResponse(
@@ -147,8 +148,17 @@ export function createPropertyApiHandlers(dependencies: PropertyApiDependencies)
         const properties = await dependencies.repository.search(
           parsed.data.q,
           parsed.data.limit,
+          parsed.data.offset,
         );
-        return successResponse({ properties, count: properties.length });
+        return successResponse({
+          properties,
+          count: properties.length,
+          offset: parsed.data.offset,
+          next_offset:
+            properties.length === parsed.data.limit
+              ? parsed.data.offset + properties.length
+              : null,
+        });
       } catch (error) {
         return handleUnexpected(error);
       }

@@ -84,15 +84,19 @@ export const supabasePropertyRepository: PropertyRepository = {
     return property ? toApiProperty(property) : null;
   },
 
-  async search(query, limit) {
-    const { data, error } = await createAdminClient()
+  async search(query, limit, offset) {
+    let request = createAdminClient()
       .from("properties")
       .select(propertyColumns)
-      .or(
+      .order("created_at", { ascending: false });
+
+    if (query) {
+      request = request.or(
         `property_number.ilike.*${query}*,title.ilike.*${query}*,public_address.ilike.*${query}*,private_address.ilike.*${query}*`,
-      )
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      );
+    }
+
+    const { data, error } = await request.range(offset, offset + limit - 1);
 
     if (error) throw storeError(error);
     return (data ?? []).map(toApiProperty);
