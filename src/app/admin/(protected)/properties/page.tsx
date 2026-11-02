@@ -16,6 +16,9 @@ type PropertyStatusFilter =
   | "recommended"
   | "no-image";
 
+type RentFilter = "all" | "under-100" | "100-200" | "200-300" | "over-300";
+type AreaFilter = "all" | "under-20" | "20-30" | "30-50" | "over-50";
+
 const statusLabels: Record<PropertyStatusFilter, string> = {
   all: "전체 매물",
   published: "노출 매물",
@@ -31,6 +34,43 @@ function normalizeStatusFilter(value?: string): PropertyStatusFilter {
     value === "no-image"
     ? value
     : "all";
+}
+
+function normalizeRentFilter(value?: string): RentFilter {
+  return value === "under-100" ||
+    value === "100-200" ||
+    value === "200-300" ||
+    value === "over-300"
+    ? value
+    : "all";
+}
+
+function normalizeAreaFilter(value?: string): AreaFilter {
+  return value === "under-20" ||
+    value === "20-30" ||
+    value === "30-50" ||
+    value === "over-50"
+    ? value
+    : "all";
+}
+
+function matchesRent(property: Property, filter: RentFilter) {
+  if (filter === "all") return true;
+  if (property.monthly_rent === null) return false;
+  if (filter === "under-100") return property.monthly_rent < 100;
+  if (filter === "100-200") return property.monthly_rent >= 100 && property.monthly_rent < 200;
+  if (filter === "200-300") return property.monthly_rent >= 200 && property.monthly_rent < 300;
+  return property.monthly_rent >= 300;
+}
+
+function matchesArea(property: Property, filter: AreaFilter) {
+  if (filter === "all") return true;
+  if (property.exclusive_area === null) return false;
+  const pyeong = property.exclusive_area / 3.3058;
+  if (filter === "under-20") return pyeong < 20;
+  if (filter === "20-30") return pyeong >= 20 && pyeong < 30;
+  if (filter === "30-50") return pyeong >= 30 && pyeong < 50;
+  return pyeong >= 50;
 }
 
 function formatWon(value: number | null) {
@@ -113,11 +153,15 @@ export default async function AdminPropertiesPage({
     updated?: string;
     q?: string;
     status?: string;
+    rent?: string;
+    area?: string;
   }>;
 }) {
   const notice = await searchParams;
   const keyword = (notice.q ?? "").trim();
   const status = normalizeStatusFilter(notice.status);
+  const rent = normalizeRentFilter(notice.rent);
+  const area = normalizeAreaFilter(notice.area);
   const normalizedKeyword = normalizeSearchText(keyword);
   const { data, error } = await createAdminClient()
     .from("properties")
@@ -133,11 +177,22 @@ export default async function AdminPropertiesPage({
       return true;
     }) ?? [];
   const filteredProperties = statusFilteredProperties.filter((property) => {
-      if (!normalizedKeyword) return true;
-      return normalizeSearchText(propertySearchText(property)).includes(
-        normalizedKeyword,
-      );
-    });
+    if (!matchesRent(property, rent) || !matchesArea(property, area)) return false;
+    if (!normalizedKeyword) return true;
+    return normalizeSearchText(propertySearchText(property)).includes(
+      normalizedKeyword,
+    );
+  });
+  const hasSearchFilter = Boolean(normalizedKeyword) || rent !== "all" || area !== "all";
+  function statusHref(value: PropertyStatusFilter) {
+    const params = new URLSearchParams();
+    if (value !== "all") params.set("status", value);
+    if (keyword) params.set("q", keyword);
+    if (rent !== "all") params.set("rent", rent);
+    if (area !== "all") params.set("area", area);
+    const query = params.toString();
+    return query ? `/admin/properties?${query}` : "/admin/properties";
+  }
   const locationProperties =
     properties
       ?.filter((property) => property.private_address)
@@ -183,7 +238,7 @@ export default async function AdminPropertiesPage({
           {(Object.keys(statusLabels) as PropertyStatusFilter[]).map((value) => (
             <Link
               key={value}
-              href={value === "all" ? "/admin/properties" : `/admin/properties?status=${value}`}
+              href={statusHref(value)}
               className={`rounded-full px-4 py-2 text-sm font-black transition ${
                 status === value
                   ? "bg-brand-accent text-white"
@@ -194,7 +249,7 @@ export default async function AdminPropertiesPage({
             </Link>
           ))}
         </nav>
-        <form action="/admin/properties" className="flex min-w-0 gap-2">
+        <form action="/admin/properties" className="grid min-w-0 gap-2 sm:grid-cols-2 md:col-span-2 xl:grid-cols-[minmax(280px,1fr)_150px_150px_auto_auto]">
           {status !== "all" && <input type="hidden" name="status" value={status} />}
           <input
             name="q"
@@ -202,10 +257,34 @@ export default async function AdminPropertiesPage({
             placeholder="주소, 금액, 평수, 매물번호 검색 예: 방이동163-10 / 2000-150-30 / 30평 / CY-0029"
             className="h-11 min-w-0 flex-1 rounded-xl border border-stone-300 px-4 text-sm outline-none focus:border-brand-accent focus:ring-3 focus:ring-brand-sand/40"
           />
+          <select
+            name="rent"
+            defaultValue={rent}
+            aria-label="월세 범위"
+            className="h-11 rounded-xl border border-stone-300 bg-white px-3 text-sm font-bold outline-none focus:border-brand-accent"
+          >
+            <option value="all">월세 전체</option>
+            <option value="under-100">100만원 미만</option>
+            <option value="100-200">100~199만원</option>
+            <option value="200-300">200~299만원</option>
+            <option value="over-300">300만원 이상</option>
+          </select>
+          <select
+            name="area"
+            defaultValue={area}
+            aria-label="전용면적 범위"
+            className="h-11 rounded-xl border border-stone-300 bg-white px-3 text-sm font-bold outline-none focus:border-brand-accent"
+          >
+            <option value="all">평수 전체</option>
+            <option value="under-20">20평 미만</option>
+            <option value="20-30">20~29평</option>
+            <option value="30-50">30~49평</option>
+            <option value="over-50">50평 이상</option>
+          </select>
           <button className="h-11 rounded-xl bg-brand-accent px-5 text-sm font-black text-white hover:bg-brand-accent-dark">
             검색
           </button>
-          {keyword && (
+          {hasSearchFilter && (
             <Link
               href={status === "all" ? "/admin/properties" : `/admin/properties?status=${status}`}
               className="grid h-11 place-items-center rounded-xl border border-stone-300 px-4 text-sm font-bold hover:bg-stone-50"
@@ -215,7 +294,7 @@ export default async function AdminPropertiesPage({
           )}
         </form>
         <p className="text-sm font-bold text-stone-500">
-          {keyword
+          {hasSearchFilter
             ? `${filteredProperties.length}개 검색됨 / ${statusLabels[status]} ${statusFilteredProperties.length}개`
             : `${statusLabels[status]} ${statusFilteredProperties.length}개 / 전체 ${properties?.length ?? 0}개`}
         </p>
@@ -244,7 +323,7 @@ export default async function AdminPropertiesPage({
         <div className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white p-14 text-center">
           <h2 className="text-xl font-black">검색 결과가 없습니다.</h2>
           <p className="mt-2 text-stone-500">
-            주소, 금액, 평수, 매물번호를 다시 확인해 주세요.
+            주소, 금액, 평수, 월세, 매물번호를 다시 확인해 주세요.
           </p>
         </div>
       )}

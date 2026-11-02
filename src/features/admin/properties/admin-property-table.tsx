@@ -273,7 +273,11 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                     <Link href={`/properties/${property.property_number}`} className="group block">
                       <b className="block group-hover:text-forest-700 group-hover:underline">{property.title}</b>
                       <span className="mt-1 block text-xs font-bold text-forest-600">{property.property_number}</span>
-                      {preview && <span className="mt-1.5 block max-w-[390px] truncate text-xs font-semibold text-red-600">{preview}</span>}
+                      {preview && (
+                        <span className="mt-1.5 block break-words text-xs leading-5 font-semibold text-red-600">
+                          {preview}
+                        </span>
+                      )}
                     </Link>
                   </td>
                   <td className="hidden px-2 py-4 text-sm xl:table-cell">{categoryLabels[property.category]}</td>

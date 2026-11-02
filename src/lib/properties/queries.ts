@@ -100,6 +100,22 @@ export async function getPublishedProperty(propertyNumber: string) {
   return sanitizePublishedProperties(data ? [data] : [])[0] ?? null;
 }
 
+export async function getAdminProperty(propertyNumber: string) {
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("properties")
+    .select(privatePublicColumns)
+    .eq("property_number", propertyNumber)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Admin property query failed:", error.message);
+    return null;
+  }
+
+  return sanitizePublishedProperties(data ? [data] : [])[0] ?? null;
+}
+
 export async function getPublishedPropertiesByIds(ids: string[]) {
   if (!ids.length) return [];
 

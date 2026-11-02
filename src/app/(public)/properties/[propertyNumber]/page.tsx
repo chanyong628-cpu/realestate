@@ -27,7 +27,10 @@ import {
   categoryLabels,
   formatPyeong,
 } from "@/lib/properties/format";
-import { getPublishedProperty } from "@/lib/properties/queries";
+import {
+  getAdminProperty,
+  getPublishedProperty,
+} from "@/lib/properties/queries";
 import { inferTotalFloorFromAdvertisement } from "@/lib/properties/smart-import";
 import {
   absoluteUrl,
@@ -136,7 +139,10 @@ export async function generateMetadata({
   params,
 }: DetailPageProps): Promise<Metadata> {
   const { propertyNumber } = await params;
-  const property = await getPublishedProperty(propertyNumber);
+  const isAdmin = Boolean(await getAdminSession());
+  const property = isAdmin
+    ? await getAdminProperty(propertyNumber)
+    : await getPublishedProperty(propertyNumber);
   if (!property) return { title: "매물을 찾을 수 없습니다" };
   const seo = buildPropertySeo(property);
 
@@ -158,6 +164,9 @@ export async function generateMetadata({
       images: property.image_urls[0] ? [property.image_urls[0]] : [],
     },
     alternates: { canonical: `/properties/${property.property_number}` },
+    robots: property.is_published
+      ? undefined
+      : { index: false, follow: false, nocache: true },
   };
 }
 
@@ -165,9 +174,11 @@ export default async function PropertyDetailPage({
   params,
 }: DetailPageProps) {
   const { propertyNumber } = await params;
-  const property = await getPublishedProperty(propertyNumber);
-  if (!property) notFound();
   const isAdmin = Boolean(await getAdminSession());
+  const property = isAdmin
+    ? await getAdminProperty(propertyNumber)
+    : await getPublishedProperty(propertyNumber);
+  if (!property) notFound();
   const publicAddress =
     property.public_address || derivePublicAddress(property.title);
   const publicLocation = formatPublicLocation(publicAddress);
@@ -264,6 +275,12 @@ export default async function PropertyDetailPage({
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-8">
+      {isAdmin && !property.is_published && (
+        <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
+          관리자 전용 비노출 매물 미리보기입니다. 일반 방문자에게는 이 페이지가
+          표시되지 않습니다.
+        </div>
+      )}
       <PropertyViewTracker propertyNumber={property.property_number} />
       <script
         type="application/ld+json"
