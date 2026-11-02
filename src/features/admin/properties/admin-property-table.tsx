@@ -3,7 +3,7 @@
 import { EyeOff, FileDown, Heart, LoaderCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { FavoriteButton } from "@/components/properties/favorite-button";
 import {
   bulkManagePropertiesAction,
@@ -57,6 +57,12 @@ function memoPreview(property: Property) {
     formatPyeong(property.exclusive_area);
 
   return [address, floor, money, area].filter(Boolean).join(" · ");
+}
+
+function folderName(property: Property) {
+  return property.private_memo
+    ?.replace(/^Google Drive\s*폴더명\s*:\s*/i, "")
+    .trim() || memoPreview(property);
 }
 
 function ActionButton({
@@ -246,13 +252,13 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
           <tbody>
             {properties.map((property) => {
               const hasImages = property.image_urls.length > 0;
-              const preview = memoPreview(property);
+              const folder = folderName(property);
               const isSelected = selected.has(property.id);
 
               return (
+                <Fragment key={property.id}>
                 <tr
-                  key={property.id}
-                  className={`border-b last:border-0 ${
+                  className={`${
                     isSelected
                       ? "border-violet-200 bg-violet-100/80 ring-2 ring-inset ring-violet-500"
                       : !hasImages
@@ -273,11 +279,6 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                     <Link href={`/properties/${property.property_number}`} className="group block">
                       <b className="block group-hover:text-forest-700 group-hover:underline">{property.title}</b>
                       <span className="mt-1 block text-xs font-bold text-forest-600">{property.property_number}</span>
-                      {preview && (
-                        <span className="mt-1.5 block break-words text-xs leading-5 font-semibold text-red-600">
-                          {preview}
-                        </span>
-                      )}
                     </Link>
                   </td>
                   <td className="hidden px-2 py-4 text-sm xl:table-cell">{categoryLabels[property.category]}</td>
@@ -309,12 +310,12 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                   </td>
                   <td className="hidden px-2 py-4 text-center xl:table-cell">
                     {hasImages ? (
-                      <span className="inline-flex min-w-20 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-800" title={`${property.image_urls.length}장 등록됨`}>
-                        사진 {property.image_urls.length}장
+                      <span className="inline-flex min-w-14 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-100 px-3 py-1.5 text-sm font-black text-emerald-800" title="사진 있음">
+                        有
                       </span>
                     ) : (
-                      <span className="inline-flex min-w-20 items-center justify-center rounded-full border-2 border-red-500 bg-red-100 px-3 py-1.5 text-xs font-black text-red-700" title="사진 미등록">
-                        사진 없음
+                      <span className="inline-flex min-w-14 items-center justify-center rounded-full border-2 border-red-500 bg-red-100 px-3 py-1.5 text-sm font-black text-red-700" title="사진 없음">
+                        無
                       </span>
                     )}
                   </td>
@@ -327,6 +328,15 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                     </div>
                   </td>
                 </tr>
+                {folder && (
+                  <tr className={`border-b border-stone-100 ${isSelected ? "bg-violet-100/80" : !hasImages ? "bg-red-50/30" : "bg-white"}`}>
+                    <td />
+                    <td colSpan={9} className="px-5 pb-4 text-xs leading-5 font-bold text-red-600">
+                      {folder}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>

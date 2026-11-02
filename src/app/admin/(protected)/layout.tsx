@@ -11,12 +11,10 @@ export default async function AdminLayout({
 
   const links = [
     ["/admin", "대시보드"],
+    ["/admin/content/new", "광고 등록"],
+    ["/admin/properties/bulk", "EXCEL 등록"],
     ["/admin/properties", "매물 관리"],
     ["/admin/property-db", "매물 DB"],
-    ["/admin/properties/bulk", "EXCEL 등록"],
-    ["/admin/content/new", "광고 등록"],
-    ["/admin/properties/new", "매물광고 등록"],
-    ["/admin/articles/new", "게시판 글 등록"],
     ["/admin/customer-blocks", "고객 블록"],
     ["/admin/inquiries", "맞춤 문의"],
     ["/admin/settings", "설정"],
