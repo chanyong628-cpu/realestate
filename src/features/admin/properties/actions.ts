@@ -106,9 +106,14 @@ export async function createPropertyAction(
     return { error: friendlyDatabaseError(error.message) };
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin/properties");
-  redirect("/admin/properties?created=1");
+  revalidatePropertyPages();
+  revalidatePath("/admin/property-db");
+  const returnTo = String(formData.get("return_to") ?? "");
+  redirect(
+    returnTo === "/admin/property-db"
+      ? "/admin/property-db?created=1"
+      : "/admin/properties?created=1",
+  );
 }
 
 export async function bulkCreatePropertiesAction(
@@ -273,8 +278,125 @@ export async function setPropertyPublishedAction(
     .eq("id", id);
 
   if (error) throw new Error("노출 상태를 변경하지 못했습니다.");
-  revalidatePath("/");
-  revalidatePath("/admin/properties");
+  revalidatePropertyPages();
+  revalidatePath("/admin/property-db");
+  revalidatePath(`/admin/property-db/${id}`);
+}
+
+const propertyDatabaseEditSchema = z.object({
+  private_address: z.string().trim().min(1, "주소를 입력해 주세요.").max(300),
+  deposit: z.coerce.number().nonnegative().nullable(),
+  monthly_rent: z.coerce.number().nonnegative().nullable(),
+  maintenance_fee: z.coerce.number().nonnegative().nullable(),
+  exclusive_area: z.coerce.number().nonnegative().nullable(),
+  supply_area: z.coerce.number().nonnegative().nullable(),
+  floor: z.string().trim().max(30),
+  total_floor: z.string().trim().max(30),
+  room_count: z.coerce.number().nonnegative().nullable(),
+  restroom_count: z.coerce.number().nonnegative().nullable(),
+  total_parking_count: z.coerce.number().nonnegative().nullable(),
+  available_parking_count: z.coerce.number().nonnegative().nullable(),
+  building_use: z.string().trim().max(100),
+  approval_date: z.string().nullable(),
+  building_direction: z.string().trim().max(50),
+  air_conditioner_type: z
+    .enum(["유", "무", "시스템", "스탠드", "벽걸이"])
+    .nullable(),
+  parking_available: z.boolean(),
+  elevator_available: z.boolean(),
+  is_violating_building: z.boolean(),
+});
+
+function nullableFormNumber(formData: FormData, name: string) {
+  const value = String(formData.get(name) ?? "").trim();
+  return value === "" ? null : Number(value);
+}
+
+export async function updatePropertyDatabaseAction(
+  id: string,
+  formData: FormData,
+) {
+  await requireAdmin();
+  const airConditionerType = String(
+    formData.get("air_conditioner_type") ?? "",
+  );
+  const approvalDate = String(formData.get("approval_date") ?? "").trim();
+  const parsed = propertyDatabaseEditSchema.safeParse({
+    private_address: formData.get("private_address"),
+    deposit: nullableFormNumber(formData, "deposit"),
+    monthly_rent: nullableFormNumber(formData, "monthly_rent"),
+    maintenance_fee: nullableFormNumber(formData, "maintenance_fee"),
+    exclusive_area: nullableFormNumber(formData, "exclusive_area"),
+    supply_area: nullableFormNumber(formData, "supply_area"),
+    floor: formData.get("floor"),
+    total_floor: formData.get("total_floor"),
+    room_count: nullableFormNumber(formData, "room_count"),
+    restroom_count: nullableFormNumber(formData, "restroom_count"),
+    total_parking_count: nullableFormNumber(formData, "total_parking_count"),
+    available_parking_count: nullableFormNumber(
+      formData,
+      "available_parking_count",
+    ),
+    building_use: formData.get("building_use"),
+    approval_date: approvalDate || null,
+    building_direction: formData.get("building_direction"),
+    air_conditioner_type: airConditionerType || null,
+    parking_available: formData.get("parking_available") === "on",
+    elevator_available: formData.get("elevator_available") === "on",
+    is_violating_building:
+      formData.get("is_violating_building") === "on",
+  });
+
+  if (!parsed.success) {
+    redirect(
+      `/admin/property-db/${id}?edit=1&error=${encodeURIComponent(
+        parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요.",
+      )}`,
+    );
+  }
+
+  const { error } = await createAdminClient()
+    .from("properties")
+    .update(parsed.data)
+    .eq("id", id);
+  if (error) throw new Error("매물장 정보를 저장하지 못했습니다.");
+
+  revalidatePropertyPages();
+  revalidatePath("/admin/property-db");
+  revalidatePath(`/admin/property-db/${id}`);
+  redirect(`/admin/property-db/${id}?saved=1`);
+}
+
+function folderMemoLine(value: string | null | undefined) {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .find((line) => line.trim().startsWith("Google Drive 폴더명:"))
+    ?.trim();
+}
+
+export async function savePropertyPrivateMemoAction(
+  id: string,
+  formData: FormData,
+) {
+  await requireAdmin();
+  const memo = String(formData.get("private_memo") ?? "").trim().slice(0, 5000);
+  const supabase = createAdminClient();
+  const { data: previous } = await supabase
+    .from("properties")
+    .select("private_memo")
+    .eq("id", id)
+    .maybeSingle();
+  const folderLine = folderMemoLine(previous?.private_memo);
+  const privateMemo = [folderLine, memo].filter(Boolean).join("\n");
+  const { error } = await supabase
+    .from("properties")
+    .update({ private_memo: privateMemo })
+    .eq("id", id);
+  if (error) throw new Error("관리자 메모를 저장하지 못했습니다.");
+
+  revalidatePath("/admin/property-db");
+  revalidatePath(`/admin/property-db/${id}`);
+  redirect(`/admin/property-db/${id}?memoSaved=1`);
 }
 
 export async function setPropertyRecommendedAction(

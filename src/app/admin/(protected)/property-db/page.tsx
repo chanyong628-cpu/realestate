@@ -12,10 +12,8 @@ function normalize(value: string) {
   return value.toLocaleLowerCase("ko-KR").replace(/[\s,]/g, "");
 }
 
-function price(property: Property) {
-  return [property.deposit, property.monthly_rent]
-    .map((value) => (value === null ? "-" : value.toLocaleString("ko-KR")))
-    .join(" / ");
+function money(value: number | null) {
+  return value === null ? "-" : value.toLocaleString("ko-KR");
 }
 
 function pyeong(area: number | null) {
@@ -34,7 +32,7 @@ function infoTags(property: Property) {
     `P${property.available_parking_count ?? (property.parking_available ? 1 : 0)}대`,
     `E ${property.elevator_available ? "있음" : "없음"}`,
     `T${property.restroom_count ?? 0}`,
-    `A ${property.air_conditioner_type ? "유" : "무"}`,
+    `A ${property.air_conditioner_type && property.air_conditioner_type !== "무" ? "유" : "무"}`,
   ];
 }
 
@@ -53,7 +51,8 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
     if (!keyword) return true;
     return normalize([
       property.property_number, property.title, property.private_address,
-      property.public_address, property.floor, price(property),
+      property.public_address, property.floor, property.deposit,
+      property.monthly_rent, property.maintenance_fee,
       pyeong(property.exclusive_area), property.private_memo,
     ].filter(Boolean).join(" ")).includes(normalize(keyword));
   });
@@ -66,7 +65,7 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
           <h1 className="mt-1 flex items-center gap-2 text-3xl font-black"><Database className="text-brand-accent" /> 매물장 DB</h1>
           <p className="mt-2 text-stone-600">홈페이지 실제 매물을 한 줄씩 빠르게 확인하고 관리합니다.</p>
         </div>
-        <Link href="/admin/properties/new" className="inline-flex items-center gap-2 rounded-xl bg-brand-accent px-5 py-3 font-black text-white hover:bg-brand-accent-dark"><Plus size={18} /> 직접 입력</Link>
+        <Link href="/admin/properties/new?source=property-db" className="inline-flex items-center gap-2 rounded-xl bg-brand-accent px-5 py-3 font-black text-white hover:bg-brand-accent-dark"><Plus size={18} /> 직접 입력</Link>
       </div>
 
       <form className="mt-6 grid gap-2 rounded-2xl bg-white p-4 shadow-sm md:grid-cols-[minmax(240px,1fr)_150px_150px_auto]">
@@ -81,23 +80,23 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
 
       {!!properties.length && (
         <div className="mt-6 overflow-hidden rounded-2xl border border-brand-line bg-white shadow-sm">
-          <div className="hidden grid-cols-[80px_100px_minmax(280px,1fr)_130px_90px_90px_230px] items-center gap-3 bg-brand-soft px-4 py-4 text-sm font-black text-brand-muted xl:grid">
-            <span>ON/OFF</span><span>매물번호</span><span>정보</span><span>금액</span><span>등록일</span><span>확인일</span><span className="text-right">관리</span>
+          <div className="hidden grid-cols-[70px_88px_minmax(250px,1fr)_230px_82px_210px] items-center gap-3 bg-brand-soft px-4 py-4 text-sm font-black text-brand-muted xl:grid">
+            <span>ON/OFF</span><span>매물번호</span><span>정보</span><span>보증금 / 월세 / 관리비 / 평수</span><span>확인일</span><span className="text-right">관리</span>
           </div>
           {properties.map((property) => (
-            <article key={property.id} className={`border-t border-brand-line p-4 first:border-t-0 ${property.is_published ? "bg-white" : "bg-stone-50/80 opacity-75"}`}>
-              <div className="hidden grid-cols-[80px_100px_minmax(280px,1fr)_130px_90px_90px_230px] items-center gap-3 xl:grid">
-                <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button aria-label={`${property.property_number} 노출 전환`} className={`relative h-8 w-14 rounded-full transition ${property.is_published ? "bg-brand-accent" : "bg-stone-300"}`}><span className={`absolute top-1 size-6 rounded-full bg-white shadow transition ${property.is_published ? "left-7" : "left-1"}`} /></button></form>
+            <article key={property.id} className={`border-t border-brand-line p-4 first:border-t-0 ${property.is_published ? "bg-white" : "bg-stone-50/80"}`}>
+              <div className="hidden grid-cols-[70px_88px_minmax(250px,1fr)_230px_82px_210px] items-center gap-3 xl:grid">
+                <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button aria-label={`${property.property_number} 노출 전환`} className={`relative h-8 w-14 rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-6 rounded-full bg-white shadow transition ${property.is_published ? "left-7" : "left-1"}`} /></button></form>
                 <b className="text-brand-accent">{property.property_number}</b>
                 <div className="flex min-w-0 items-center gap-4">
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-brand-soft">{property.image_urls[0] && <Image src={property.image_urls[0]} alt="" fill sizes="80px" className="object-cover" />}</div>
-                  <div className="min-w-0"><b className="block break-keep text-base">{property.private_address || property.public_address || property.title}</b><span className="mt-1 block text-sm text-stone-500">전용 {pyeong(property.exclusive_area)}</span><div className="mt-2 flex flex-wrap gap-1.5">{infoTags(property).map((tag) => <span key={tag} className="rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-accent">{tag}</span>)}</div></div>
+                  <div className="min-w-0"><b className="block break-keep text-lg leading-snug">{property.private_address || property.public_address || property.title}</b><div className="mt-2 flex flex-wrap gap-1.5">{infoTags(property).map((tag) => <span key={tag} className="rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-accent">{tag}</span>)}</div></div>
                 </div>
-                <div><b className="block text-lg">{price(property)}</b><span className="text-xs text-stone-500">관리비 {property.maintenance_fee ?? "-"}</span></div>
-                <span className="text-sm text-stone-600">{date(property.created_at)}</span><span className="text-sm text-stone-600">{date(property.updated_at)}</span>
-                <div className="flex justify-end gap-2"><Link href={`/admin/properties/${property.id}/edit`} className="rounded-lg border border-brand-line px-3 py-2 text-xs font-black text-brand-accent"><Pencil size={14} className="inline" /> 수정</Link><Link href={`/admin/property-db/${property.id}`} className="rounded-lg bg-brand-soft px-3 py-2 text-xs font-black text-brand-accent"><Eye size={14} className="inline" /> 상세보기</Link><DeletePropertyButton id={property.id} propertyNumber={property.property_number} /></div>
+                <div className="grid grid-cols-4 gap-2 text-center"><div><span className="block text-[11px] text-stone-500">보증금</span><b className="mt-1 block text-sm">{money(property.deposit)}</b></div><div><span className="block text-[11px] text-stone-500">월세</span><b className="mt-1 block text-sm">{money(property.monthly_rent)}</b></div><div><span className="block text-[11px] text-stone-500">관리비</span><b className="mt-1 block text-sm">{money(property.maintenance_fee)}</b></div><div><span className="block text-[11px] text-stone-500">평수</span><b className="mt-1 block text-sm">{pyeong(property.exclusive_area)}</b></div></div>
+                <span className="text-sm text-stone-600">{date(property.updated_at)}</span>
+                <div className="flex justify-end gap-2"><Link href={`/admin/property-db/${property.id}?edit=1`} className="rounded-lg border border-brand-line px-3 py-2 text-xs font-black text-brand-accent"><Pencil size={14} className="inline" /> 수정</Link><Link href={`/admin/property-db/${property.id}`} className="rounded-lg bg-brand-soft px-3 py-2 text-xs font-black text-brand-accent"><Eye size={14} className="inline" /> 상세보기</Link><DeletePropertyButton id={property.id} propertyNumber={property.property_number} /></div>
               </div>
-              <div className="xl:hidden"><div className="flex items-start gap-3"><div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-brand-soft">{property.image_urls[0] && <Image src={property.image_urls[0]} alt="" fill sizes="80px" className="object-cover" />}</div><div className="min-w-0"><b className="text-brand-accent">{property.property_number}</b><h2 className="mt-1 font-black">{property.private_address || property.public_address || property.title}</h2><p className="mt-1 text-sm text-stone-500">{price(property)} · {pyeong(property.exclusive_area)}</p></div></div><div className="mt-4 flex gap-2"><Link href={`/admin/properties/${property.id}/edit`} className="flex-1 rounded-lg border border-brand-line px-3 py-2 text-center text-sm font-black">수정</Link><Link href={`/admin/property-db/${property.id}`} className="flex-1 rounded-lg bg-brand-soft px-3 py-2 text-center text-sm font-black text-brand-accent">상세보기</Link></div></div>
+              <div className="xl:hidden"><div className="flex items-start gap-3"><form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button aria-label={`${property.property_number} 노출 전환`} className={`relative mt-1 h-8 w-14 rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-6 rounded-full bg-white shadow transition ${property.is_published ? "left-7" : "left-1"}`} /></button></form><div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-brand-soft">{property.image_urls[0] && <Image src={property.image_urls[0]} alt="" fill sizes="80px" className="object-cover" />}</div><div className="min-w-0"><b className="text-brand-accent">{property.property_number}</b><h2 className="mt-1 text-lg font-black">{property.private_address || property.public_address || property.title}</h2><p className="mt-1 text-sm text-stone-500">보증금 {money(property.deposit)} · 월세 {money(property.monthly_rent)} · 관리비 {money(property.maintenance_fee)} · {pyeong(property.exclusive_area)}</p></div></div><div className="mt-4 flex gap-2"><Link href={`/admin/property-db/${property.id}?edit=1`} className="flex-1 rounded-lg border border-brand-line px-3 py-2 text-center text-sm font-black">수정</Link><Link href={`/admin/property-db/${property.id}`} className="flex-1 rounded-lg bg-brand-soft px-3 py-2 text-center text-sm font-black text-brand-accent">상세보기</Link></div></div>
             </article>
           ))}
         </div>

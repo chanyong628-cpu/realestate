@@ -18,6 +18,8 @@ import { AddressLocationFields } from "./address-location-fields";
 interface PropertyFormProps {
   property?: Property;
   propertyOnly?: boolean;
+  defaultPublished?: boolean;
+  returnTo?: string;
 }
 
 const categories = [
@@ -64,6 +66,8 @@ function Field({
 export function PropertyForm({
   property,
   propertyOnly = false,
+  defaultPublished = true,
+  returnTo,
 }: PropertyFormProps) {
   const [category, setCategory] = useState(property?.category ?? "office");
   const [importedDescription, setImportedDescription] = useState<string | null>(
@@ -109,6 +113,7 @@ export function PropertyForm({
 
   return (
     <form ref={formRef} action={formAction} className="mt-8 space-y-8">
+      {returnTo && <input type="hidden" name="return_to" value={returnTo} />}
       {!property && <SmartPropertyImporter onImport={applyImportedDraft} />}
       <section className="rounded-2xl bg-white p-6 shadow-sm">
         <h2 className="text-lg font-black">기본 정보</h2>
@@ -379,7 +384,7 @@ export function PropertyForm({
             <input
               name="is_published"
               type="checkbox"
-              defaultChecked={property?.is_published ?? true}
+              defaultChecked={property?.is_published ?? defaultPublished}
               className="size-5 accent-forest-700"
             />
             <span>

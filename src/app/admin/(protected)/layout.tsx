@@ -23,7 +23,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-stone-100">
       <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-5 py-4">
           <Link href="/admin" className="text-lg font-black">
             CY 부동산 관리자
           </Link>
@@ -34,7 +34,7 @@ export default async function AdminLayout({
           </form>
         </div>
       </header>
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 md:grid-cols-[210px_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-[1600px] gap-6 px-5 py-8 md:grid-cols-[190px_minmax(0,1fr)]">
         <nav className="h-fit rounded-2xl bg-white p-3 shadow-sm">
           {links.map(([href, label]) => (
             <Link
