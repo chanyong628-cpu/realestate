@@ -128,7 +128,7 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
     if (
       action === "delete" &&
       !window.confirm(
-        `선택한 ${selectedIds.length}개 매물을 완전히 삭제할까요?\n사진 파일도 함께 삭제되며 되돌릴 수 없습니다.`,
+        `선택한 ${selectedIds.length}개 매물을 사이트에서 내릴까요?\n매물 DB와 사진은 그대로 보존되고 노출만 OFF 됩니다.`,
       )
     ) {
       return;

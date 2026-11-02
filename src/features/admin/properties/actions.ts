@@ -246,25 +246,15 @@ export async function updatePropertyAction(
 
 export async function deletePropertyAction(id: string) {
   await requireAdmin();
-  const supabase = createAdminClient();
-  const { data: property } = await supabase
+  const { error } = await createAdminClient()
     .from("properties")
-    .select("image_urls")
-    .eq("id", id)
-    .maybeSingle();
-  const { error } = await supabase
-    .from("properties")
-    .delete()
+    .update({ is_published: false })
     .eq("id", id);
 
-  if (error) throw new Error("매물을 삭제하지 못했습니다.");
-  await removeStoredImages(
-    Array.isArray(property?.image_urls)
-      ? (property.image_urls as string[])
-      : [],
-  );
-  revalidatePath("/");
-  revalidatePath("/admin/properties");
+  if (error) throw new Error("매물을 비노출로 변경하지 못했습니다.");
+  revalidatePropertyPages();
+  revalidatePath("/admin/property-db");
+  revalidatePath(`/admin/property-db/${id}`);
 }
 
 export async function setPropertyPublishedAction(
@@ -529,26 +519,22 @@ export async function bulkManagePropertiesAction(
     };
   }
 
-  const imageUrls = existing.flatMap((property) =>
-    Array.isArray(property.image_urls) ? (property.image_urls as string[]) : [],
-  );
   const { error: deleteError } = await supabase
     .from("properties")
-    .delete()
+    .update({ is_published: false })
     .in("id", existingIds);
   if (deleteError) {
-    console.error("Bulk property deletion failed:", deleteError.message);
+    console.error("Bulk property unpublish failed:", deleteError.message);
     return {
       success: false,
-      message: "선택 매물을 삭제하지 못했습니다.",
+      message: "선택 매물을 사이트에서 내리지 못했습니다.",
       affectedCount: 0,
     };
   }
-  await removeStoredImages(imageUrls);
   revalidatePropertyPages();
   return {
     success: true,
-    message: `${existingIds.length}개 매물을 삭제했습니다.`,
+    message: `${existingIds.length}개 매물을 사이트에서 내리고 매물 DB에 보존했습니다.`,
     affectedCount: existingIds.length,
   };
 }
