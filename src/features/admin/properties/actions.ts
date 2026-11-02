@@ -285,10 +285,11 @@ export async function setPropertyPublishedAction(
 
 const propertyDatabaseEditSchema = z.object({
   private_address: z.string().trim().min(1, "주소를 입력해 주세요.").max(300),
+  building_name: z.string().trim().max(100),
   deposit: z.coerce.number().nonnegative().nullable(),
   monthly_rent: z.coerce.number().nonnegative().nullable(),
   maintenance_fee: z.coerce.number().nonnegative().nullable(),
-  exclusive_area: z.coerce.number().nonnegative().nullable(),
+  exclusive_area_pyeong: z.coerce.number().int().nonnegative().nullable(),
   supply_area: z.coerce.number().nonnegative().nullable(),
   floor: z.string().trim().max(30),
   total_floor: z.string().trim().max(30),
@@ -323,10 +324,11 @@ export async function updatePropertyDatabaseAction(
   const approvalDate = String(formData.get("approval_date") ?? "").trim();
   const parsed = propertyDatabaseEditSchema.safeParse({
     private_address: formData.get("private_address"),
+    building_name: formData.get("building_name"),
     deposit: nullableFormNumber(formData, "deposit"),
     monthly_rent: nullableFormNumber(formData, "monthly_rent"),
     maintenance_fee: nullableFormNumber(formData, "maintenance_fee"),
-    exclusive_area: nullableFormNumber(formData, "exclusive_area"),
+    exclusive_area_pyeong: nullableFormNumber(formData, "exclusive_area_pyeong"),
     supply_area: nullableFormNumber(formData, "supply_area"),
     floor: formData.get("floor"),
     total_floor: formData.get("total_floor"),
@@ -355,9 +357,28 @@ export async function updatePropertyDatabaseAction(
     );
   }
 
-  const { error } = await createAdminClient()
+  const supabase = createAdminClient();
+  const { data: previous } = await supabase
     .from("properties")
-    .update(parsed.data)
+    .select("private_memo")
+    .eq("id", id)
+    .maybeSingle();
+  const folderLine = metadataMemoLine(previous?.private_memo, "Google Drive 폴더명:");
+  const memoBody = managerMemoBody(previous?.private_memo);
+  const { building_name, exclusive_area_pyeong, ...databaseFields } = parsed.data;
+  const buildingLine = building_name ? `건물명: ${building_name}` : undefined;
+  const updateFields = {
+    ...databaseFields,
+    exclusive_area:
+      exclusive_area_pyeong === null
+        ? null
+        : Number((exclusive_area_pyeong * 3.3058).toFixed(2)),
+    private_memo: [folderLine, buildingLine, memoBody].filter(Boolean).join("\n"),
+  };
+
+  const { error } = await supabase
+    .from("properties")
+    .update(updateFields)
     .eq("id", id);
   if (error) throw new Error("매물장 정보를 저장하지 못했습니다.");
 
@@ -367,11 +388,22 @@ export async function updatePropertyDatabaseAction(
   redirect(`/admin/property-db/${id}?saved=1`);
 }
 
-function folderMemoLine(value: string | null | undefined) {
+function metadataMemoLine(value: string | null | undefined, prefix: string) {
   return (value ?? "")
     .split(/\r?\n/)
-    .find((line) => line.trim().startsWith("Google Drive 폴더명:"))
+    .find((line) => line.trim().startsWith(prefix))
     ?.trim();
+}
+
+function managerMemoBody(value: string | null | undefined) {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .filter((line) => {
+      const trimmed = line.trim();
+      return !trimmed.startsWith("Google Drive 폴더명:") && !trimmed.startsWith("건물명:");
+    })
+    .join("\n")
+    .trim();
 }
 
 export async function savePropertyPrivateMemoAction(
@@ -386,8 +418,9 @@ export async function savePropertyPrivateMemoAction(
     .select("private_memo")
     .eq("id", id)
     .maybeSingle();
-  const folderLine = folderMemoLine(previous?.private_memo);
-  const privateMemo = [folderLine, memo].filter(Boolean).join("\n");
+  const folderLine = metadataMemoLine(previous?.private_memo, "Google Drive 폴더명:");
+  const buildingLine = metadataMemoLine(previous?.private_memo, "건물명:");
+  const privateMemo = [folderLine, buildingLine, memo].filter(Boolean).join("\n");
   const { error } = await supabase
     .from("properties")
     .update({ private_memo: privateMemo })

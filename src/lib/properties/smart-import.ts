@@ -155,9 +155,9 @@ export function parsePropertyInputs(
     exactAddress.match(/([가-힣0-9]+동)/)?.[1] ??
     combined.match(/([가-힣0-9]+동)/)?.[1] ??
     "";
-  const floorNumber =
-    folderName.match(/(\d+)층/)?.[1] ??
-    advertisement.match(/층수\s*:\s*(\d+)층/)?.[1] ??
+  const floorLabel =
+    folderName.match(/(?:B\d+층(?:전체|일부)?|\d+층(?:전체|일부)?|\d+호)/i)?.[0] ??
+    advertisement.match(/층수\s*:\s*((?:B\d+|\d+)층(?:전체|일부)?|\d+호)/i)?.[1] ??
     "";
   const money = folderName.match(
     /(\d+)\s*-\s*(\d+)\s*-\s*(\d+|포함|없음|무|무료|관리비포함)/i,
@@ -188,7 +188,7 @@ export function parsePropertyInputs(
       .replace(/[가-힣0-9]+역세권/g, "역세권") ?? "";
 
   return {
-    title: [dong, floorNumber && `${floorNumber}층`, keyFeature, "사무실"]
+    title: [dong, floorLabel, keyFeature, "사무실"]
       .filter(Boolean)
       .join(" "),
     category:
@@ -205,7 +205,7 @@ export function parsePropertyInputs(
     exclusive_area:
       numberMatch(advertisement, /전용면적\s*:\s*[\d.]+㎡\s*\/\s*([\d.]+)㎡/) ??
       (areaPyeong ? Number((areaPyeong * 3.3058).toFixed(2)) : null),
-    floor: floorNumber ? `${floorNumber}층` : "",
+    floor: floorLabel,
     total_floor: inferTotalFloorFromAdvertisement(combined),
     parking_available: !/P0|주차\s*불가/.test(combined),
     elevator_available: /E유|엘리베이터\s*있/.test(combined),

@@ -31,4 +31,22 @@ describe("매물 광고문 총층수 자동 입력", () => {
   test("총층 정보가 없으면 빈 값으로 둔다", () => {
     assert.equal(inferTotalFloorFromAdvertisement("층수 : 3층"), "");
   });
+
+  test("폴더명에 적힌 해당층 표현을 그대로 유지한다", () => {
+    assert.equal(
+      parsePropertyInputs("문정동 54-9 2층일부 2200-160-25 22평", "")
+        .floor,
+      "2층일부",
+    );
+    assert.equal(
+      parsePropertyInputs("가락동 48-11 202호 6000-450-75 45평", "")
+        .floor,
+      "202호",
+    );
+    assert.equal(
+      parsePropertyInputs("방이동 188 2층전체 3000-200-20 30평", "")
+        .floor,
+      "2층전체",
+    );
+  });
 });

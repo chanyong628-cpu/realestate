@@ -311,11 +311,11 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                   <td className="hidden px-2 py-4 text-center xl:table-cell">
                     {hasImages ? (
                       <span className="inline-flex min-w-14 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-100 px-3 py-1.5 text-sm font-black text-emerald-800" title="사진 있음">
-                        有
+                        O
                       </span>
                     ) : (
                       <span className="inline-flex min-w-14 items-center justify-center rounded-full border-2 border-red-500 bg-red-100 px-3 py-1.5 text-sm font-black text-red-700" title="사진 없음">
-                        無
+                        X
                       </span>
                     )}
                   </td>
