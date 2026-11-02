@@ -27,6 +27,7 @@ import {
   categoryLabels,
   formatPyeong,
 } from "@/lib/properties/format";
+import { formatCurrentFloor } from "@/lib/properties/floor";
 import {
   getAdminProperty,
   getPublishedProperty,
@@ -70,12 +71,6 @@ function formatExactLocationHeading(address: string | null) {
 
   if (!parcel) return districtAddress;
   return `${parcel[1]} ${parcel[2]} ${parcel[3].replace(/\s+/g, " ")}`;
-}
-
-function formatFloor(floor: string | null) {
-  if (!floor) return "-";
-  const match = floor.match(/(\d+)\s*층?/);
-  return match ? `${match[1]}층` : floor;
 }
 
 function formatTotalFloor(totalFloor: string | null) {
@@ -228,7 +223,7 @@ export default async function PropertyDetailPage({
     {
       icon: Building,
       label: "층수",
-      value: formatFloor(property.floor),
+      value: formatCurrentFloor(property.floor),
       subValue: `(총 ${formatTotalFloor(totalFloor) ?? "-층"})`,
     },
     {

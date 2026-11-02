@@ -16,18 +16,12 @@ import { useEffect, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 import { trackConversion } from "@/components/analytics/google-analytics";
 import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
+import { formatCurrentFloor } from "@/lib/properties/floor";
 import { KakaoMap } from "@/components/map/kakao-map";
 import { inferTotalFloorFromAdvertisement } from "@/lib/properties/smart-import";
 import { ContactActions, ShareLinkButton } from "./contact-actions";
 import { FavoriteButton } from "./favorite-button";
 import { PropertyGallery } from "./property-gallery";
-
-function formatFloor(floor: string | null) {
-  if (!floor?.trim()) return "-";
-  const current = floor.match(/(\d+)\s*층?/)?.[1];
-  if (!current) return floor;
-  return `${current}층`;
-}
 
 function formatTotalFloor(totalFloor: string | null) {
   if (!totalFloor?.trim()) return "-층";
@@ -148,7 +142,7 @@ export function PropertyQuickViewContent({
     {
       icon: Building,
       label: "층수",
-      value: formatFloor(property.floor),
+      value: formatCurrentFloor(property.floor),
       subValue: `(총 ${formatTotalFloor(totalFloor)})`,
     },
     {
