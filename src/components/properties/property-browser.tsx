@@ -219,9 +219,11 @@ function MapPropertyCard({
 export function PropertyBrowser({
   properties,
   title = "최신매물",
+  headingLevel = "h1",
 }: {
   properties: Property[];
   title?: string;
+  headingLevel?: "h1" | "h2";
 }) {
   const [propertyNumber, setPropertyNumber] = useState("");
   const [dong, setDong] = useState("");
@@ -484,6 +486,8 @@ export function PropertyBrowser({
     [properties],
   );
 
+  const Heading = headingLevel;
+
   return (
     <section
       className="mx-auto min-h-[65vh] max-w-[1440px] px-5 py-12 sm:px-6 lg:px-8 lg:py-16"
@@ -494,9 +498,9 @@ export function PropertyBrowser({
           <p className="text-sm font-bold text-brand-accent">
             {visiblePropertyCount}개의 매물
           </p>
-          <h1 className="mt-1 text-3xl font-black tracking-[-0.03em] text-brand-ink md:text-4xl">
+          <Heading className="mt-1 text-3xl font-black tracking-[-0.03em] text-brand-ink md:text-4xl">
             {title}
-          </h1>
+          </Heading>
         </div>
         <div className="inline-flex rounded-xl border border-brand-line bg-brand-surface p-1 shadow-card">
           <button

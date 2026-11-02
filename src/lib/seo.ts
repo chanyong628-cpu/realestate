@@ -1,5 +1,6 @@
 import type { Property } from "@/types/database";
 import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
+import { songpaRegionNames } from "@/lib/songpa-regions";
 
 export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://cy-office.com";
@@ -10,20 +11,7 @@ export const serviceArea = "서울특별시 송파구";
 export const mainPhone = "02-6425-8090";
 export const mobilePhone = "010-6546-5997";
 
-export const songpaNeighborhoods = [
-  "가락동",
-  "문정동",
-  "방이동",
-  "석촌동",
-  "삼전동",
-  "송파동",
-  "오금동",
-  "거여동",
-  "마천동",
-  "잠실동",
-  "풍납동",
-  "장지동",
-];
+export const songpaNeighborhoods = songpaRegionNames;
 
 export const baseKeywords = [
   "송파구 사무실 임대",
@@ -36,6 +24,14 @@ export const baseKeywords = [
   "방이동 사무실 임대",
   "석촌동 사무실 임대",
   "삼전동 사무실 임대",
+  "송파동 사무실 임대",
+  "신천동 사무실 임대",
+  "오금동 사무실 임대",
+  "거여동 사무실 임대",
+  "마천동 사무실 임대",
+  "잠실동 사무실 임대",
+  "장지동 사무실 임대",
+  "풍납동 사무실 임대",
   "C.Y 부동산",
   "CY 부동산",
 ];
@@ -61,7 +57,7 @@ export function truncate(value: string, maxLength: number) {
 
 export function extractSongpaDong(value: string | null | undefined) {
   const match = (value ?? "").match(
-    /(가락|문정|방이|석촌|삼전|송파|오금|거여|마천|잠실|풍납|장지)동/,
+    /(가락|거여|마천|문정|방이|삼전|석촌|송파|신천|오금|잠실|장지|풍납)동/,
   );
   return match ? match[0] : null;
 }

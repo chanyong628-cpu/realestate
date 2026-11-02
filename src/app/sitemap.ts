@@ -1,5 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getPublishedProperties } from "@/lib/properties/queries";
+import {
+  filterPropertiesByRegion,
+  getRegionPath,
+  songpaRegions,
+} from "@/lib/songpa-regions";
 import { siteUrl } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -18,6 +23,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       categoryUpdatedAt.set(property.category, property.updated_at);
     }
   }
+
+  const regionalPages = (["office", "store"] as const).flatMap((category) => {
+    const categoryProperties = properties.filter(
+      (property) => property.category === category,
+    );
+
+    return songpaRegions.flatMap((region) => {
+      const regionalProperties = filterPropertiesByRegion(
+        categoryProperties,
+        region,
+      );
+      if (!regionalProperties.length) return [];
+
+      const regionalUpdatedAt = regionalProperties.reduce(
+        (latest, property) =>
+          property.updated_at > latest ? property.updated_at : latest,
+        regionalProperties[0].updated_at,
+      );
+
+      return [
+        {
+          url: `${base}${getRegionPath(category, region)}`,
+          lastModified: regionalUpdatedAt,
+          changeFrequency: "daily" as const,
+          priority: 0.85,
+        },
+      ];
+    });
+  });
 
   return [
     {
@@ -39,6 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     },
+    ...regionalPages,
     ...properties.map((property) => ({
       url: `${base}/properties/${property.property_number}`,
       lastModified: property.updated_at,

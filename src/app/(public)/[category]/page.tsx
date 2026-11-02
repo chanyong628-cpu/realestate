@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PropertyBrowser } from "@/components/properties/property-browser";
+import { RegionDirectory } from "@/components/properties/region-directory";
 import { EtcArticleList } from "@/components/properties/etc-article-list";
 import { categoryLabels } from "@/lib/properties/format";
 import { getPublishedProperties } from "@/lib/properties/queries";
@@ -122,6 +123,7 @@ export default async function CategoryPage({
   return (
     <main className="min-h-[70vh]">
       {structuredData}
+      <RegionDirectory category={typedCategory} />
       <PropertyBrowser
         properties={properties}
         title={`${categoryLabels[typedCategory]} 매물`}
