@@ -2,28 +2,26 @@
 
 ## References
 
-- `C:/Users/박찬영/AppData/Local/Temp/codex-clipboard-4e32828d-86c1-4980-8b37-0ebd638a1f65.png`
-- `C:/Users/박찬영/AppData/Local/Temp/codex-clipboard-9923de24-e97e-4592-ac08-a61a5d040171.png`
-- `C:/Users/박찬영/Desktop/a매물장 상세보기.png`
+- `C:/Users/박찬영/Desktop/0061.png`
+- `C:/Users/박찬영/Desktop/0062.png`
+- `C:/Users/박찬영/Desktop/0063.png`
+- `C:/Users/박찬영/AppData/Local/Temp/codex-clipboard-8e45d77f-5278-4aa7-a1c7-bfd58b098c58.png`
 
 ## Implemented checks
 
-- ON 상태 uses navy and OFF uses neutral gray.
-- Site publishing and the property database share the same `is_published` state.
-- Property-database direct entry defaults to OFF, while normal website registration remains visible and automatically appears in the property database.
-- The desktop table removes the registration-date column and shows address, R/P/E/T/A, deposit, rent, maintenance fee, and pyeong.
-- Hidden listings retain full administrator-only photos, private address, and exact-location map inputs.
-- Detail and edit modes use the same reference layout.
-- Administrator memo is editable directly and has its own save button.
-- The list changes to responsive cards before the desktop grid can overflow.
+- Existing properties, including Excel-imported properties, show the same smart auto-input section and complete edit form as normal registrations.
+- Room-style floor labels are normalized for public detail display: `201호`, `2층전체`, and `410호` display as `2층`, `2층`, and `4층`.
+- Basement labels are normalized for public detail display: `B1층전체` displays as `지하1층`.
+- The full public detail and map quick-view use the same floor formatter.
 
 ## Verification
 
 - TypeScript: passed.
 - ESLint: passed.
-- Automated tests: 48 passed.
-- Vercel preview build: passed (`9a10be6`).
-- Local webpack compilation: passed; prerender stopped only because the local sandbox does not contain the Supabase secret environment variable.
-- Live authenticated visual comparison: waiting for the user to sign in to the protected preview.
+- Automated tests: 53 passed.
+- Production Vercel deployment: ready (`9dc25a3`).
+- Production runtime errors during the verification window: none.
+- Live public verification: `CY-0265` displays `4층 (총 4층)` instead of `410층`.
+- Live authenticated admin verification: the edit page displays `매물정보 자동 입력`, all property fields, existing images, and exposure settings.
 
-final result: blocked
+final result: passed
