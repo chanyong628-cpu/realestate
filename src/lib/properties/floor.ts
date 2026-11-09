@@ -8,6 +8,9 @@ export function formatCurrentFloor(floor: string | null) {
   const koreanBasement = normalized.match(/지하\s*(\d+)\s*층?/);
   if (koreanBasement) return `지하${koreanBasement[1]}층`;
 
+  const negativeBasement = normalized.match(/(?:^|\s)-\s*(\d+)\s*층?/);
+  if (negativeBasement) return `지하${negativeBasement[1]}층`;
+
   const room = normalized.match(/(\d{3,})\s*호/)?.[1];
   if (room) {
     const roomFloor = Number(room.slice(0, -2));

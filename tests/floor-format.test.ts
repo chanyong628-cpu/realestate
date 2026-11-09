@@ -8,6 +8,12 @@ describe("상세페이지 층수 표시", () => {
     assert.equal(formatCurrentFloor("b2층전체"), "지하2층");
   });
 
+  test("음수 층 표기를 지하층으로 표시한다", () => {
+    assert.equal(formatCurrentFloor("-1층"), "지하1층");
+    assert.equal(formatCurrentFloor("-1층전체"), "지하1층");
+    assert.equal(formatCurrentFloor("-2층"), "지하2층");
+  });
+
   test("지하 한글 표기는 공백만 정리한다", () => {
     assert.equal(formatCurrentFloor("지하 1층"), "지하1층");
   });
