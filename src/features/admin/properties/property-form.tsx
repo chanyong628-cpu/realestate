@@ -114,7 +114,7 @@ export function PropertyForm({
   return (
     <form ref={formRef} action={formAction} className="mt-8 space-y-8">
       {returnTo && <input type="hidden" name="return_to" value={returnTo} />}
-      {!property && <SmartPropertyImporter onImport={applyImportedDraft} />}
+      <SmartPropertyImporter onImport={applyImportedDraft} />
       <section className="rounded-2xl bg-white p-6 shadow-sm">
         <h2 className="text-lg font-black">기본 정보</h2>
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
