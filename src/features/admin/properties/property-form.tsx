@@ -2,7 +2,8 @@
 
 import { useActionState, useRef, useState } from "react";
 import { isStoredAddressHidden } from "@/lib/properties/address";
-import type { Property } from "@/types/database";
+import { listingTagLabels, themeDefinitions } from "@/lib/properties/listing-tags";
+import type { Property, PropertyListingTag } from "@/types/database";
 import {
   createPropertyAction,
   updatePropertyAction,
@@ -25,7 +26,7 @@ interface PropertyFormProps {
 const categories = [
   ["office", "사무실"],
   ["store", "상가"],
-  ["etc", "기타"],
+  ["etc", "기타 정보"],
 ];
 
 const restroomTypes = [
@@ -70,6 +71,13 @@ export function PropertyForm({
   returnTo,
 }: PropertyFormProps) {
   const [category, setCategory] = useState(property?.category ?? "office");
+  const [listingTags, setListingTags] = useState<PropertyListingTag[]>(() => {
+    const stored = property?.listing_tags ?? [];
+    if (stored.length) return stored;
+    if (property?.category === "store") return ["store"];
+    if (property?.category === "etc") return [];
+    return ["office"];
+  });
   const [importedDescription, setImportedDescription] = useState<string | null>(
     null,
   );
@@ -84,6 +92,7 @@ export function PropertyForm({
     const form = formRef.current;
     if (!form) return;
     setCategory(draft.category);
+    setListingTags([draft.category]);
     setImportedDescription(draft.description);
     setDescriptionVersion((version) => version + 1);
 
@@ -135,9 +144,17 @@ export function PropertyForm({
               name="category"
               required
               value={category}
-              onChange={(event) =>
-                setCategory(event.target.value as "office" | "store" | "etc")
-              }
+              onChange={(event) => {
+                const nextCategory = event.target.value as "office" | "store" | "etc";
+                setCategory(nextCategory);
+                if (nextCategory === "office" || nextCategory === "store") {
+                  setListingTags((current) =>
+                    current.includes(nextCategory)
+                      ? current
+                      : [...current, nextCategory],
+                  );
+                }
+              }}
               className="h-12 w-full rounded-xl border border-stone-300 bg-white px-4"
             >
               {categories
@@ -155,6 +172,57 @@ export function PropertyForm({
             defaultValue={property?.move_in_date ?? "즉시입주"}
             placeholder="예: 즉시 입주, 협의"
           />
+          {category !== "etc" && (
+            <div className="sm:col-span-2">
+              <span className="mb-2 block text-sm font-bold">동시 노출 분류</span>
+              <p className="mb-3 text-sm text-stone-500">
+                여러 항목을 선택하면 한 매물이 사무실·상가·테마 목록에 동시에 표시됩니다. 기본 분류는 자동으로 포함됩니다.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {(["office", "store"] as const).map((tag) => (
+                  <label key={tag} className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3.5">
+                    <input
+                      type="checkbox"
+                      name="listing_tags"
+                      value={tag}
+                      checked={listingTags.includes(tag)}
+                      onChange={(event) =>
+                        setListingTags((current) =>
+                          event.target.checked
+                            ? [...new Set([...current, tag])]
+                            : current.filter((value) => value !== tag),
+                        )
+                      }
+                      className="size-5 accent-blue-600"
+                    />
+                    <b>{listingTagLabels[tag]}</b>
+                  </label>
+                ))}
+                {themeDefinitions.map((theme) => (
+                  <label key={theme.tag} className="flex items-center gap-3 rounded-xl border border-stone-200 p-3.5">
+                    <input
+                      type="checkbox"
+                      name="listing_tags"
+                      value={theme.tag}
+                      checked={listingTags.includes(theme.tag)}
+                      onChange={(event) =>
+                        setListingTags((current) =>
+                          event.target.checked
+                            ? [...new Set([...current, theme.tag])]
+                            : current.filter((value) => value !== theme.tag),
+                        )
+                      }
+                      className="size-5 accent-blue-600"
+                    />
+                    <span>
+                      <b className="block">{theme.label}</b>
+                      <small className="text-stone-500">테마</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

@@ -1,7 +1,11 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Property, PropertyCategory } from "@/types/database";
+import type {
+  Property,
+  PropertyCategory,
+  PropertyListingTag,
+} from "@/types/database";
 import {
   isStoredAddressHidden,
   resolvePublicAddress,
@@ -12,6 +16,7 @@ const publicColumns = [
   "property_number",
   "title",
   "category",
+  "listing_tags",
   "deposit",
   "monthly_rent",
   "maintenance_fee",
@@ -72,11 +77,34 @@ export async function getPublishedProperties(category?: PropertyCategory) {
     .order("is_recommended", { ascending: false })
     .order("created_at", { ascending: false });
 
-  if (category) query = query.eq("category", category);
+  if (category === "office" || category === "store") {
+    query = query.contains("listing_tags", [category]);
+  } else if (category) {
+    query = query.eq("category", category);
+  }
   const { data, error } = await query;
 
   if (error) {
     console.error("Published properties query failed:", error.message);
+    return [];
+  }
+
+  return sanitizePublishedProperties(data);
+}
+
+export async function getPublishedPropertiesByListingTag(
+  tag: PropertyListingTag,
+) {
+  const { data, error } = await createAdminClient()
+    .from("properties")
+    .select(privatePublicColumns)
+    .eq("is_published", true)
+    .contains("listing_tags", [tag])
+    .order("is_recommended", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Published property tag query failed:", error.message);
     return [];
   }
 

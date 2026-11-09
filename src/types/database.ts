@@ -1,4 +1,11 @@
 export type PropertyCategory = "office" | "store" | "etc";
+export type PropertyListingTag =
+  | "office"
+  | "store"
+  | "theme_whole_rent"
+  | "theme_sale"
+  | "theme_rooftop"
+  | "theme_etc";
 
 export type RestroomType =
   | "internal_shared"
@@ -11,6 +18,7 @@ export interface Property {
   property_number: string;
   title: string;
   category: PropertyCategory;
+  listing_tags: PropertyListingTag[];
   deposit: number | null;
   monthly_rent: number | null;
   maintenance_fee: number | null;

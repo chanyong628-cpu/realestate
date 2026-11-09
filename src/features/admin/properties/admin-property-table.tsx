@@ -16,6 +16,7 @@ import {
   isStoredAddressHidden,
   resolvePublicAddress,
 } from "@/lib/properties/address";
+import { listingTagLabels } from "@/lib/properties/listing-tags";
 import type { Property, PropertyCategory } from "@/types/database";
 
 const categoryLabels: Record<PropertyCategory, string> = {
@@ -281,7 +282,20 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
                       <span className="mt-1 block text-xs font-bold text-forest-600">{property.property_number}</span>
                     </Link>
                   </td>
-                  <td className="hidden px-2 py-4 text-sm xl:table-cell">{categoryLabels[property.category]}</td>
+                  <td className="hidden px-2 py-4 text-sm xl:table-cell">
+                    <div className="flex max-w-40 flex-wrap gap-1">
+                      {(property.listing_tags?.length
+                        ? property.listing_tags
+                        : [property.category]
+                      ).map((tag) => (
+                        <span key={tag} className="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">
+                          {tag in listingTagLabels
+                            ? listingTagLabels[tag as keyof typeof listingTagLabels]
+                            : categoryLabels[property.category]}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                   <td className="hidden truncate px-2 py-4 text-sm text-stone-600 2xl:table-cell">
                     {resolvePublicAddress(property.public_address, property.private_address) || "-"}
                   </td>

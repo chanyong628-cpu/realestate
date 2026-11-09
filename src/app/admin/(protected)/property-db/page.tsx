@@ -49,7 +49,12 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
   const visibility = params.visibility === "published" || params.visibility === "hidden" ? params.visibility : "all";
   const { data, error } = await createAdminClient().from("properties").select("*").order("updated_at", { ascending: false });
   const properties = ((data ?? []) as Property[]).filter((property) => {
-    if (category !== "all" && property.category !== category) return false;
+    if (
+      category !== "all" &&
+      (category === "office" || category === "store"
+        ? !property.listing_tags?.includes(category)
+        : property.category !== category)
+    ) return false;
     if (visibility === "published" && !property.is_published) return false;
     if (visibility === "hidden" && property.is_published) return false;
     if (!keyword) return true;

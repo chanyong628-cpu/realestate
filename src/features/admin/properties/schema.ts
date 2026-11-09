@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { buildStoredPublicAddress } from "@/lib/properties/address";
 
+const listingTagSchema = z.enum([
+  "office",
+  "store",
+  "theme_whole_rent",
+  "theme_sale",
+  "theme_rooftop",
+  "theme_etc",
+]);
+
 const optionalNumber = z.preprocess(
   (value) => (value === "" || value === null ? null : Number(value)),
   z.number().nonnegative().nullable(),
@@ -19,6 +28,7 @@ const optionalDate = z.preprocess(
 export const propertyFormSchema = z.object({
   title: z.string().trim().min(1, "매물명을 입력해 주세요.").max(120),
   category: z.enum(["office", "store", "etc"]),
+  listing_tags: z.array(listingTagSchema),
   deposit: optionalNumber,
   monthly_rent: optionalNumber,
   maintenance_fee: optionalNumber,
@@ -62,6 +72,14 @@ export const propertyFormSchema = z.object({
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>;
 
 export function propertyFormDataToValues(formData: FormData) {
+  const category = String(formData.get("category") ?? "");
+  const listingTags = formData
+    .getAll("listing_tags")
+    .map(String)
+    .filter(Boolean);
+  if ((category === "office" || category === "store") && !listingTags.includes(category)) {
+    listingTags.unshift(category);
+  }
   const restroomType = String(formData.get("restroom_type") ?? "");
   const privateAddress = String(formData.get("private_address") ?? "").trim();
   const isAddressHidden = formData.get("is_address_hidden") === "on";
@@ -72,7 +90,8 @@ export function propertyFormDataToValues(formData: FormData) {
 
   return {
     title: formData.get("title"),
-    category: formData.get("category"),
+    category,
+    listing_tags: [...new Set(listingTags)],
     deposit: formData.get("deposit"),
     monthly_rent: formData.get("monthly_rent"),
     maintenance_fee: formData.get("maintenance_fee"),

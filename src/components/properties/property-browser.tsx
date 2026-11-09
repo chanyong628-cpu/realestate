@@ -695,7 +695,7 @@ export function PropertyBrowser({
             onClick={() => changeViewMode("list")}
             className="order-3 h-14 w-full rounded-xl bg-brand-accent text-base font-black text-white shadow-card transition hover:bg-brand-accent-dark lg:hidden"
           >
-            사무실 매물 전체보기
+            전체 매물 목록보기
           </button>
         ) : null}
       </div>

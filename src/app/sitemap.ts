@@ -6,6 +6,7 @@ import {
   songpaRegions,
 } from "@/lib/songpa-regions";
 import { siteUrl } from "@/lib/seo";
+import { themeDefinitions } from "@/lib/properties/listing-tags";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl;
@@ -22,11 +23,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!current || property.updated_at > current) {
       categoryUpdatedAt.set(property.category, property.updated_at);
     }
+    for (const tag of property.listing_tags) {
+      const tagCurrent = categoryUpdatedAt.get(tag);
+      if (!tagCurrent || property.updated_at > tagCurrent) {
+        categoryUpdatedAt.set(tag, property.updated_at);
+      }
+    }
   }
 
   const regionalPages = (["office", "store"] as const).flatMap((category) => {
     const categoryProperties = properties.filter(
-      (property) => property.category === category,
+      (property) => property.listing_tags.includes(category),
     );
 
     return songpaRegions.flatMap((region) => {
@@ -64,6 +71,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${base}/${path}`,
       ...(categoryUpdatedAt.get(path)
         ? { lastModified: categoryUpdatedAt.get(path) }
+        : {}),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    })),
+    {
+      url: `${base}/theme`,
+      ...(latestUpdatedAt ? { lastModified: latestUpdatedAt } : {}),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    },
+    ...themeDefinitions.map((theme) => ({
+      url: `${base}/theme/${theme.slug}`,
+      ...(categoryUpdatedAt.get(theme.tag)
+        ? { lastModified: categoryUpdatedAt.get(theme.tag) }
         : {}),
       changeFrequency: "daily" as const,
       priority: 0.8,

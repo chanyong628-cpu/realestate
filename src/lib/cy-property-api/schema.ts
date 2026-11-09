@@ -11,6 +11,16 @@ const nullableText = (maximum: number) =>
 const nullableAmount = z.number().int().nonnegative().max(2_147_483_647).nullable();
 const nullableCount = z.number().int().nonnegative().max(100_000).nullable();
 const nullableArea = z.number().finite().nonnegative().max(10_000_000).nullable();
+const listingTags = z.array(
+  z.enum([
+    "office",
+    "store",
+    "theme_whole_rent",
+    "theme_sale",
+    "theme_rooftop",
+    "theme_etc",
+  ]),
+).max(6);
 
 const nullableDate = z
   .string()
@@ -46,6 +56,7 @@ export const propertyNumberSchema = z
 const writablePropertyShape = {
   title: z.string().trim().min(1, "매물명을 입력해 주세요.").max(120),
   category: z.enum(["office", "store", "etc"]),
+  listing_tags: listingTags,
   deposit: nullableAmount,
   monthly_rent: nullableAmount,
   maintenance_fee: nullableAmount,
@@ -98,6 +109,7 @@ export const createPropertySchema = z
     property_number: propertyNumberSchema.optional(),
     title: writablePropertyShape.title,
     category: writablePropertyShape.category,
+    listing_tags: writablePropertyShape.listing_tags.optional(),
     deposit: writablePropertyShape.deposit.optional(),
     monthly_rent: writablePropertyShape.monthly_rent.optional(),
     maintenance_fee: writablePropertyShape.maintenance_fee.optional(),

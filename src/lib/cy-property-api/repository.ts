@@ -16,6 +16,7 @@ const propertyColumns = [
   "property_number",
   "title",
   "category",
+  "listing_tags",
   "deposit",
   "monthly_rent",
   "maintenance_fee",
@@ -115,6 +116,11 @@ export const supabasePropertyRepository: PropertyRepository = {
   async create(input: CreatePropertyInput) {
     const values = {
       ...input,
+      listing_tags:
+        input.listing_tags ??
+        (input.category === "office" || input.category === "store"
+          ? [input.category]
+          : []),
       is_published: false,
       is_recommended: input.is_recommended ?? false,
       parking_available: input.parking_available ?? false,

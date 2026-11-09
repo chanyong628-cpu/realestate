@@ -143,6 +143,7 @@ export async function bulkCreatePropertiesAction(
     return {
       title: draft.title || row.folderName.slice(0, 120) || "신규 매물",
       category: draft.category,
+      listing_tags: [draft.category],
       deposit: draft.deposit,
       monthly_rent: draft.monthly_rent,
       maintenance_fee: draft.maintenance_fee,

@@ -17,6 +17,7 @@ function propertyFixture(overrides: Partial<Property> = {}): Property {
     property_number: "CY-0001",
     title: "기존 매물",
     category: "office",
+    listing_tags: ["office"],
     deposit: 3_000,
     monthly_rent: 250,
     maintenance_fee: 30,
