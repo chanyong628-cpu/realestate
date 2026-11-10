@@ -34,6 +34,7 @@ const bulkPropertyManageSchema = z
   .object({
     ids: z.array(z.string().uuid()).min(1).max(200),
     action: z.enum(["hide", "delete", "favorite"]),
+    customerBlockId: z.string().uuid().optional(),
   })
   .strict();
 
@@ -498,6 +499,46 @@ export async function bulkManagePropertiesAction(
   }
 
   if (parsed.data.action === "favorite") {
+    if (parsed.data.customerBlockId) {
+      const { data: block, error: blockError } = await supabase
+        .from("customer_blocks")
+        .select("id,customer_name,shared_slug")
+        .eq("id", parsed.data.customerBlockId)
+        .maybeSingle();
+      if (blockError || !block) {
+        console.error("Bulk customer block lookup failed:", blockError?.message);
+        return {
+          success: false,
+          message: "선택한 고객 블록을 찾지 못했습니다.",
+          affectedCount: 0,
+        };
+      }
+
+      const { error } = await supabase.from("customer_block_properties").upsert(
+        existingIds.map((propertyId) => ({
+          customer_block_id: block.id,
+          property_id: propertyId,
+        })),
+        { onConflict: "customer_block_id,property_id" },
+      );
+      if (error) {
+        console.error("Bulk customer block favorite failed:", error.message);
+        return {
+          success: false,
+          message: "선택 매물을 고객 블록에 저장하지 못했습니다.",
+          affectedCount: 0,
+        };
+      }
+
+      revalidatePath(`/admin/customer-blocks/${block.id}/edit`);
+      revalidatePath(`/share/customer-block/${block.shared_slug}`);
+      return {
+        success: true,
+        message: `${existingIds.length}개 매물을 ${block.customer_name} 고객 블록에 저장했습니다.`,
+        affectedCount: existingIds.length,
+      };
+    }
+
     const { error } = await supabase
       .from("admin_favorite_properties")
       .upsert(

@@ -95,11 +95,23 @@ function ActionButton({
   );
 }
 
-export function AdminPropertyTable({ properties }: { properties: Property[] }) {
+export interface CustomerBlockOption {
+  id: string;
+  customer_name: string;
+}
+
+export function AdminPropertyTable({
+  properties,
+  customerBlocks,
+}: {
+  properties: Property[];
+  customerBlocks: CustomerBlockOption[];
+}) {
   const router = useRouter();
   const selectAllRef = useRef<HTMLInputElement>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [pending, setPending] = useState(false);
+  const [favoriteDestination, setFavoriteDestination] = useState("admin");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const propertyIds = useMemo(() => properties.map((property) => property.id), [properties]);
   const selectedIds = propertyIds.filter((id) => selected.has(id));
@@ -144,7 +156,13 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
     setPending(true);
     setMessage(null);
     try {
-      const result = await bulkManagePropertiesAction({ ids: selectedIds, action });
+      const result = await bulkManagePropertiesAction({
+        ids: selectedIds,
+        action,
+        ...(action === "favorite" && favoriteDestination !== "admin"
+          ? { customerBlockId: favoriteDestination }
+          : {}),
+      });
       setMessage({ ok: result.success, text: result.message });
       if (result.success) {
         setSelected(new Set());
@@ -219,8 +237,25 @@ export function AdminPropertyTable({ properties }: { properties: Property[] }) {
         <ActionButton disabled={!selectedIds.length || pending} tone="accent" onClick={downloadProposal}>
           <FileDown size={16} /> 선택 PPT
         </ActionButton>
+        <label className="sr-only" htmlFor="bulk-favorite-destination">
+          즐겨찾기 저장 위치
+        </label>
+        <select
+          id="bulk-favorite-destination"
+          value={favoriteDestination}
+          onChange={(event) => setFavoriteDestination(event.target.value)}
+          disabled={pending}
+          className="h-10 max-w-48 rounded-xl border border-emerald-300 bg-white px-3 text-sm font-bold text-stone-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50"
+        >
+          <option value="admin">나의 즐겨찾기</option>
+          {customerBlocks.map((block) => (
+            <option key={block.id} value={block.id}>
+              고객: {block.customer_name}
+            </option>
+          ))}
+        </select>
         <ActionButton disabled={!selectedIds.length || pending} tone="green" onClick={() => runMutation("favorite")}>
-          <Heart size={16} /> 선택 즐겨찾기
+          <Heart size={16} /> 선택 저장
         </ActionButton>
         <ActionButton disabled={!selectedIds.length || pending} tone="red" onClick={() => runMutation("delete")}>
           <Trash2 size={16} /> 선택 삭제

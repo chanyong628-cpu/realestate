@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { AdminPropertyTable } from "@/features/admin/properties/admin-property-table";
+import {
+  AdminPropertyTable,
+  type CustomerBlockOption,
+} from "@/features/admin/properties/admin-property-table";
 import { AdminLocationAutoRepair } from "@/features/admin/properties/admin-location-auto-repair";
 import {
   derivePublicAddress,
@@ -163,10 +166,19 @@ export default async function AdminPropertiesPage({
   const rent = normalizeRentFilter(notice.rent);
   const area = normalizeAreaFilter(notice.area);
   const normalizedKeyword = normalizeSearchText(keyword);
-  const { data, error } = await createAdminClient()
-    .from("properties")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const client = createAdminClient();
+  const [propertyResult, customerBlockResult] = await Promise.all([
+    client
+      .from("properties")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    client
+      .from("customer_blocks")
+      .select("id,customer_name")
+      .order("created_at", { ascending: false }),
+  ]);
+  const { data, error } = propertyResult;
+  const customerBlocks = (customerBlockResult.data ?? []) as CustomerBlockOption[];
   const properties = data as Property[] | null;
   const statusFilteredProperties =
     properties?.filter((property) => {
@@ -329,7 +341,10 @@ export default async function AdminPropertiesPage({
       )}
 
       {!!filteredProperties.length && (
-        <AdminPropertyTable properties={filteredProperties} />
+        <AdminPropertyTable
+          properties={filteredProperties}
+          customerBlocks={customerBlocks}
+        />
       )}
     </section>
   );
