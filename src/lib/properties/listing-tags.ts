@@ -3,15 +3,22 @@ import type { PropertyListingTag } from "@/types/database";
 export const listingTagLabels: Record<PropertyListingTag, string> = {
   office: "사무실",
   store: "상가",
+  theme_new_build: "신축",
   theme_whole_rent: "통임대",
   theme_sale: "매매",
-  theme_rooftop: "루프탑",
+  theme_rooftop: "테라스",
   theme_etc: "기타",
 };
 
 export const primaryListingTags = ["office", "store"] as const;
 
 export const themeDefinitions = [
+  {
+    slug: "new-build",
+    tag: "theme_new_build",
+    label: "신축",
+    description: "준공이 새롭거나 신축급으로 관리된 매물",
+  },
   {
     slug: "whole-rent",
     tag: "theme_whole_rent",
@@ -25,16 +32,10 @@ export const themeDefinitions = [
     description: "송파구 사무실·상가 매매 매물",
   },
   {
-    slug: "rooftop",
+    slug: "terrace",
     tag: "theme_rooftop",
-    label: "루프탑",
-    description: "옥상과 테라스를 활용할 수 있는 매물",
-  },
-  {
-    slug: "etc",
-    tag: "theme_etc",
-    label: "기타",
-    description: "특별한 조건과 특징을 가진 매물",
+    label: "테라스",
+    description: "테라스나 야외 공간을 활용할 수 있는 매물",
   },
 ] as const satisfies ReadonlyArray<{
   slug: string;
@@ -46,5 +47,8 @@ export const themeDefinitions = [
 export type ThemeSlug = (typeof themeDefinitions)[number]["slug"];
 
 export function getThemeDefinition(slug: string) {
+  if (slug === "rooftop") {
+    return themeDefinitions.find((theme) => theme.slug === "terrace");
+  }
   return themeDefinitions.find((theme) => theme.slug === slug);
 }

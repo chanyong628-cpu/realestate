@@ -5,15 +5,15 @@ import { themeDefinitions } from "@/lib/properties/listing-tags";
 
 export const metadata: Metadata = {
   title: "테마별 매물",
-  description: "통임대, 매매, 루프탑 등 원하는 조건으로 C.Y 부동산 매물을 모아보세요.",
+  description: "신축, 통임대, 매매, 테라스 조건으로 C.Y 부동산 매물을 모아보세요.",
   alternates: { canonical: "/theme" },
 };
 
 const themeIcons = {
+  "new-build": Sparkles,
   "whole-rent": Building2,
   sale: KeyRound,
-  rooftop: Sun,
-  etc: Sparkles,
+  terrace: Sun,
 } as const;
 
 export default function ThemePage() {

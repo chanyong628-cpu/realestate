@@ -15,12 +15,13 @@ const listingTags = z.array(
   z.enum([
     "office",
     "store",
+    "theme_new_build",
     "theme_whole_rent",
     "theme_sale",
     "theme_rooftop",
     "theme_etc",
   ]),
-).max(6);
+).max(7);
 
 const nullableDate = z
   .string()

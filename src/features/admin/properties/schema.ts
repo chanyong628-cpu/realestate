@@ -4,6 +4,7 @@ import { buildStoredPublicAddress } from "@/lib/properties/address";
 const listingTagSchema = z.enum([
   "office",
   "store",
+  "theme_new_build",
   "theme_whole_rent",
   "theme_sale",
   "theme_rooftop",

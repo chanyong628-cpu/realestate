@@ -165,7 +165,7 @@ export function AdminPropertyTable({
       });
       setMessage({ ok: result.success, text: result.message });
       if (result.success) {
-        setSelected(new Set());
+        if (action !== "favorite") setSelected(new Set());
         router.refresh();
       }
     } catch {
@@ -255,7 +255,7 @@ export function AdminPropertyTable({
           ))}
         </select>
         <ActionButton disabled={!selectedIds.length || pending} tone="green" onClick={() => runMutation("favorite")}>
-          <Heart size={16} /> 선택 저장
+          <Heart size={16} /> {favoriteDestination === "admin" ? "선택 즐겨찾기" : "선택 고객블록 저장"}
         </ActionButton>
         <ActionButton disabled={!selectedIds.length || pending} tone="red" onClick={() => runMutation("delete")}>
           <Trash2 size={16} /> 선택 삭제

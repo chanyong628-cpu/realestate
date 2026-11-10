@@ -2,6 +2,7 @@ export type PropertyCategory = "office" | "store" | "etc";
 export type PropertyListingTag =
   | "office"
   | "store"
+  | "theme_new_build"
   | "theme_whole_rent"
   | "theme_sale"
   | "theme_rooftop"
