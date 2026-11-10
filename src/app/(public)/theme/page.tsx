@@ -35,7 +35,7 @@ export default function ThemePage() {
               <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-accent sm:size-13">
                 <Icon size={24} />
               </span>
-              <h2 className="mt-5 text-2xl font-black text-brand-dark sm:text-3xl">{theme.label}</h2>
+              <h2 className="mt-5 break-keep text-2xl font-black text-brand-dark sm:text-3xl">{theme.label}</h2>
               <p className="mt-2 text-sm leading-6 text-brand-muted sm:text-base">{theme.description}</p>
             </Link>
           );
