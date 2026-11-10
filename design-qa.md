@@ -1,64 +1,54 @@
 **Source visual truth**
 
-- `C:\Users\박찬영\AppData\Local\Temp\codex-clipboard-d32e90af-bf39-4357-91c3-0b728affff77.png`
-- Source pixels: 826 × 472.
-- The source shows the existing header typography and the four theme choices. Its open dropdown is not the target interaction; the user explicitly requested that the same choices appear only after navigating to the theme page.
+- `C:\Users\박찬영\AppData\Local\Temp\codex-clipboard-d28d7315-37ad-4e8e-9a86-887a18d23627.png`
+- Source pixels: 1047 × 573.
+- Target change: keep the existing 2 × 2 theme layout, center each icon and theme title, enlarge the four titles, and rename the first theme to `신축, 리모델링`.
 
 **Implementation evidence**
 
-- Browser-rendered screenshot: `C:\Users\박찬영\Documents\Codex\2026-08-26\https-cy-office-com-https-cy\work\realestate\implementation-theme-preview.png`
-- Side-by-side comparison: `C:\Users\박찬영\Documents\Codex\2026-08-26\https-cy-office-com-https-cy\work\realestate\design-qa-theme-comparison.png`
-- Preview URL: `https://cy-realestate-4qa0yfs2f-01065465997s-projects.vercel.app/theme`
-- Viewport and screenshot pixels: 1848 × 886 CSS pixels at device scale factor 1.
-- Density normalization: the comparison board scales both captures to a common height while preserving aspect ratio; no finding was based on raster density alone.
-- State: desktop, theme landing page after clicking the normal `테마` header link.
+- Browser-rendered preview URL: `https://cy-realestate-83z2pv0rk-01065465997s-projects.vercel.app/theme`
+- Desktop browser capture: 1849 × 1125 CSS pixels at device scale factor 1, captured inline through the Codex browser.
+- Mobile browser capture: 390 × 844 CSS viewport at device scale factor 1, full-page capture rendered at 375 px content width.
+- State: public theme landing page, desktop and mobile.
+- Density normalization: source and implementation were visually compared at their native density; findings were based on layout, alignment, typography, and wrapping rather than raster scale.
 
 **Primary interactions tested**
 
-- Confirmed `테마` appears as a normal header link beside `상가`, with the same size, weight, and color classes.
-- Clicked `테마` and confirmed navigation to `/theme` rather than opening a dropdown.
-- Confirmed the destination exposes the four 2 × 2 choices: 통임대, 매매, 루프탑, 기타.
-- Checked the browser console after navigation. No application errors were present.
+- Confirmed all four cards remain links to their theme result pages.
+- Confirmed the requested order: `신축, 리모델링 / 통임대 / 매매 / 테라스`.
+- Confirmed desktop and mobile 2 × 2 layouts.
+- Checked browser warning/error logs after render. No application warnings or errors were present.
 
 **Full-view comparison evidence**
 
-- Typography: the header navigation uses the same 15 px bold brand-dark treatment for `상가` and `테마`. The destination page keeps the established C.Y heading hierarchy.
-- Spacing and layout rhythm: the four options form an even 2 × 2 grid with consistent padding, gaps, radii, and card heights. Nothing is clipped at the verified desktop viewport.
-- Colors and tokens: the implementation uses the existing brand navy, blue accent, muted copy, border, and surface tokens rather than introducing a new palette.
-- Image quality and asset fidelity: no new raster asset was required. Existing logo and icon assets remain sharp; the user-requested destination intentionally replaces the source dropdown-over-hero state.
-- Copy and content: all four requested themes and their descriptions are present and readable.
+- Fonts and typography: card titles are larger (`text-2xl`, `sm:text-3xl`) and retain the existing heavy C.Y display weight. The page heading hierarchy remains unchanged.
+- Spacing and layout rhythm: icons, titles, and descriptions are centered vertically and horizontally inside equal-height cards. Existing gaps, borders, radii, and shadows remain consistent.
+- Colors and visual tokens: only existing brand surface, border, navy, muted, and blue-accent tokens are used.
+- Image quality and asset fidelity: no raster assets were added or replaced. Existing Lucide icons and C.Y logo assets remain sharp.
+- Copy and content: the first theme now reads `신축, 리모델링`; the other three labels remain `통임대`, `매매`, and `테라스`.
 
 **Focused region comparison evidence**
 
-- A separate crop was unnecessary because the combined comparison keeps the header labels and all four card labels legible at review size.
+- The first card was reviewed separately at the mobile breakpoint because its longer title is the highest wrapping risk.
+- Pass 1 showed `리모델링` splitting mid-word across two lines.
+- The title received `break-keep`; the revised capture shows a clean two-line `신축, / 리모델링` treatment with no clipping or overflow.
 
 **Findings**
 
 - No actionable P0, P1, or P2 visual mismatch remains.
-- The absent header dropdown is an intentional product change required by the user, not design drift.
+- The centered description text is an intentional extension of the requested centered icon/title treatment and keeps all four cards visually balanced.
 
 **Comparison history**
 
-- Pass 1: no actionable P0/P1/P2 issues were found, so no visual repair iteration was required.
-
-**Residual test gap**
-
-- The preview admin route requires a separate C.Y administrator login, so the authenticated bulk-selection toolbar could not be visually captured in this browser session. Its server/client paths passed TypeScript, lint, and the full automated test suite.
+- Pass 1 [P2]: the mobile first-card title split as `리모델 / 링`. Fix: preserve Korean word boundaries with `break-keep`.
+- Pass 2: desktop and mobile captures show centered content, larger headings, clean mobile wrapping, and no overflow.
 
 **Implementation checklist**
 
-- [x] Normal header navigation to `/theme`.
-- [x] `테마` matches `상가` typography and color.
-- [x] Four theme choices appear only on the destination page.
-- [x] Desktop layout and console checked in the Vercel preview.
-
-**Prior QA history retained from the previous release**
-
-- References: `C:/Users/박찬영/Desktop/0061.png`, `C:/Users/박찬영/Desktop/0062.png`, `C:/Users/박찬영/Desktop/0063.png`, and `C:/Users/박찬영/AppData/Local/Temp/codex-clipboard-8e45d77f-5278-4aa7-a1c7-bfd58b098c58.png`.
-- Existing and Excel-imported properties expose the same smart auto-input section and complete edit form.
-- Room-style floor labels normalize on public detail pages: `201호`, `2층전체`, and `410호` display as `2층`, `2층`, and `4층`.
-- Basement labels normalize as well: `B1층전체` displays as `지하1층`.
-- The public detail and map quick-view use the same floor formatter.
-- Previous verification: TypeScript and ESLint passed; 53 tests passed; production deployment `9dc25a3` was ready with no runtime errors during that verification window; `CY-0265` displayed `4층 (총 4층)`; the authenticated edit page showed automatic input, all property fields, existing images, and exposure settings.
+- [x] Center icon and theme content.
+- [x] Increase all four theme-title sizes.
+- [x] Rename first theme to `신축, 리모델링`.
+- [x] Preserve the requested 2 × 2 order.
+- [x] Verify desktop, mobile, links, and browser logs.
 
 final result: passed
