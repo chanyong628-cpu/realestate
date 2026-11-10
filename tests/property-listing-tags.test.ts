@@ -37,7 +37,7 @@ describe("매물 복수 분류", () => {
 
   test("테마는 2x2 화면에 맞는 네 종류만 제공한다", () => {
     assert.equal(themeDefinitions.length, 4);
-    assert.equal(getThemeDefinition("new-build")?.label, "신축");
+    assert.equal(getThemeDefinition("new-build")?.label, "신축, 리모델링");
     assert.equal(getThemeDefinition("whole-rent")?.label, "통임대");
     assert.equal(getThemeDefinition("sale")?.label, "매매");
     assert.equal(getThemeDefinition("terrace")?.label, "테라스");

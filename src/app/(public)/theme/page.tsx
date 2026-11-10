@@ -5,7 +5,7 @@ import { themeDefinitions } from "@/lib/properties/listing-tags";
 
 export const metadata: Metadata = {
   title: "테마별 매물",
-  description: "신축, 통임대, 매매, 테라스 조건으로 C.Y 부동산 매물을 모아보세요.",
+  description: "신축·리모델링, 통임대, 매매, 테라스 조건으로 C.Y 부동산 매물을 모아보세요.",
   alternates: { canonical: "/theme" },
 };
 
@@ -30,12 +30,12 @@ export default function ThemePage() {
             <Link
               key={theme.slug}
               href={`/theme/${theme.slug}`}
-              className="group min-h-44 rounded-2xl border border-brand-line bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-brand-accent hover:shadow-xl sm:min-h-52 sm:p-7"
+              className="group flex min-h-44 flex-col items-center justify-center rounded-2xl border border-brand-line bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-brand-accent hover:shadow-xl sm:min-h-52 sm:p-7"
             >
               <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-accent sm:size-13">
                 <Icon size={24} />
               </span>
-              <h2 className="mt-5 text-xl font-black text-brand-dark sm:text-2xl">{theme.label}</h2>
+              <h2 className="mt-5 text-2xl font-black text-brand-dark sm:text-3xl">{theme.label}</h2>
               <p className="mt-2 text-sm leading-6 text-brand-muted sm:text-base">{theme.description}</p>
             </Link>
           );
