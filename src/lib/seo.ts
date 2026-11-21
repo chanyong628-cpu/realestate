@@ -13,6 +13,12 @@ export const mobilePhone = "010-6546-5997";
 
 export const songpaNeighborhoods = songpaRegionNames;
 
+// 같은 업체의 외부 프로필(네이버 플레이스, 구글 비즈니스 프로필)
+export const businessProfileUrls = [
+  "https://m.place.naver.com/place/2063006956/home",
+  "https://www.google.com/search?kgmid=/g/11z7mw8vm6",
+];
+
 export const baseKeywords = [
   "송파구 사무실 임대",
   "송파구 상가 임대",
@@ -82,6 +88,7 @@ export function buildRealEstateAgentJsonLd() {
     legalName: companyName,
     alternateName: "C.Y REAL ESTATE",
     url: siteUrl,
+    sameAs: businessProfileUrls,
     identifier: {
       "@type": "PropertyValue",
       name: "부동산등록번호",
