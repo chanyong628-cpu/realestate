@@ -290,10 +290,17 @@ export function HomePropertySections({
   const recommended = useMemo(
     () =>
       shuffleProperties(
-        properties.filter(
-          (property) =>
-            property.category !== "etc" && property.is_recommended,
-        ),
+        properties
+          .filter(
+            (property) =>
+              property.category !== "etc" && property.is_recommended,
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )
+          .slice(0, 30),
         `${shuffleSeed}:recommended`,
       ),
     [properties, shuffleSeed],
