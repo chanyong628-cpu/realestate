@@ -8,6 +8,9 @@ import {
 import { siteUrl } from "@/lib/seo";
 import { themeDefinitions } from "@/lib/properties/listing-tags";
 
+// 임대 완료로 삭제된 매물이 사이트맵에 남지 않도록 1시간마다 다시 생성한다.
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl;
   const properties = await getPublishedProperties();

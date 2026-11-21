@@ -79,8 +79,19 @@ export function buildRealEstateAgentJsonLd() {
     "@type": "RealEstateAgent",
     "@id": `${siteUrl}/#realestate-agent`,
     name: companyName,
+    legalName: companyName,
     alternateName: "C.Y REAL ESTATE",
     url: siteUrl,
+    identifier: {
+      "@type": "PropertyValue",
+      name: "부동산등록번호",
+      value: "11710-2025-00257",
+    },
+    founder: {
+      "@type": "Person",
+      name: "박찬영",
+      jobTitle: "대표 공인중개사",
+    },
     telephone: mainPhone,
     description:
       "송파구 사무실·상가 임대 매물을 전문으로 중개하는 C.Y 부동산입니다.",
@@ -241,6 +252,16 @@ export function buildPropertyJsonLd(property: Property, publicAddress: string) {
         property.monthly_rent === null ? undefined : property.monthly_rent * 10000,
       priceCurrency: "KRW",
       availability: "https://schema.org/InStock",
+      priceSpecification:
+        property.monthly_rent === null
+          ? undefined
+          : {
+              "@type": "UnitPriceSpecification",
+              price: property.monthly_rent * 10000,
+              priceCurrency: "KRW",
+              unitCode: "MON",
+              unitText: "월세",
+            },
       seller: {
         "@id": `${siteUrl}/#realestate-agent`,
       },
