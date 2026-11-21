@@ -16,7 +16,7 @@ export function PublicFooter() {
 
         <div className="mt-5 hidden text-[13px] leading-6 font-semibold tracking-[-0.02em] text-brand-base lg:block">
           <p>
-            상호: 씨와이(C.Y)부동산중개&nbsp;&nbsp;|&nbsp;&nbsp;대표자:
+            상호: 씨와이부동산중개&nbsp;&nbsp;|&nbsp;&nbsp;대표자:
             공인중개사 박찬영&nbsp;&nbsp;|&nbsp;&nbsp;사업자등록번호:
             383-54-01061&nbsp;&nbsp;|&nbsp;&nbsp;부동산등록번호:
             11710-2025-00257
@@ -28,7 +28,7 @@ export function PublicFooter() {
         </div>
 
         <dl className="mx-auto mt-5 grid max-w-2xl gap-1 text-left text-xs leading-5 text-brand-base lg:hidden">
-          <div><dt className="inline font-bold">상호: </dt><dd className="inline">씨와이(C.Y)부동산중개</dd></div>
+          <div><dt className="inline font-bold">상호: </dt><dd className="inline">씨와이부동산중개</dd></div>
           <div><dt className="inline font-bold">대표자: </dt><dd className="inline">공인중개사 박찬영</dd></div>
           <div><dt className="inline font-bold">사업자등록번호: </dt><dd className="inline">383-54-01061</dd></div>
           <div><dt className="inline font-bold">부동산등록번호: </dt><dd className="inline">11710-2025-00257</dd></div>
@@ -37,7 +37,7 @@ export function PublicFooter() {
         </dl>
 
         <p className="mt-5 text-xs leading-5 font-semibold tracking-[-0.02em] text-brand-base">
-          씨와이(C.Y)부동산중개. 사진. 매물. 커뮤니티 등 사이트 내 모든
+          씨와이부동산중개. 사진. 매물. 커뮤니티 등 사이트 내 모든
           정보는 보호되며 무단 전재 및 재배포 금지합니다.
         </p>
         <Link

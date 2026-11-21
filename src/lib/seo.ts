@@ -6,7 +6,7 @@ export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://cy-office.com";
 
 export const siteName = "C.Y 부동산";
-export const companyName = "씨와이(C.Y)부동산중개";
+export const companyName = "씨와이부동산중개";
 export const serviceArea = "서울특별시 송파구";
 export const mainPhone = "02-6425-8090";
 export const mobilePhone = "010-6546-5997";
