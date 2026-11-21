@@ -8,10 +8,12 @@ export const RECOMMENDED_PROPERTY_LIMIT = 30;
  * 최대 limit개까지만 반환합니다. 등록일이 같으면 매물번호가 큰(최근) 순입니다.
  * 기타(etc) 카테고리는 제외합니다.
  */
-export function selectRecommendedProperties(
-  properties: Property[],
-  limit = RECOMMENDED_PROPERTY_LIMIT,
-): Property[] {
+export function selectRecommendedProperties<
+  T extends Pick<
+    Property,
+    "category" | "is_recommended" | "created_at" | "property_number"
+  >,
+>(properties: T[], limit = RECOMMENDED_PROPERTY_LIMIT): T[] {
   return properties
     .filter((property) => property.category !== "etc" && property.is_recommended)
     .sort((a, b) => {

@@ -7,6 +7,7 @@ import { getAdminSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminLocationAutoRepair } from "@/features/admin/properties/admin-location-auto-repair";
 import { getPublishedProperties } from "@/lib/properties/queries";
+import { toPropertyCardData } from "@/lib/properties/card-data";
 import { derivePublicAddress } from "@/lib/properties/address";
 import { buildRealEstateAgentJsonLd, buildWebsiteJsonLd } from "@/lib/seo";
 
@@ -94,7 +95,7 @@ export default async function HomePage() {
         </div>
       </section>
       <HomePropertySections
-        properties={properties}
+        properties={properties.map(toPropertyCardData)}
         isAdmin={isAdmin}
         shuffleSeed={randomUUID()}
       />
