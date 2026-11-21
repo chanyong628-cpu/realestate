@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Property } from "@/types/database";
+import type { PropertyCardData } from "@/lib/properties/card-data";
 import { PropertyCard } from "./property-card";
 
 type RentFilter =
@@ -52,7 +52,7 @@ function createSeededRandom(seed: string) {
   };
 }
 
-function shuffleProperties(properties: Property[], seed: string) {
+function shuffleProperties(properties: PropertyCardData[], seed: string) {
   const shuffled = [...properties];
   const random = createSeededRandom(seed);
 
@@ -152,7 +152,7 @@ function PropertyGrid({
   emptyText,
   isAdmin,
 }: {
-  properties: Property[];
+  properties: PropertyCardData[];
   emptyText: string;
   isAdmin: boolean;
 }) {
@@ -180,7 +180,7 @@ function RecommendedSlider({
   properties,
   isAdmin,
 }: {
-  properties: Property[];
+  properties: PropertyCardData[];
   isAdmin: boolean;
 }) {
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -244,7 +244,7 @@ export function HomePropertySections({
   isAdmin,
   shuffleSeed,
 }: {
-  properties: Property[];
+  properties: PropertyCardData[];
   isAdmin: boolean;
   shuffleSeed: string;
 }) {
