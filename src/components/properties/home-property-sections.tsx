@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Property } from "@/types/database";
+import { selectRecommendedProperties } from "@/lib/properties/recommended";
 import { PropertyCard } from "./property-card";
 
 type RentFilter =
@@ -290,10 +291,7 @@ export function HomePropertySections({
   const recommended = useMemo(
     () =>
       shuffleProperties(
-        properties.filter(
-          (property) =>
-            property.category !== "etc" && property.is_recommended,
-        ),
+        selectRecommendedProperties(properties),
         `${shuffleSeed}:recommended`,
       ),
     [properties, shuffleSeed],
