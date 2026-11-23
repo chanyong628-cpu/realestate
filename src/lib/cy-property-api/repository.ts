@@ -174,9 +174,25 @@ export const supabasePropertyRepository: PropertyRepository = {
     const existing = await findStoredProperty(identifier);
     if (!existing) return null;
 
+    if (!isPublished) {
+      // 비공개 전환 = 사이트에서 영구 삭제하고 매물장(property_archive)에는 OFF로 보존
+      const { data: current, error: readError } = await createAdminClient()
+        .from("properties")
+        .select(propertyColumns)
+        .eq("id", existing.id)
+        .single();
+      if (readError) throw storeError(readError);
+
+      const { error } = await createAdminClient().rpc("archive_property", {
+        p_id: existing.id,
+      });
+      if (error) throw storeError(error);
+      return toApiProperty({ ...(current as unknown as Property), is_published: false });
+    }
+
     const { data, error } = await createAdminClient()
       .from("properties")
-      .update({ is_published: isPublished })
+      .update({ is_published: true })
       .eq("id", existing.id)
       .select(propertyColumns)
       .single();

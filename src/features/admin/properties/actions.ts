@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAdminSession } from "@/lib/auth/session";
+import { archivePropertyById, updatePropertyDatabaseFields } from "@/lib/properties/archive";
 import { revalidatePublicPropertyPages } from "@/lib/properties/revalidate";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -244,28 +245,27 @@ export async function updatePropertyAction(
 
 export async function deletePropertyAction(id: string) {
   await requireAdmin();
-  const { error } = await createAdminClient()
-    .from("properties")
-    .update({ is_published: false })
-    .eq("id", id);
-
-  if (error) throw new Error("매물을 비노출로 변경하지 못했습니다.");
+  await archivePropertyById(id);
   revalidatePropertyPages();
   revalidatePath("/admin/property-db");
   revalidatePath(`/admin/property-db/${id}`);
 }
 
+// 노출 OFF = 사이트에서 영구 삭제(매물장에는 OFF로 보존). 보관된 매물은 사이트로 되돌리지 않는다.
 export async function setPropertyPublishedAction(
   id: string,
   isPublished: boolean,
 ) {
   await requireAdmin();
-  const { error } = await createAdminClient()
-    .from("properties")
-    .update({ is_published: isPublished })
-    .eq("id", id);
-
-  if (error) throw new Error("노출 상태를 변경하지 못했습니다.");
+  if (!isPublished) {
+    await archivePropertyById(id);
+  } else {
+    const { error } = await createAdminClient()
+      .from("properties")
+      .update({ is_published: true })
+      .eq("id", id);
+    if (error) throw new Error("노출 상태를 변경하지 못했습니다.");
+  }
   revalidatePropertyPages();
   revalidatePath("/admin/property-db");
   revalidatePath(`/admin/property-db/${id}`);
@@ -350,7 +350,16 @@ export async function updatePropertyDatabaseAction(
     .from("properties")
     .select("private_memo")
     .eq("id", id)
-    .maybeSingle();
+    .maybeSingle()
+    .then(async (live) =>
+      live.data
+        ? live
+        : supabase
+            .from("property_archive")
+            .select("private_memo")
+            .eq("id", id)
+            .maybeSingle(),
+    );
   const folderLine = metadataMemoLine(previous?.private_memo, "Google Drive 폴더명:");
   const memoBody = managerMemoBody(previous?.private_memo);
   const { building_name, exclusive_area_pyeong, ...databaseFields } = parsed.data;
@@ -364,10 +373,7 @@ export async function updatePropertyDatabaseAction(
     private_memo: [folderLine, buildingLine, memoBody].filter(Boolean).join("\n"),
   };
 
-  const { error } = await supabase
-    .from("properties")
-    .update(updateFields)
-    .eq("id", id);
+  const error = await updatePropertyDatabaseFields(id, updateFields);
   if (error) throw new Error("매물장 정보를 저장하지 못했습니다.");
 
   revalidatePropertyPages();
@@ -405,14 +411,22 @@ export async function savePropertyPrivateMemoAction(
     .from("properties")
     .select("private_memo")
     .eq("id", id)
-    .maybeSingle();
+    .maybeSingle()
+    .then(async (live) =>
+      live.data
+        ? live
+        : supabase
+            .from("property_archive")
+            .select("private_memo")
+            .eq("id", id)
+            .maybeSingle(),
+    );
   const folderLine = metadataMemoLine(previous?.private_memo, "Google Drive 폴더명:");
   const buildingLine = metadataMemoLine(previous?.private_memo, "건물명:");
   const privateMemo = [folderLine, buildingLine, memo].filter(Boolean).join("\n");
-  const { error } = await supabase
-    .from("properties")
-    .update({ private_memo: privateMemo })
-    .eq("id", id);
+  const error = await updatePropertyDatabaseFields(id, {
+    private_memo: privateMemo,
+  });
   if (error) throw new Error("관리자 메모를 저장하지 못했습니다.");
 
   revalidatePath("/admin/property-db");
@@ -474,12 +488,10 @@ export async function bulkManagePropertiesAction(
   }
 
   if (parsed.data.action === "hide") {
-    const { error } = await supabase
-      .from("properties")
-      .update({ is_published: false })
-      .in("id", existingIds);
-    if (error) {
-      console.error("Bulk property hide failed:", error.message);
+    try {
+      for (const propertyId of existingIds) await archivePropertyById(propertyId);
+    } catch (error) {
+      console.error("Bulk property archive failed:", error);
       return {
         success: false,
         message: "선택 매물을 비노출로 바꾸지 못했습니다.",
@@ -489,7 +501,7 @@ export async function bulkManagePropertiesAction(
     revalidatePropertyPages();
     return {
       success: true,
-      message: `${existingIds.length}개 매물을 비노출로 변경했습니다.`,
+      message: `${existingIds.length}개 매물을 사이트에서 삭제하고 매물장에 OFF로 보존했습니다.`,
       affectedCount: existingIds.length,
     };
   }
@@ -557,12 +569,10 @@ export async function bulkManagePropertiesAction(
     };
   }
 
-  const { error: deleteError } = await supabase
-    .from("properties")
-    .update({ is_published: false })
-    .in("id", existingIds);
-  if (deleteError) {
-    console.error("Bulk property unpublish failed:", deleteError.message);
+  try {
+    for (const propertyId of existingIds) await archivePropertyById(propertyId);
+  } catch (deleteError) {
+    console.error("Bulk property delete failed:", deleteError);
     return {
       success: false,
       message: "선택 매물을 사이트에서 내리지 못했습니다.",
@@ -572,7 +582,7 @@ export async function bulkManagePropertiesAction(
   revalidatePropertyPages();
   return {
     success: true,
-    message: `${existingIds.length}개 매물을 사이트에서 내리고 매물 DB에 보존했습니다.`,
+    message: `${existingIds.length}개 매물을 사이트에서 영구 삭제하고 매물장에 OFF로 보존했습니다.`,
     affectedCount: existingIds.length,
   };
 }

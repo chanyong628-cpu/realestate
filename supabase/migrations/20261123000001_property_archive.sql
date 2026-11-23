@@ -1,6 +1,7 @@
 begin;
 
--- 매물장 DB 보관 테이블: C.Y부동산 사이트(properties)에서 완전 삭제된 매물을 OFF 상태로 보존한다.
+-- 매물장 DB 보관 테이블: C.Y부동산 사이트(properties)에서 영구 삭제된 매물을 OFF 상태로 보존한다.
+-- 보관된 매물은 사이트로 되돌리지 않는다(사이트 등록은 새로 작성).
 create table if not exists public.property_archive (
   like public.properties including defaults including constraints
 );
@@ -55,33 +56,7 @@ begin
 end;
 $$;
 
--- 매물장 ON: 보관 중인 매물을 사이트(properties)로 복원한다.
-create or replace function public.restore_property(p_id uuid)
-returns boolean
-language plpgsql
-set search_path = ''
-as $$
-begin
-  if not exists (select 1 from public.property_archive where id = p_id) then
-    return false;
-  end if;
-
-  insert into public.properties
-  select (jsonb_populate_record(
-    null::public.properties,
-    (to_jsonb(a) - 'archived_at') || jsonb_build_object('is_published', true)
-  )).*
-  from public.property_archive a
-  where a.id = p_id;
-
-  delete from public.property_archive where id = p_id;
-  return true;
-end;
-$$;
-
 revoke all on function public.archive_property(uuid) from public, anon, authenticated;
-revoke all on function public.restore_property(uuid) from public, anon, authenticated;
 grant execute on function public.archive_property(uuid) to service_role;
-grant execute on function public.restore_property(uuid) to service_role;
 
 commit;
