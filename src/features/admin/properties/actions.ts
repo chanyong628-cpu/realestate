@@ -196,7 +196,7 @@ export async function bulkCreatePropertiesAction(
     return { error: `저장 실패: ${friendlyDatabaseError(error.message)}` };
   }
 
-  revalidatePath("/");
+  revalidatePropertyPages();
   revalidatePath("/admin/properties");
   return { createdCount: values.length };
 }
@@ -238,8 +238,9 @@ export async function updatePropertyAction(
     previousUrls.filter((url) => !parsed.data.image_urls.includes(url)),
   );
 
-  revalidatePath("/");
-  revalidatePath("/admin/properties");
+  revalidatePropertyPages();
+  revalidatePath("/admin/property-db");
+  revalidatePath(`/admin/property-db/${id}`);
   redirect("/admin/properties?updated=1");
 }
 
@@ -442,7 +443,7 @@ export async function setPropertyRecommendedAction(
     .eq("id", id);
 
   if (error) throw new Error("추천 상태를 변경하지 못했습니다.");
-  revalidatePath("/");
+  revalidatePropertyPages();
   revalidatePath("/admin/properties");
 }
 
@@ -609,6 +610,6 @@ export async function updatePropertyCoordinatesAction(
     .eq("id", id);
   if (error) throw new Error("매물 위치를 저장하지 못했습니다.");
 
-  revalidatePath("/");
+  revalidatePropertyPages();
   revalidatePath("/admin/properties");
 }
