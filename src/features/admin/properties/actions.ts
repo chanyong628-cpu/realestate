@@ -251,21 +251,18 @@ export async function deletePropertyAction(id: string) {
   revalidatePath(`/admin/property-db/${id}`);
 }
 
-// 노출 OFF = 사이트에서 영구 삭제(매물장에는 OFF로 보존). 보관된 매물은 사이트로 되돌리지 않는다.
+// 노출 ON/OFF(비노출)는 사이트에서 숨기기만 한다. 영구 삭제는 deletePropertyAction.
 export async function setPropertyPublishedAction(
   id: string,
   isPublished: boolean,
 ) {
   await requireAdmin();
-  if (!isPublished) {
-    await archivePropertyById(id);
-  } else {
-    const { error } = await createAdminClient()
-      .from("properties")
-      .update({ is_published: true })
-      .eq("id", id);
-    if (error) throw new Error("노출 상태를 변경하지 못했습니다.");
-  }
+  const { error } = await createAdminClient()
+    .from("properties")
+    .update({ is_published: isPublished })
+    .eq("id", id);
+
+  if (error) throw new Error("노출 상태를 변경하지 못했습니다.");
   revalidatePropertyPages();
   revalidatePath("/admin/property-db");
   revalidatePath(`/admin/property-db/${id}`);
@@ -488,10 +485,12 @@ export async function bulkManagePropertiesAction(
   }
 
   if (parsed.data.action === "hide") {
-    try {
-      for (const propertyId of existingIds) await archivePropertyById(propertyId);
-    } catch (error) {
-      console.error("Bulk property archive failed:", error);
+    const { error } = await supabase
+      .from("properties")
+      .update({ is_published: false })
+      .in("id", existingIds);
+    if (error) {
+      console.error("Bulk property hide failed:", error.message);
       return {
         success: false,
         message: "선택 매물을 비노출로 바꾸지 못했습니다.",
@@ -501,7 +500,7 @@ export async function bulkManagePropertiesAction(
     revalidatePropertyPages();
     return {
       success: true,
-      message: `${existingIds.length}개 매물을 사이트에서 삭제하고 매물장에 OFF로 보존했습니다.`,
+      message: `${existingIds.length}개 매물을 비노출로 변경했습니다. (삭제되지 않았습니다)`,
       affectedCount: existingIds.length,
     };
   }
