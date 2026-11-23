@@ -10,6 +10,7 @@ import { formatPyeong, formatWon } from "@/lib/properties/format";
 import type { Property } from "@/types/database";
 import { FavoriteButton } from "./favorite-button";
 import { PropertyCard } from "./property-card";
+import { useIsAdmin } from "./use-admin";
 import {
   PropertyQuickViewContent,
   PropertyQuickViewModal,
@@ -225,6 +226,7 @@ export function PropertyBrowser({
   title?: string;
   headingLevel?: "h1" | "h2";
 }) {
+  const isAdmin = useIsAdmin();
   const [propertyNumber, setPropertyNumber] = useState("");
   const [dong, setDong] = useState("");
   const [rentFilter, setRentFilter] = useState<RentFilter>("all");
@@ -679,7 +681,12 @@ export function PropertyBrowser({
             className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
             {filtered.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard
+                key={property.id}
+                property={property}
+                isAdmin={isAdmin}
+                stayOnPageAfterDelete
+              />
             ))}
           </div>
           )
