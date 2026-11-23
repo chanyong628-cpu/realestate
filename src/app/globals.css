@@ -48,3 +48,10 @@ html.cy-public-content-protected img {
   -webkit-user-drag: none;
   user-select: none;
 }
+
+/* 이미지 저장·드래그 억제 (관리자 화면 제외는 ImageProtect에서 처리) */
+img {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
