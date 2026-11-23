@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Building, Ruler } from "lucide-react";
-import type { Property } from "@/types/database";
+import type { PropertyCardData } from "@/lib/properties/card-data";
 import { formatPyeong, formatWon } from "@/lib/properties/format";
 import { FavoriteButton } from "./favorite-button";
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
@@ -12,7 +12,7 @@ export function PropertyCard({
   property,
   isAdmin = false,
 }: {
-  property: Property;
+  property: PropertyCardData;
   isAdmin?: boolean;
 }) {
   const image = property.image_urls[0];
