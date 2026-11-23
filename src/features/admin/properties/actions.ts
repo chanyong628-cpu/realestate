@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAdminSession } from "@/lib/auth/session";
+import { revalidatePublicPropertyPages } from "@/lib/properties/revalidate";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   parseBulkPropertyRows,
@@ -45,12 +46,7 @@ async function requireAdmin() {
 }
 
 function revalidatePropertyPages() {
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/properties");
-  revalidatePath("/favorites");
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/rss.xml");
+  revalidatePublicPropertyPages();
 }
 
 function getStoredImagePath(url: string) {
