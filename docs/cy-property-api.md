@@ -45,7 +45,7 @@ Secret이 없거나 틀리면 `401 UNAUTHORIZED`, 서버에 32자 이상의 Secr
 | `unpublishProperty` | `POST` | `/api/cy/properties/{identifier}/unpublish` |
 | `importPropertyImagesFromDrive` | `POST` | `/api/cy/property-images/import-drive` |
 
-`identifier`에는 UUID 내부 ID 또는 `CY-0001` 형식의 매물번호를 사용할 수 있습니다. 생성된 매물은 요청과 관계없이 항상 비공개(`is_published: false`)로 저장되며, 공개 상태 변경은 별도 endpoint로만 수행합니다. 삭제 endpoint는 제공하지 않습니다. 단, `unpublish`는 C.Y 사이트에서 매물을 영구 삭제하고 매물장 DB(`property_archive`)에는 OFF로 보존합니다. 보관된 매물은 `publish`로 사이트에 되돌릴 수 없으며 다시 올리려면 새로 작성해야 합니다.
+`identifier`에는 UUID 내부 ID 또는 `CY-0001` 형식의 매물번호를 사용할 수 있습니다. 생성된 매물은 요청과 관계없이 항상 비공개(`is_published: false`)로 저장되며, 공개 상태 변경은 별도 endpoint로만 수행합니다. 삭제 endpoint는 제공하지 않습니다. `unpublish`는 사이트에서 숨기기만 하는 비노출이며 삭제가 아닙니다. 영구 삭제(매물장 DB에는 OFF로 보존)는 관리자 화면의 삭제 버튼으로만 할 수 있습니다.
 
 ## 요청 예시
 
