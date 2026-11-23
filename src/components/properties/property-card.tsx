@@ -11,9 +11,11 @@ import { TrackedPropertyLink } from "./tracked-property-link";
 export function PropertyCard({
   property,
   isAdmin = false,
+  stayOnPageAfterDelete = false,
 }: {
   property: PropertyCardData;
   isAdmin?: boolean;
+  stayOnPageAfterDelete?: boolean;
 }) {
   const image = property.image_urls[0];
   const pyeong = property.exclusive_area
@@ -91,7 +93,7 @@ export function PropertyCard({
             <DeletePropertyButton
               id={property.id}
               propertyNumber={property.property_number}
-              redirectTo="/"
+              redirectTo={stayOnPageAfterDelete ? undefined : "/"}
             />
           </div>
         )}

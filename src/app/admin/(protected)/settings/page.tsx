@@ -62,6 +62,37 @@ export default function SettingsPage() {
           connected={driveConnected}
           description="폴더 링크의 사진을 홈페이지 저장소로 가져옵니다."
         />
+        <StatusRow
+          label="Google Analytics 4"
+          connected={Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID)}
+          description="방문자·유입 경로·문의 전환을 측정합니다."
+        />
+        <StatusRow
+          label="Google Search Console 소유확인"
+          connected={Boolean(process.env.GOOGLE_SITE_VERIFICATION)}
+          description="메타 태그 방식 소유확인입니다. 도메인(DNS) 또는 다른 방식으로 확인했다면 '설정 필요'로 보여도 정상일 수 있습니다."
+        />
+        <StatusRow
+          label="네이버 서치어드바이저 소유확인"
+          connected={Boolean(process.env.NAVER_SITE_VERIFICATION)}
+          description="네이버 검색 등록용 소유확인 메타 태그입니다."
+        />
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-brand-line bg-brand-soft p-5">
+        <p className="font-black text-brand-dark">검색 노출 분석(Claude 연동)</p>
+        <p className="mt-1 text-sm leading-6 text-brand-slate">
+          Attaché(app.attache.studio)에서 Google 계정으로 로그인해 Search Console·GA4·Google Ads를
+          읽기 전용으로 연결하면, Claude가 주간 노출·클릭·순위와 색인 상태를 확인해 회의록에 반영합니다.
+        </p>
+        <a
+          href="https://app.attache.studio/dashboard"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold"
+        >
+          Attaché 연결 화면 열기 <ExternalLink size={16} />
+        </a>
       </div>
 
       {driveServiceAccountEmail && (
