@@ -7,21 +7,28 @@ const disallow = ["/admin", "/favorites", "/share/customer-block"];
 // 적용되지 않으므로 차단 경로를 동일하게 반복한다.)
 const searchCrawlers = [
   "Yeti",
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Google-Extended",
+  "Applebot-Extended",
+  "PerplexityBot",
+  "Perplexity-User",
+  "DuckAssistBot",
+  "Meta-ExternalAgent",
+  "Amazonbot",
+  "CCBot",
   "Claude-SearchBot",
   "Claude-User",
-  "PerplexityBot",
   "Applebot",
 ];
-
-// OpenAI(GPT) 계열 크롤러는 전체 차단한다.
-const blockedCrawlers = ["GPTBot", "OAI-SearchBot", "ChatGPT-User"];
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow },
       { userAgent: searchCrawlers, allow: "/", disallow },
-      { userAgent: blockedCrawlers, disallow: "/" },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };
