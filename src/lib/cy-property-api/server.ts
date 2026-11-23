@@ -1,21 +1,12 @@
 import "server-only";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePublicPropertyPages } from "../properties/revalidate";
 import { createPropertyApiHandlers } from "./handlers";
 import { supabasePropertyRepository } from "./repository";
 import type { Property } from "../../types/database";
 
 function revalidateProperty(property: Property) {
-  [
-    "/",
-    "/office",
-    "/store",
-    "/etc",
-    `/properties/${property.property_number}`,
-    "/admin/properties",
-    "/sitemap.xml",
-    "/rss.xml",
-  ].forEach((path) => revalidatePath(path));
+  revalidatePublicPropertyPages(property.property_number);
 }
 
 export const propertyApiHandlers = createPropertyApiHandlers({

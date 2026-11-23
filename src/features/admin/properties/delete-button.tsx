@@ -17,7 +17,7 @@ export function DeletePropertyButton({
   const [pending, setPending] = useState(false);
 
   async function remove() {
-    if (!window.confirm(`${propertyNumber} 매물을 사이트에서 내릴까요?\n매물 DB에는 보존되고 노출만 OFF 됩니다.`)) return;
+    if (!window.confirm(`${propertyNumber} 매물을 C.Y부동산 사이트에서 영구 삭제할까요?\n사이트에서는 완전히 삭제되고, 매물장 DB에는 OFF로 보존됩니다.\n(사이트로 되돌릴 수 없으며 다시 올리려면 새로 작성해야 합니다.)`)) return;
     setPending(true);
     try {
       await deletePropertyAction(id);
