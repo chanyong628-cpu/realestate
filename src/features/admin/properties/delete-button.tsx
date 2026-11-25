@@ -8,10 +8,12 @@ export function DeletePropertyButton({
   id,
   propertyNumber,
   redirectTo,
+  className,
 }: {
   id: string;
   propertyNumber: string;
   redirectTo?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -33,7 +35,7 @@ export function DeletePropertyButton({
       type="button"
       onClick={remove}
       disabled={pending}
-      className="whitespace-nowrap rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+      className={className ?? "whitespace-nowrap rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"}
     >
       {pending ? "처리 중" : "삭제"}
     </button>
