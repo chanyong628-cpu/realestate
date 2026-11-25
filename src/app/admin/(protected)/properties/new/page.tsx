@@ -25,7 +25,6 @@ export default async function NewPropertyPage({
           : "저장하면 매물번호가 자동으로 생성되고 홈페이지와 매물DB에 함께 등록됩니다."}
       </p>
       <PropertyForm
-        propertyOnly
         defaultPublished={!fromPropertyDatabase}
         returnTo={fromPropertyDatabase ? "/admin/property-db" : undefined}
       />

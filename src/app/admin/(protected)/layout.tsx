@@ -11,7 +11,7 @@ export default async function AdminLayout({
 
   const links = [
     ["/admin", "대시보드"],
-    ["/admin/content/new", "광고 등록"],
+    ["/admin/properties/new", "광고 등록"],
     ["/admin/properties/bulk", "EXCEL 등록"],
     ["/admin/properties", "매물 관리"],
     ["/admin/property-db", "매물 DB"],

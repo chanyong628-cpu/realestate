@@ -78,13 +78,13 @@ export default async function AdminDashboardPage({
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <Link
-          href="/admin/content/new"
+          href="/admin/properties/new"
           className="rounded-2xl bg-forest-700 p-7 text-white"
         >
           <p className="text-sm font-bold text-white/60">빠른 작업</p>
           <h2 className="mt-2 text-2xl font-black">새 광고 등록</h2>
           <p className="mt-2 text-sm text-white/70">
-            매물광고 또는 게시판 글 유형을 선택해 등록합니다.
+            사무실·상가 매물광고를 등록합니다.
           </p>
         </Link>
         <Link
