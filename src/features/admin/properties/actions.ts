@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAdminSession } from "@/lib/auth/session";
+import { PROPERTY_DOCUMENT_BUCKET } from "@/lib/properties/document";
 import { archivePropertyById, updatePropertyDatabaseFields } from "@/lib/properties/archive";
 import { revalidatePublicPropertyPages } from "@/lib/properties/revalidate";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -73,6 +74,20 @@ async function removeStoredImages(urls: string[]) {
     .storage.from("property-images")
     .remove(paths);
   if (error) console.error("Property image cleanup failed:", error.message);
+}
+
+// 문서를 바꾸거나 지웠을 때 예전 파일을 저장소에서 치운다(우리 저장소 파일일 때만).
+async function removeStoredDocument(url: string | null | undefined) {
+  if (!url) return;
+  const marker = `/storage/v1/object/public/${PROPERTY_DOCUMENT_BUCKET}/`;
+  const index = url.indexOf(marker);
+  if (index < 0) return;
+  const path = decodeURIComponent(url.slice(index + marker.length).split(/[?#]/)[0] ?? "");
+  if (!path) return;
+  const { error } = await createAdminClient()
+    .storage.from(PROPERTY_DOCUMENT_BUCKET)
+    .remove([path]);
+  if (error) console.error("Property document cleanup failed:", error.message);
 }
 
 function friendlyDatabaseError(message: string) {
@@ -218,7 +233,7 @@ export async function updatePropertyAction(
   const supabase = createAdminClient();
   const { data: previous } = await supabase
     .from("properties")
-    .select("image_urls")
+    .select("image_urls,document_url")
     .eq("id", id)
     .maybeSingle();
   const { error } = await supabase
@@ -237,6 +252,9 @@ export async function updatePropertyAction(
   await removeStoredImages(
     previousUrls.filter((url) => !parsed.data.image_urls.includes(url)),
   );
+  if (previous?.document_url && previous.document_url !== parsed.data.document_url) {
+    await removeStoredDocument(previous.document_url);
+  }
 
   revalidatePropertyPages();
   revalidatePath("/admin/property-db");

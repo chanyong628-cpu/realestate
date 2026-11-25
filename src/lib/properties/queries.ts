@@ -43,6 +43,8 @@ const publicColumns = [
   "is_recommended",
   "is_published",
   "image_urls",
+  "document_url",
+  "document_name",
   "description",
   "view_count",
   "created_at",

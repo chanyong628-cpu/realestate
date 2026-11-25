@@ -8,6 +8,7 @@ import {
   createPropertyAction,
   updatePropertyAction,
 } from "./actions";
+import { DocumentUploader } from "./document-uploader";
 import { ImageUrlManager } from "./image-url-manager";
 import { RichContentEditor } from "./rich-content-editor";
 import {
@@ -18,7 +19,6 @@ import { AddressLocationFields } from "./address-location-fields";
 
 interface PropertyFormProps {
   property?: Property;
-  propertyOnly?: boolean;
   defaultPublished?: boolean;
   returnTo?: string;
 }
@@ -66,7 +66,6 @@ function Field({
 
 export function PropertyForm({
   property,
-  propertyOnly = false,
   defaultPublished = true,
   returnTo,
 }: PropertyFormProps) {
@@ -158,7 +157,7 @@ export function PropertyForm({
               className="h-12 w-full rounded-xl border border-stone-300 bg-white px-4"
             >
               {categories
-                .filter(([value]) => !propertyOnly || value !== "etc")
+                .filter(([value]) => value !== "etc" || property?.category === "etc")
                 .map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -430,6 +429,17 @@ export function PropertyForm({
             <span className="mb-2 block text-sm font-bold">매물 사진</span>
             <ImageUrlManager initialUrls={property?.image_urls ?? []} />
           </div>
+          {category !== "etc" && (
+            <div>
+              <span className="mb-2 block text-sm font-bold">
+                상세 안내 문서 (PDF / PPT)
+              </span>
+              <DocumentUploader
+                initialUrl={property?.document_url ?? null}
+                initialName={property?.document_name ?? null}
+              />
+            </div>
+          )}
           <label className="block">
             <span className="mb-2 block text-sm font-bold">
               비공개 메모

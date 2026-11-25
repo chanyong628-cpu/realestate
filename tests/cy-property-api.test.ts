@@ -45,6 +45,8 @@ function propertyFixture(overrides: Partial<Property> = {}): Property {
     is_recommended: false,
     is_published: true,
     image_urls: [],
+    document_url: null,
+    document_name: null,
     description: "설명",
     private_memo: "관리자 메모",
     view_count: 0,
