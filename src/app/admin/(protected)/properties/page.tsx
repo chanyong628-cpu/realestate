@@ -221,8 +221,8 @@ export default async function AdminPropertiesPage({
   return (
     <section>
       <AdminLocationAutoRepair properties={locationProperties} />
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="flex flex-wrap items-end justify-between gap-4 max-xl:justify-start">
+        <div className="max-xl:hidden">
           <p className="font-bold text-forest-600">PROPERTIES</p>
           <h1 className="mt-1 text-3xl font-black">매물 관리</h1>
           <p className="mt-2 text-stone-600">
