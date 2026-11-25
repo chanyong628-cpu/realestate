@@ -15,6 +15,7 @@ export default async function AdminLayout({
     ["/admin/properties/bulk", "EXCEL 등록"],
     ["/admin/properties", "매물 관리"],
     ["/admin/property-db", "매물 DB"],
+    ["/admin/ad-status", "광고현황판"],
     ["/admin/customer-blocks", "고객 블록"],
     ["/admin/inquiries", "맞춤 문의"],
     ["/admin/settings", "설정"],
