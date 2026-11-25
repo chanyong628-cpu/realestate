@@ -45,14 +45,19 @@ function listTitle(property: PropertyDatabaseRow) {
   return parts.join(" ");
 }
 
-// 모바일 제목: 동 + 지번 + 층수까지만 ("서울특별시 송파구" 같은 앞부분과 건물명은 뺀다).
+// 모바일 제목: 동 + 지번 + 건물명(없으면 생략) + 층수. "서울특별시 송파구" 같은 앞부분은 뺀다.
 function mobileTitle(property: PropertyDatabaseRow) {
   const trimmed = (property.private_address || property.public_address || property.title)
     .replace(/^(서울특별시|서울시|서울)\s*/, "")
     .replace(/^\S+구\s+/, "");
   const address = trimmed.match(/^\S*?(?:동|가|리|로|길)\s*\d+(?:-\d+)?/)?.[0] ?? trimmed;
+  const building = memoValue(property, "건물명:");
   const floor = exactFloor(property);
-  return [address, floor !== "-" && !address.includes(floor) ? floor : ""].filter(Boolean).join(" ");
+  return [
+    address,
+    building && !address.includes(building) ? building : "",
+    floor !== "-" && !address.includes(floor) ? floor : "",
+  ].filter(Boolean).join(" ");
 }
 
 // 태그 줄은 R·P·E·T·A만 보여준다(층수는 제목 줄로 옮겼다).
@@ -140,13 +145,13 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-2">
-                      <b className="break-keep text-base leading-snug">{mobileTitle(property)}</b>
+                      <b className="break-keep text-lg leading-snug">{mobileTitle(property)}</b>
                       <div className="pointer-events-auto relative z-10 shrink-0">
                         {property.archived ? <span className="inline-flex h-7 items-center rounded-full bg-stone-400 px-3 text-[10px] font-black text-white">삭제됨</span> : <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button type="submit" aria-label={`${property.property_number} 노출 ${property.is_published ? "끄기" : "켜기"}`} className={`relative h-7 w-[62px] rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${property.is_published ? "left-1" : "left-[38px]"}`} /><span className={`absolute top-1/2 -translate-y-1/2 text-[10px] font-black ${property.is_published ? "right-2 text-white" : "left-2 text-stone-600"}`}>{property.is_published ? "ON" : "OFF"}</span></button></form>}
                       </div>
                     </div>
-                    <p className="mt-1.5 text-lg font-black leading-tight">{money(property.deposit)} / {money(property.monthly_rent)}</p>
-                    <p className="mt-1 text-sm font-bold text-stone-500">관리비 {money(property.maintenance_fee)} / {pyeong(property.exclusive_area)}</p>
+                    <p className="mt-1.5 text-xl font-black leading-tight">{money(property.deposit)} / {money(property.monthly_rent)}{property.maintenance_fee !== null ? ` ${money(property.maintenance_fee)}` : ""}</p>
+                    <p className="mt-1 text-sm font-bold text-stone-500">실 {pyeong(property.exclusive_area)}</p>
                   </div>
                 </div>
                 <div className="relative z-10 mt-3 flex justify-end gap-2">
