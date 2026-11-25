@@ -6,7 +6,7 @@ import { setPropertyPublishedAction } from "@/features/admin/properties/actions"
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
 import { MobilePropertyCard } from "@/features/admin/properties/mobile-property-card";
 import { PropertyMemoButton } from "@/features/admin/properties/property-memo-button";
-import { exactFloor, memoValue, mobileAreaLine, mobilePriceLine, mobileTitle, money, pyeong } from "@/lib/properties/admin-list-format";
+import { exactFloor, managerMemo, memoValue, mobileAreaLine, mobilePriceLine, mobileTitle, money, pyeong } from "@/lib/properties/admin-list-format";
 import { getPropertyDatabaseRows, type PropertyDatabaseRow } from "@/lib/properties/archive";
 import type { PropertyCategory } from "@/types/database";
 
@@ -113,7 +113,7 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
               areaLine={mobileAreaLine(property)}
               topRight={property.archived ? <span className="inline-flex h-7 items-center rounded-full bg-stone-400 px-3 text-[10px] font-black text-white">삭제됨</span> : <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button type="submit" aria-label={`${property.property_number} 노출 ${property.is_published ? "끄기" : "켜기"}`} className={`relative h-7 w-[62px] rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-5 rounded-full bg-white shadow transition ${property.is_published ? "left-1" : "left-[38px]"}`} /><span className={`absolute top-1/2 -translate-y-1/2 text-[10px] font-black ${property.is_published ? "right-2 text-white" : "left-2 text-stone-600"}`}>{property.is_published ? "ON" : "OFF"}</span></button></form>}
               actions={<>
-                <PropertyMemoButton propertyNumber={property.property_number} title={mobileTitle(property)} memo={property.private_memo} />
+                <PropertyMemoButton propertyNumber={property.property_number} memo={managerMemo(property.private_memo)} />
                 <Link href={`/admin/property-db/${property.id}?edit=1`} className="rounded-full border border-brand-line bg-white px-5 py-2 text-sm font-black text-brand-accent">수정</Link>
                 {!property.archived && <DeletePropertyButton id={property.id} propertyNumber={property.property_number} className="whitespace-nowrap rounded-full border border-red-200 bg-white px-5 py-2 text-sm font-black text-red-700 hover:bg-red-50 disabled:opacity-50" />}
               </>}

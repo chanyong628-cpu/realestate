@@ -27,3 +27,12 @@ test("금액줄은 보증금 / 월세 관리비, 평수줄은 실 N평", () => {
   assert.equal(mobilePriceLine({ ...base, maintenance_fee: null }), "3,000 / 270");
   assert.equal(mobileAreaLine(base), "실 50평");
 });
+
+test("관리자 메모는 폴더명·건물명 줄을 뺀 직접 적은 내용만", async () => {
+  const { managerMemo } = await import("../src/lib/properties/admin-list-format");
+  assert.equal(
+    managerMemo("건물명: JK빌딩\nGoogle Drive 폴더명: 가락동121 6층\n공동현관 비밀번호 1234*"),
+    "공동현관 비밀번호 1234*",
+  );
+  assert.equal(managerMemo(null), "");
+});

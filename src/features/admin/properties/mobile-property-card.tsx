@@ -50,7 +50,7 @@ export function MobilePropertyCard({
           <p className="mt-1 text-sm font-bold text-stone-500">{areaLine}</p>
         </div>
       </div>
-      <div className="relative z-10 mt-3 flex justify-end gap-2">{actions}</div>
+      <div className="pointer-events-none relative z-10 mt-3 flex justify-end gap-2 *:pointer-events-auto">{actions}</div>
     </article>
   );
 }

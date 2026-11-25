@@ -58,3 +58,15 @@ export function mobilePriceLine(property: AdminListSource) {
 export function mobileAreaLine(property: AdminListSource) {
   return `실 ${pyeong(property.exclusive_area)}`;
 }
+
+// 관리자가 직접 적은 메모만 돌려준다(폴더명·건물명 같은 자동 기록 줄은 뺀다).
+export function managerMemo(value: string | null) {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .filter((line) => {
+      const trimmed = line.trim();
+      return !trimmed.startsWith("Google Drive 폴더명:") && !trimmed.startsWith("건물명:");
+    })
+    .join("\n")
+    .trim();
+}
