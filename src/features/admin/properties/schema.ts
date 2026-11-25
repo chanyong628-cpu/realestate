@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { buildStoredPublicAddress } from "@/lib/properties/address";
+import { getDocumentKind } from "@/lib/properties/document";
 
 const listingTagSchema = z.enum([
   "office",
@@ -24,6 +25,23 @@ const optionalCoordinate = z.preprocess(
 const optionalDate = z.preprocess(
   (value) => (value === "" || value === null ? null : value),
   z.string().nullable(),
+);
+
+const emptyToNull = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? null : value;
+
+const optionalDocumentUrl = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .url("문서 주소 형식이 올바르지 않습니다.")
+    .refine((url) => getDocumentKind(url) !== null, "PDF 또는 PPT 파일만 등록할 수 있습니다.")
+    .nullable(),
+);
+
+const optionalDocumentName = z.preprocess(
+  emptyToNull,
+  z.string().trim().max(200).nullable(),
 );
 
 export const propertyFormSchema = z.object({
@@ -66,6 +84,8 @@ export const propertyFormSchema = z.object({
   is_recommended: z.boolean(),
   is_published: z.boolean(),
   image_urls: z.array(z.string().url("이미지 주소 형식이 올바르지 않습니다.")),
+  document_url: optionalDocumentUrl,
+  document_name: optionalDocumentName,
   description: z.string().trim().max(20000),
   private_memo: z.string().trim().max(5000),
 });
@@ -123,6 +143,8 @@ export function propertyFormDataToValues(formData: FormData) {
     is_recommended: formData.get("is_recommended") === "on",
     is_published: formData.get("is_published") === "on",
     image_urls: imageUrls,
+    document_url: formData.get("document_url"),
+    document_name: formData.get("document_name"),
     description: formData.get("description"),
     private_memo: formData.get("private_memo"),
   };

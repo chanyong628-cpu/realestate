@@ -48,6 +48,8 @@ export interface Property {
   is_published: boolean;
   address_hidden?: boolean;
   image_urls: string[];
+  document_url: string | null;
+  document_name: string | null;
   description: string | null;
   private_memo: string | null;
   view_count: number;

@@ -16,6 +16,7 @@ import {
 } from "@/components/properties/contact-actions";
 import { PropertyViewTracker } from "@/components/analytics/property-view-tracker";
 import { FavoriteButton } from "@/components/properties/favorite-button";
+import { PropertyDocumentViewer } from "@/components/properties/property-document-viewer";
 import { PropertyGallery } from "@/components/properties/property-gallery";
 import { KakaoMap } from "@/components/map/kakao-map";
 import { EtcArticleDetail } from "@/components/properties/etc-article-detail";
@@ -28,6 +29,7 @@ import {
   formatMaintenanceFee,
   formatPyeong,
 } from "@/lib/properties/format";
+import { getDocumentKind } from "@/lib/properties/document";
 import { formatCurrentFloor } from "@/lib/properties/floor";
 import {
   getAdminProperty,
@@ -207,6 +209,10 @@ export default async function PropertyDetailPage({
     ["냉난방", property.air_conditioner_type || "-"],
     ["위반건축물 여부", property.is_violating_building ? "위반" : "적법"],
   ];
+  // 안내 문서(PDF/PPT)가 등록된 매물은 요약 카드·매물 설명 대신 문서를 보여준다.
+  const documentUrl = getDocumentKind(property.document_url)
+    ? property.document_url
+    : null;
   const publicDescriptionItems = descriptionItems(
     formatPublicDescription(property.description),
   );
@@ -373,6 +379,7 @@ export default async function PropertyDetailPage({
             </div>
           </section>
 
+          {!documentUrl && (
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {detailMetrics.map(({ icon: ItemIcon, label, value, subValue }) => {
               return (
@@ -398,8 +405,22 @@ export default async function PropertyDetailPage({
               );
             })}
           </div>
+          )}
 
-          <div className="mt-12 grid items-stretch gap-6 border-t border-brand-line pt-10 md:grid-cols-2">
+          {documentUrl && (
+            <PropertyDocumentViewer
+              url={documentUrl}
+              name={property.document_name}
+              title={property.title}
+            />
+          )}
+
+          <div
+            className={`mt-12 grid items-stretch gap-6 border-t border-brand-line pt-10 ${
+              documentUrl ? "" : "md:grid-cols-2"
+            }`}
+          >
+            {!documentUrl && (
             <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-6">
               <h2 className="text-2xl font-black">매물 설명</h2>
               <div className="mt-5 space-y-6 rounded-xl bg-brand-soft/60 p-5">
@@ -413,6 +434,7 @@ export default async function PropertyDetailPage({
                 ))}
               </div>
             </section>
+            )}
 
             <section className="h-full rounded-2xl border border-brand-line bg-brand-surface p-6">
               <h2 className="text-2xl font-black">건축물 정보</h2>
