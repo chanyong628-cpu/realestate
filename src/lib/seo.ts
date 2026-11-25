@@ -1,5 +1,10 @@
 import type { Property } from "@/types/database";
-import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
+import {
+  categoryLabels,
+  formatMaintenanceFee,
+  formatPyeong,
+  formatWon,
+} from "@/lib/properties/format";
 import { songpaRegionNames } from "@/lib/songpa-regions";
 
 export const siteUrl =
@@ -205,7 +210,7 @@ export function buildPropertySeo(property: Property) {
       publicAddress,
       price,
       property.maintenance_fee !== null
-        ? `관리비 ${formatWon(property.maintenance_fee)}`
+        ? `관리비 ${formatMaintenanceFee(property.maintenance_fee)}`
         : null,
       area,
       property.floor ? `${property.floor} 매물` : null,
@@ -295,7 +300,7 @@ export function buildPropertyJsonLd(property: Property, publicAddress: string) {
       {
         "@type": "PropertyValue",
         name: "관리비",
-        value: formatWon(property.maintenance_fee),
+        value: formatMaintenanceFee(property.maintenance_fee),
       },
       { "@type": "PropertyValue", name: "층수", value: property.floor ?? "-" },
       {

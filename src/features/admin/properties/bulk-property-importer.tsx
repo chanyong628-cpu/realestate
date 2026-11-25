@@ -6,10 +6,13 @@ import { bulkCreatePropertiesAction } from "./actions";
 import {
   parseBulkPropertyRows,
   parsePropertyInputs,
+  withListingMeta,
 } from "@/lib/properties/smart-import";
 import {
   HOMEPAGE_EXCEL_SHEET_NAME,
+  HOMEPAGE_TITLE_SHEET_NAME,
   parseHomepageExcelSheet,
+  parseHomepageTitleSheet,
 } from "@/lib/properties/homepage-excel-import";
 
 const excelFolderColumns = ["A", "C", "E", "G", "I", "K"] as const;
@@ -119,7 +122,23 @@ export function BulkPropertyImporter() {
         return;
       }
 
-      const parsedText = valuesToImportText(parsedSheet.items);
+      const titleSheet = workbook.Sheets[HOMEPAGE_TITLE_SHEET_NAME];
+      const titleRange = titleSheet?.["!ref"]
+        ? XLSX.utils.decode_range(titleSheet["!ref"])
+        : { e: { r: 1 } };
+      const listingMeta = parseHomepageTitleSheet(
+        titleSheet,
+        titleRange.e.r + 1,
+      );
+      const parsedText = valuesToImportText(
+        parsedSheet.items.map((item) => ({
+          folderName: item.folderName,
+          advertisement: withListingMeta(
+            item.advertisement,
+            listingMeta.get(item.folderName),
+          ),
+        })),
+      );
       const parsedRows = parseBulkPropertyRows(parsedText);
 
       if (!parsedRows.length) {

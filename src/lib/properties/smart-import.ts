@@ -2,6 +2,7 @@ import {
   derivePublicAddress,
   normalizeSongpaAddress,
 } from "@/lib/properties/address";
+import { normalizeFloorRange } from "@/lib/properties/floor";
 
 export interface ImportedPropertyDraft {
   title: string;
@@ -35,6 +36,35 @@ export interface BulkPropertyInputRow {
   rowNumber: number;
   folderName: string;
   advertisement: string;
+}
+
+const LISTING_TITLE_LINE = /^[ \t]*매물명[ \t]*[:：][ \t]*(.+?)[ \t]*$/m;
+const LISTING_FLOOR_LINE = /^[ \t]*층표기[ \t]*[:：][ \t]*(.+?)[ \t]*$/m;
+
+/**
+ * 광고프로그램이 엑셀에 따로 적어 보내는 "매물명"·"층표기"를 광고문 맨 위 두 줄로 붙인다.
+ * parsePropertyInputs가 이 줄을 읽어 제목·층에 쓰고, 공개 설명에는 남기지 않는다.
+ */
+export function withListingMeta(
+  advertisement: string,
+  meta?: { title?: string; floor?: string },
+) {
+  const lines = [
+    meta?.title?.trim() ? `매물명 : ${meta.title.trim()}` : "",
+    meta?.floor?.trim() ? `층표기 : ${meta.floor.trim()}` : "",
+  ].filter(Boolean);
+  return lines.length ? `${lines.join("\n")}\n${advertisement}` : advertisement;
+}
+
+function extractListingMeta(advertisement: string) {
+  const title = advertisement.match(LISTING_TITLE_LINE)?.[1]?.trim() ?? "";
+  const floor = advertisement.match(LISTING_FLOOR_LINE)?.[1]?.trim() ?? "";
+  const cleaned = advertisement
+    .replace(new RegExp(LISTING_TITLE_LINE.source, "gm"), "")
+    .replace(new RegExp(LISTING_FLOOR_LINE.source, "gm"), "")
+    .replace(/^\s*\n/, "")
+    .replace(/\n{3,}/g, "\n\n");
+  return { title, floor, cleaned: title || floor ? cleaned : advertisement };
 }
 
 function numberMatch(text: string, pattern: RegExp) {
@@ -147,8 +177,10 @@ function extractPrivateAddress(folderName: string, advertisement: string) {
 
 export function parsePropertyInputs(
   folderName: string,
-  advertisement: string,
+  rawAdvertisement: string,
 ): ImportedPropertyDraft {
+  const listingMeta = extractListingMeta(rawAdvertisement);
+  const advertisement = listingMeta.cleaned;
   const combined = `${folderName}\n${advertisement}`;
   const exactAddress = extractPrivateAddress(folderName, advertisement);
   const dong =
@@ -156,7 +188,10 @@ export function parsePropertyInputs(
     combined.match(/([가-힣0-9]+동)/)?.[1] ??
     "";
   const floorLabel =
+    normalizeFloorRange(listingMeta.floor) ??
+    normalizeFloorRange(folderName) ??
     folderName.match(/(?:B\d+층(?:전체|일부)?|\d+층(?:전체|일부)?|\d+호)/i)?.[0] ??
+    normalizeFloorRange(advertisement.match(/층수\s*:\s*([^\r\n]+)/)?.[1]) ??
     advertisement.match(/층수\s*:\s*((?:B\d+|\d+)층(?:전체|일부)?|\d+호)/i)?.[1] ??
     "";
   const money = folderName.match(
@@ -188,9 +223,9 @@ export function parsePropertyInputs(
       .replace(/[가-힣0-9]+역세권/g, "역세권") ?? "";
 
   return {
-    title: [dong, floorLabel, keyFeature, "사무실"]
-      .filter(Boolean)
-      .join(" "),
+    title:
+      listingMeta.title ||
+      [dong, floorLabel, keyFeature, "사무실"].filter(Boolean).join(" "),
     category:
       /상가/.test(combined) && !/사무실/.test(combined) ? "store" : "office",
     deposit: money

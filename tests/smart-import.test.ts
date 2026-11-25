@@ -3,6 +3,7 @@ import { describe, test } from "node:test";
 import {
   inferTotalFloorFromAdvertisement,
   parsePropertyInputs,
+  withListingMeta,
 } from "../src/lib/properties/smart-import";
 
 describe("매물 광고문 총층수 자동 입력", () => {
@@ -47,6 +48,49 @@ describe("매물 광고문 총층수 자동 입력", () => {
       parsePropertyInputs("방이동 188 2층전체 3000-200-20 30평", "")
         .floor,
       "2층전체",
+    );
+  });
+});
+
+describe("광고프로그램이 보낸 매물명·층표기", () => {
+  const folder = "가락동 1-1 가락시장역 B1층~7층 통임대 20000-2000-없음 R2 E유";
+  const advertisement = "광고문 첫 줄\n층수 : B1~7층 통임대";
+
+  test("매물명 줄이 있으면 제목으로 쓰고 설명에는 남기지 않는다", () => {
+    const draft = parsePropertyInputs(
+      folder,
+      withListingMeta(advertisement, {
+        title: "가락시장역 실 300평 월세2000만원 통임대",
+        floor: "B1층~6층",
+      }),
+    );
+
+    assert.equal(draft.title, "가락시장역 실 300평 월세2000만원 통임대");
+    assert.equal(draft.floor, "B1~6층");
+    assert.ok(!draft.description.includes("매물명"));
+    assert.ok(!draft.description.includes("층표기"));
+    assert.ok(draft.description.includes("광고문 첫 줄"));
+    assert.equal(draft.maintenance_fee, 0);
+  });
+
+  test("매물명 줄이 없으면 예전 방식 제목을 그대로 만든다", () => {
+    const draft = parsePropertyInputs("문정동 54-9 2층일부 2200-160-25 22평", "");
+    assert.equal(draft.title, "문정동 2층일부 사무실");
+    assert.equal(draft.floor, "2층일부");
+  });
+
+  test("폴더명의 여러 층 표기를 범위로 저장한다", () => {
+    assert.equal(
+      parsePropertyInputs("가락동 100-1 3~4층 5000-450-45 40평", "").floor,
+      "3~4층",
+    );
+    assert.equal(
+      parsePropertyInputs("가락동 100-1 3,4층 5000-450-45 40평", "").floor,
+      "3~4층",
+    );
+    assert.equal(
+      parsePropertyInputs("가락동 100-1 3층,4층 5000-450-45 40평", "").floor,
+      "3~4층",
     );
   });
 });

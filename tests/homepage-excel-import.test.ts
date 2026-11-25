@@ -3,6 +3,7 @@ import { describe, test } from "node:test";
 import {
   HOMEPAGE_EXCEL_MAX_LISTINGS,
   parseHomepageExcelSheet,
+  parseHomepageTitleSheet,
   type WorksheetLike,
 } from "../src/lib/properties/homepage-excel-import";
 
@@ -77,5 +78,28 @@ describe("C.Y홈페이지 엑셀 시트 파싱", () => {
     });
 
     assert.deepEqual(result.overflowCells, ["A8", "B8", "M3"]);
+  });
+});
+
+describe("C.Y홈페이지매물명 시트 파싱", () => {
+  test("폴더명별 매물명과 층표기를 읽고, 시트가 없으면 빈 목록이다", () => {
+    const sheet: WorksheetLike = {
+      A1: cell("사진폴더명"),
+      B1: cell("매물명"),
+      C1: cell("층표기"),
+      A2: cell("폴더 1"),
+      B2: cell("가락시장역 실 30평 월세450만원 중소형사무실"),
+      C2: cell("3~4층"),
+      A3: cell("폴더 2"),
+    };
+
+    const result = parseHomepageTitleSheet(sheet, 3);
+
+    assert.equal(result.size, 1);
+    assert.deepEqual(result.get("폴더 1"), {
+      title: "가락시장역 실 30평 월세450만원 중소형사무실",
+      floor: "3~4층",
+    });
+    assert.equal(parseHomepageTitleSheet(undefined, 3).size, 0);
   });
 });

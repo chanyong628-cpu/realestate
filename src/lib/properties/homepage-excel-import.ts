@@ -1,4 +1,5 @@
 export const HOMEPAGE_EXCEL_SHEET_NAME = "C.Y홈페이지";
+export const HOMEPAGE_TITLE_SHEET_NAME = "C.Y홈페이지매물명";
 export const HOMEPAGE_EXCEL_MAX_LISTINGS = 30;
 
 const folderColumns = [1, 3, 5, 7, 9, 11] as const;
@@ -132,4 +133,31 @@ export function parseHomepageExcelSheet(
     incompleteItems,
     overflowCells: [...overflowCells],
   };
+}
+
+export interface HomepageListingMeta {
+  title: string;
+  floor: string;
+}
+
+/**
+ * 광고프로그램이 "C.Y홈페이지매물명" 시트에 적은 사진폴더명 / 매물명 / 층표기를 읽는다.
+ * 1행은 머리글, 2행부터 데이터. 시트가 없으면 빈 목록(예전 파일은 그대로 등록된다).
+ */
+export function parseHomepageTitleSheet(
+  sheet: WorksheetLike | undefined,
+  maxRow: number,
+) {
+  const result = new Map<string, HomepageListingMeta>();
+  if (!sheet) return result;
+
+  for (let row = 2; row <= maxRow; row += 1) {
+    const folderName = worksheetText(sheet, `A${row}`);
+    if (!folderName) continue;
+    const title = worksheetText(sheet, `B${row}`);
+    const floor = worksheetText(sheet, `C${row}`);
+    if (title || floor) result.set(folderName, { title, floor });
+  }
+
+  return result;
 }

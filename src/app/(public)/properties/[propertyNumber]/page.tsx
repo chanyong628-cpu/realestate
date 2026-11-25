@@ -25,6 +25,7 @@ import { getAdminSession } from "@/lib/auth/session";
 import { derivePublicAddress } from "@/lib/properties/address";
 import {
   categoryLabels,
+  formatMaintenanceFee,
   formatPyeong,
 } from "@/lib/properties/format";
 import { formatCurrentFloor } from "@/lib/properties/floor";
@@ -363,7 +364,7 @@ export default async function PropertyDetailPage({
               <div className="flex items-center justify-between py-3">
                 <dt className="text-sm font-semibold text-brand-muted">관리비</dt>
                 <dd className="text-base font-black text-brand-ink">
-                  {formatPriceNumber(property.maintenance_fee)}만원
+                  {formatMaintenanceFee(property.maintenance_fee)}
                 </dd>
               </div>
             </dl>
@@ -486,7 +487,7 @@ export default async function PropertyDetailPage({
             <div className="flex items-center justify-between py-4">
               <dt className="text-sm font-semibold text-brand-muted">관리비</dt>
               <dd className="text-base font-black text-brand-ink">
-                {formatPriceNumber(property.maintenance_fee)}만원
+                {formatMaintenanceFee(property.maintenance_fee)}
               </dd>
             </div>
           </dl>
