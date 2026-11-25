@@ -29,9 +29,25 @@ function exactFloor(property: PropertyDatabaseRow) {
   return folderLine?.match(/(?:B\d+층(?:전체|일부)?|\d+층(?:전체|일부)?|\d+호)/i)?.[0] ?? property.floor ?? "-";
 }
 
+function memoValue(property: PropertyDatabaseRow, prefix: string) {
+  const line = (property.private_memo ?? "")
+    .split(/\r?\n/)
+    .find((item) => item.trim().startsWith(prefix));
+  return line ? line.trim().slice(prefix.length).trim() : "";
+}
+
+// 목록 제목 줄: 주소 + 건물명 + 층수. 이미 주소에 들어 있는 말은 다시 붙이지 않는다.
+function listTitle(property: PropertyDatabaseRow) {
+  const address = property.private_address || property.public_address || property.title;
+  const parts = [address, memoValue(property, "건물명:"), exactFloor(property)].filter(
+    (part, index) => part && part !== "-" && (index === 0 || !address.includes(part)),
+  );
+  return parts.join(" ");
+}
+
+// 태그 줄은 R·P·E·T·A만 보여준다(층수는 제목 줄로 옮겼다).
 function infoTags(property: PropertyDatabaseRow) {
   return [
-    exactFloor(property),
     `R${property.room_count ?? 0}`,
     `P${property.available_parking_count ?? (property.parking_available ? 1 : 0)}대`,
     `E ${property.elevator_available ? "있음" : "없음"}`,
@@ -89,23 +105,23 @@ export default async function AdminPropertyDatabasePage({ searchParams }: {
 
       {!!properties.length && (
         <div className="mt-6 overflow-hidden rounded-2xl border border-brand-line bg-white shadow-sm">
-          <div className="hidden grid-cols-[74px_88px_minmax(360px,560px)_230px_minmax(0,1fr)_190px] items-center gap-3 bg-brand-soft px-4 py-4 text-sm font-black text-brand-muted xl:grid">
+          <div className="hidden grid-cols-[74px_88px_minmax(360px,560px)_340px_minmax(0,1fr)_190px] items-center gap-3 bg-brand-soft px-4 py-4 text-sm font-black text-brand-muted xl:grid">
             <span>ON/OFF</span><span>매물번호</span><span>정보</span><span>보증금 / 월세 / 관리비 / 평수</span><span /><span className="text-right">관리</span>
           </div>
           {properties.map((property) => (
             <article key={property.id} className={`border-t border-brand-line p-4 first:border-t-0 ${property.is_published ? "bg-white" : "bg-stone-50/80"}`}>
-              <div className="hidden grid-cols-[74px_88px_minmax(360px,560px)_230px_minmax(0,1fr)_190px] items-center gap-3 xl:grid">
+              <div className="hidden grid-cols-[74px_88px_minmax(360px,560px)_340px_minmax(0,1fr)_190px] items-center gap-3 xl:grid">
                 {property.archived ? <span title="사이트에서 삭제되어 매물장에만 보존된 매물입니다" className="relative mt-1 inline-flex h-8 w-[70px] items-center justify-center rounded-full bg-stone-400 text-[10px] font-black text-white">삭제됨</span> : <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button type="submit" aria-label={`${property.property_number} 노출 ${property.is_published ? "끄기" : "켜기"}`} title="클릭해서 사이트 노출 ON/OFF" className={`relative h-8 w-[70px] rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-6 rounded-full bg-white shadow transition ${property.is_published ? "left-1" : "left-11"}`} /><span className={`absolute top-1/2 -translate-y-1/2 text-[10px] font-black ${property.is_published ? "right-2 text-white" : "left-2 text-stone-600"}`}>{property.is_published ? "ON" : "OFF"}</span></button></form>}
                 <b className="text-brand-accent">{property.property_number}</b>
                 <div className="flex min-w-0 items-center gap-4">
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-brand-soft">{property.image_urls[0] && <Image src={property.image_urls[0]} alt="" fill sizes="80px" className="object-cover" />}</div>
-                  <div className="min-w-0"><b className="block break-keep text-lg leading-snug">{property.private_address || property.public_address || property.title}</b><div className="mt-2 flex flex-wrap gap-1.5">{infoTags(property).map((tag) => <span key={tag} className="rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-accent">{tag}</span>)}</div></div>
+                  <div className="min-w-0"><b className="block break-keep text-xl leading-snug">{listTitle(property)}</b><div className="mt-2 flex flex-wrap gap-1.5">{infoTags(property).map((tag) => <span key={tag} className="rounded-md bg-brand-soft px-2 py-1 text-xs font-bold text-brand-accent">{tag}</span>)}</div></div>
                 </div>
-                <div className="grid grid-cols-4 gap-2 text-center"><div><span className="block text-[11px] text-stone-500">보증금</span><b className="mt-1 block text-sm">{money(property.deposit)}</b></div><div><span className="block text-[11px] text-stone-500">월세</span><b className="mt-1 block text-sm">{money(property.monthly_rent)}</b></div><div><span className="block text-[11px] text-stone-500">관리비</span><b className="mt-1 block text-sm">{money(property.maintenance_fee)}</b></div><div><span className="block text-[11px] text-stone-500">평수</span><b className="mt-1 block text-sm">{pyeong(property.exclusive_area)}</b></div></div>
+                <div className="grid grid-cols-4 gap-2 text-center"><div><span className="block text-sm text-stone-500">보증금</span><b className="mt-1 block text-lg font-black">{money(property.deposit)}</b></div><div><span className="block text-sm text-stone-500">월세</span><b className="mt-1 block text-lg font-black">{money(property.monthly_rent)}</b></div><div><span className="block text-sm text-stone-500">관리비</span><b className="mt-1 block text-lg font-black">{money(property.maintenance_fee)}</b></div><div><span className="block text-sm text-stone-500">평수</span><b className="mt-1 block text-lg font-black">{pyeong(property.exclusive_area)}</b></div></div>
                 <span />
                 <div className="flex flex-nowrap justify-end gap-2"><Link href={`/admin/property-db/${property.id}?edit=1`} className="whitespace-nowrap rounded-lg border border-brand-line px-3 py-2 text-xs font-black text-brand-accent">수정</Link><Link href={`/admin/property-db/${property.id}`} className="whitespace-nowrap rounded-lg bg-brand-soft px-3 py-2 text-xs font-black text-brand-accent">상세</Link>{!property.archived && <DeletePropertyButton id={property.id} propertyNumber={property.property_number} />}</div>
               </div>
-              <div className="xl:hidden"><div className="flex items-start gap-3">{property.archived ? <span title="사이트에서 삭제되어 매물장에만 보존된 매물입니다" className="relative mt-1 inline-flex h-8 w-[70px] items-center justify-center rounded-full bg-stone-400 text-[10px] font-black text-white">삭제됨</span> : <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button type="submit" aria-label={`${property.property_number} 노출 ${property.is_published ? "끄기" : "켜기"}`} className={`relative mt-1 h-8 w-[70px] rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-6 rounded-full bg-white shadow transition ${property.is_published ? "left-1" : "left-11"}`} /><span className={`absolute top-1/2 -translate-y-1/2 text-[10px] font-black ${property.is_published ? "right-2 text-white" : "left-2 text-stone-600"}`}>{property.is_published ? "ON" : "OFF"}</span></button></form>}<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-brand-soft">{property.image_urls[0] && <Image src={property.image_urls[0]} alt="" fill sizes="80px" className="object-cover" />}</div><div className="min-w-0"><b className="text-brand-accent">{property.property_number}</b><h2 className="mt-1 text-lg font-black">{property.private_address || property.public_address || property.title}</h2><div className="mt-2 flex flex-wrap gap-1">{infoTags(property).map((tag) => <span key={tag} className="rounded bg-brand-soft px-2 py-1 text-xs font-bold text-brand-accent">{tag}</span>)}</div><p className="mt-2 text-sm text-stone-500">보증금 {money(property.deposit)} · 월세 {money(property.monthly_rent)} · 관리비 {money(property.maintenance_fee)} · {pyeong(property.exclusive_area)}</p></div></div><div className="mt-4 flex gap-2"><Link href={`/admin/property-db/${property.id}?edit=1`} className="flex-1 whitespace-nowrap rounded-lg border border-brand-line px-3 py-2 text-center text-sm font-black">수정</Link><Link href={`/admin/property-db/${property.id}`} className="flex-1 whitespace-nowrap rounded-lg bg-brand-soft px-3 py-2 text-center text-sm font-black text-brand-accent">상세</Link></div></div>
+              <div className="xl:hidden"><div className="flex items-start gap-3">{property.archived ? <span title="사이트에서 삭제되어 매물장에만 보존된 매물입니다" className="relative mt-1 inline-flex h-8 w-[70px] items-center justify-center rounded-full bg-stone-400 text-[10px] font-black text-white">삭제됨</span> : <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}><button type="submit" aria-label={`${property.property_number} 노출 ${property.is_published ? "끄기" : "켜기"}`} className={`relative mt-1 h-8 w-[70px] rounded-full transition ${property.is_published ? "bg-[#14213d]" : "bg-stone-300"}`}><span className={`absolute top-1 size-6 rounded-full bg-white shadow transition ${property.is_published ? "left-1" : "left-11"}`} /><span className={`absolute top-1/2 -translate-y-1/2 text-[10px] font-black ${property.is_published ? "right-2 text-white" : "left-2 text-stone-600"}`}>{property.is_published ? "ON" : "OFF"}</span></button></form>}<div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-brand-soft">{property.image_urls[0] && <Image src={property.image_urls[0]} alt="" fill sizes="80px" className="object-cover" />}</div><div className="min-w-0"><b className="text-brand-accent">{property.property_number}</b><h2 className="mt-1 text-lg font-black">{listTitle(property)}</h2><div className="mt-2 flex flex-wrap gap-1">{infoTags(property).map((tag) => <span key={tag} className="rounded bg-brand-soft px-2 py-1 text-xs font-bold text-brand-accent">{tag}</span>)}</div><p className="mt-2 text-sm text-stone-500">보증금 {money(property.deposit)} · 월세 {money(property.monthly_rent)} · 관리비 {money(property.maintenance_fee)} · {pyeong(property.exclusive_area)}</p></div></div><div className="mt-4 flex gap-2"><Link href={`/admin/property-db/${property.id}?edit=1`} className="flex-1 whitespace-nowrap rounded-lg border border-brand-line px-3 py-2 text-center text-sm font-black">수정</Link><Link href={`/admin/property-db/${property.id}`} className="flex-1 whitespace-nowrap rounded-lg bg-brand-soft px-3 py-2 text-center text-sm font-black text-brand-accent">상세</Link></div></div>
             </article>
           ))}
         </div>
