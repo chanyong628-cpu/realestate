@@ -17,6 +17,11 @@ export function formatWon(value: number | null) {
   return value === null ? "협의" : `${value.toLocaleString("ko-KR")}만원`;
 }
 
+export function formatMaintenanceFee(value: number | null) {
+  if (value === null) return "-";
+  return value === 0 ? "없음" : `${value.toLocaleString("ko-KR")}만원`;
+}
+
 export function formatPyeong(areaInSquareMeters: number | null) {
   if (areaInSquareMeters === null) return null;
   const roundedToOneDecimal = Number((areaInSquareMeters / 3.3058).toFixed(1));

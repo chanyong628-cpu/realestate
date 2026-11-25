@@ -15,7 +15,12 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { Property } from "@/types/database";
 import { trackConversion } from "@/components/analytics/google-analytics";
-import { categoryLabels, formatPyeong, formatWon } from "@/lib/properties/format";
+import {
+  categoryLabels,
+  formatMaintenanceFee,
+  formatPyeong,
+  formatWon,
+} from "@/lib/properties/format";
 import { formatCurrentFloor } from "@/lib/properties/floor";
 import { KakaoMap } from "@/components/map/kakao-map";
 import { inferTotalFloorFromAdvertisement } from "@/lib/properties/smart-import";
@@ -278,7 +283,7 @@ export function PropertyQuickViewContent({
                       관리비
                     </dt>
                     <dd className="text-base font-black text-brand-ink">
-                      {formatPriceNumber(property.maintenance_fee)}만원
+                      {formatMaintenanceFee(property.maintenance_fee)}
                     </dd>
                   </div>
                 </dl>
@@ -410,7 +415,7 @@ export function PropertyQuickViewContent({
                     관리비
                   </dt>
                   <dd className="text-base font-black text-brand-ink">
-                    {formatPriceNumber(property.maintenance_fee)}만원
+                    {formatMaintenanceFee(property.maintenance_fee)}
                   </dd>
                 </div>
               </dl>
@@ -481,7 +486,7 @@ export function PropertyQuickViewContent({
             </span>
           </p>
           <p className="mt-1.5 text-base font-semibold text-brand-muted">
-            관리비 {formatWon(property.maintenance_fee)}
+            관리비 {formatMaintenanceFee(property.maintenance_fee)}
           </p>
 
           <div
