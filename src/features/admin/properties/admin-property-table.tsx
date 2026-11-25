@@ -11,11 +11,13 @@ import {
   setPropertyRecommendedAction,
 } from "@/features/admin/properties/actions";
 import { DeletePropertyButton } from "@/features/admin/properties/delete-button";
+import { MobilePropertyCard } from "@/features/admin/properties/mobile-property-card";
 import { PropertyProposalButton } from "@/features/admin/properties/property-proposal-button";
 import {
   isStoredAddressHidden,
   resolvePublicAddress,
 } from "@/lib/properties/address";
+import { mobileAreaLine, mobilePriceLine, mobileTitle } from "@/lib/properties/admin-list-format";
 import { listingTagLabels } from "@/lib/properties/listing-tags";
 import type { Property, PropertyCategory } from "@/types/database";
 
@@ -111,6 +113,7 @@ export function AdminPropertyTable({
   const selectAllRef = useRef<HTMLInputElement>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [pending, setPending] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
   const [favoriteDestination, setFavoriteDestination] = useState("admin");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const propertyIds = useMemo(() => properties.map((property) => property.id), [properties]);
@@ -215,8 +218,8 @@ export function AdminPropertyTable({
   }
 
   return (
-    <div className="relative mt-8 overflow-visible rounded-2xl bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b border-stone-200 bg-gradient-to-r from-amber-50 via-white to-emerald-50 p-4">
+    <div className="relative mt-8 overflow-visible rounded-2xl bg-white shadow-sm max-xl:mt-4 max-xl:bg-transparent max-xl:shadow-none">
+      <div className="flex flex-wrap items-center gap-2 border-b max-xl:hidden border-stone-200 bg-gradient-to-r from-amber-50 via-white to-emerald-50 p-4">
         <div className="mr-auto flex min-w-[150px] items-center gap-3">
           <input
             ref={selectAllRef}
@@ -269,7 +272,56 @@ export function AdminPropertyTable({
         </p>
       )}
 
-      <div>
+      <div className="xl:hidden">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {selectMode ? (
+            <>
+              <label className="mr-auto flex items-center gap-2 text-sm font-black">
+                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="현재 목록 전체 선택" className="size-6 accent-violet-700" />
+                전체 선택 <span className="text-violet-700">{selectedIds.length}개</span>
+              </label>
+              <ActionButton disabled={!selectedIds.length || pending} tone="neutral" onClick={() => runMutation("hide")}>
+                <EyeOff size={16} /> 비노출
+              </ActionButton>
+              <ActionButton disabled={!selectedIds.length || pending} tone="red" onClick={() => runMutation("delete")}>
+                <Trash2 size={16} /> 삭제
+              </ActionButton>
+              <button type="button" onClick={() => { setSelectMode(false); setSelected(new Set()); }} className="h-10 rounded-xl border border-stone-300 bg-white px-3 text-sm font-black">
+                취소
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setSelectMode(true)} className="ml-auto h-10 rounded-xl border border-violet-300 bg-white px-4 text-sm font-black text-violet-800">
+              선택
+            </button>
+          )}
+          {pending && <LoaderCircle size={20} className="animate-spin text-brand-accent" />}
+        </div>
+        {properties.map((property) => (
+          <MobilePropertyCard
+            key={property.id}
+            className={selectMode && selected.has(property.id) ? "border-violet-500 bg-violet-50 ring-2 ring-violet-400" : property.image_urls.length ? "border-stone-200 bg-white" : "border-red-200 bg-red-50/40"}
+            href={`/properties/${property.property_number}`}
+            propertyNumber={property.property_number}
+            imageUrl={property.image_urls[0] ?? null}
+            title={mobileTitle(property)}
+            priceLine={mobilePriceLine(property)}
+            areaLine={mobileAreaLine(property)}
+            checkbox={selectMode ? { checked: selected.has(property.id), onChange: () => toggle(property.id) } : undefined}
+            actions={<>
+              <form action={setPropertyPublishedAction.bind(null, property.id, !property.is_published)}>
+                <button className={`rounded-full border px-5 py-2 text-sm font-black ${property.is_published ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-stone-300 bg-white text-stone-500"}`}>
+                  {property.is_published ? "노출" : "비노출"}
+                </button>
+              </form>
+              <Link href={`/admin/properties/${property.id}/edit`} className="rounded-full border border-stone-300 bg-white px-5 py-2 text-sm font-black">수정</Link>
+              <DeletePropertyButton id={property.id} propertyNumber={property.property_number} className="whitespace-nowrap rounded-full border border-red-200 bg-white px-5 py-2 text-sm font-black text-red-700 hover:bg-red-50 disabled:opacity-50" />
+            </>}
+          />
+        ))}
+      </div>
+
+      <div className="max-xl:hidden">
         <table className="w-full table-fixed border-collapse text-left">
           <thead>
             <tr className="border-b border-stone-200 bg-stone-50 text-xs text-stone-500">

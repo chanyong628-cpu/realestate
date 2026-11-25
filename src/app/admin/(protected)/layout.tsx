@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AdminChrome } from "@/features/admin/admin-chrome";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/features/admin/auth/actions";
 import { getAdminSession } from "@/lib/auth/session";
@@ -9,7 +9,7 @@ export default async function AdminLayout({
   const session = await getAdminSession();
   if (!session) redirect("/admin/login");
 
-  const links = [
+  const links: [string, string][] = [
     ["/admin", "대시보드"],
     ["/admin/properties/new", "광고 등록"],
     ["/admin/properties/bulk", "EXCEL 등록"],
@@ -21,33 +21,17 @@ export default async function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-stone-100">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-5 py-4">
-          <Link href="/admin" className="text-lg font-black">
-            CY 부동산 관리자
-          </Link>
-          <form action={logoutAction}>
-            <button className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-bold hover:bg-stone-50">
-              로그아웃
-            </button>
-          </form>
-        </div>
-      </header>
-      <div className="mx-auto grid max-w-[1600px] gap-6 px-5 py-8 md:grid-cols-[190px_minmax(0,1fr)]">
-        <nav className="h-fit rounded-2xl bg-white p-3 shadow-sm">
-          {links.map(([href, label]) => (
-            <Link
-              key={href}
-              href={href}
-              className="block rounded-xl px-4 py-3 text-sm font-bold hover:bg-forest-50 hover:text-forest-700"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <main className="min-w-0">{children}</main>
-      </div>
-    </div>
+    <AdminChrome
+      links={links}
+      logout={
+        <form action={logoutAction}>
+          <button className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-bold hover:bg-stone-50">
+            로그아웃
+          </button>
+        </form>
+      }
+    >
+      {children}
+    </AdminChrome>
   );
 }
